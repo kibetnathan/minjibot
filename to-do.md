@@ -1,9 +1,9 @@
 # To Do List
 
 - [x] Create Landing Page
-- [ ] Create Bot entry point
-- [ ] Set up auth
+- [x] Create Bot entry point
 - [ ] Create Bot Commands
+- [ ] Set up auth
 - [ ] Design API
 
 # Notes
