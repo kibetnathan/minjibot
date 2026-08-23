@@ -81,13 +81,13 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `birthday channel`   | Sets the channel for automated birthday notices.              |
 | `birthday list`      | Displays upcoming server birthdays sorted by date.            |
 | `birthday role`      | Configures the temporary role awarded on a member's birthday. |
-| `bitches`            | Random meme percentage readout for "lack of bitches".         |
+| `bitches`            | Gives a number for how many bitches a specific member has     |
 | `choose`             | Picks an option from a comma-separated list.                  |
 | `colors avatar`      | Extracts dominant hex colors from an avatar.                  |
 | `diary add`          | Saves a private journal entry into the user's database.       |
 | `diary delete`       | Removes a specific saved diary entry by ID.                   |
 | `diary view`         | Shows past diary entries in a private embed.                  |
-| `hits`               | Increments and displays your smoking/vaping counter.          |
+| `hits`               | Increments and displays your smoking counter.                 |
 | `howautism`          | Randomized fun percentage reading.                            |
 | `howgay`             | Randomized fun percentage reading.                            |
 | `howlesbian`         | Randomized fun percentage reading.                            |
@@ -95,16 +95,16 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `IQ`                 | Generates a fun, randomized IQ score readout.                 |
 | `lurk`               | Sets an AFK status indicating you are silently reading chat.  |
 | `poll`               | Creates an interactive reaction- or button-based poll embed.  |
-| `pp`                 | Generates a randomized text-based length string (`8==D`).     |
-| `puh`                | Sends a custom meme phrase or reaction text.                  |
+| `pp`                 | Generates a randomized pp length                              |
+| `puh`                | Generates random puh tightness percentage.                    |
 | `quickpoll`          | Instantly creates a simple Yes/No reaction poll.              |
 | `ship`               | Calculates a romance compatibility score between two users.   |
-| `smoke`              | Animated text sequence of smoking a cigarette.                |
-| `spark`              | Lighting-up text animation for smoke commands.                |
-| `vape`               | Animated text sequence simulating vaping.                     |
-| `vape flavor`        | Sets or changes your virtual vape e-liquid flavor.            |
+| `smoke`              | Smoke the blunt.                                              |
+| `spark`              | Light the blunt.                                              |
+| `vape`               | Hit the vape.                                                 |
+| `vape flavor`        | Sets or changes your virtual vapeflavor.                      |
 | `vape hits`          | Displays total recorded virtual vape hits.                    |
-| `vape steal`         | Mini-game to "steal" someone's virtual vape.                  |
+| `vape steal`         | Steal the vape.                                               |
 
 ## 5. Roleplay (RP)
 

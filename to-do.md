@@ -1,6 +1,6 @@
 # To Do List
 
-- [ ] Create Landing Page
+- [x] Create Landing Page
 - [ ] Create Bot entry point
 - [ ] Set up auth
 - [ ] Create Bot Commands
