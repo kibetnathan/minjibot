@@ -7,7 +7,7 @@ Go Discord bot + API (module `github.com/kibetnathan/minjibot`, Go 1.26, pgx/v5 
 - Build/check: `go build ./...`, `go vet ./...`. Nothing else (lint/test/CI) is wired up.
 - Database: `docker compose up -d database` → Postgres on host port **5433** (not 5432). All config comes from `.env` (gitignored): `POSTGRES_*`, `TESTING_DB`, plus `GOOSE_DRIVER` / `GOOSE_DBSTRING` / `GOOSE_MIGRATION_DIR`.
 - Migrations: goose format (`-- +goose Up`/`Down`) in `db/migrations/`, UTC-timestamp filenames. Because `.env` exports the `GOOSE_*` vars, plain `goose up` / `goose down` works from the repo root.
-- Makefile only loads `.env`; it declares goose targets in `.PHONY` but has no rule bodies — don't rely on `make`, call `goose` / `sqlc` directly.
+- Makefile loads + exports `.env`; targets work without Infisical: `goose-migrate-up/down` (plain goose against `.env` config), `test-migrate-up/down` (same instance, database swapped to `TESTING_DB`), `docker/up|down|down/v|logs`. `make test` (`go test ./tests/...`) fails until `tests/` contains Go files; `make run` needs a real entrypoint in `cmd/`.
 - Codegen: `sqlc generate` uses `db/queries/*.sql` + `db/migrations/` as schema and writes into `infrastructure/postgres/` (package `postgres`, pgx/v5, emit_interface, JSON tags).
 
 ## Known breakage (verify before trusting)

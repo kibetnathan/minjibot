@@ -3,22 +3,50 @@ ifneq (,$(wildcard ./.env))
 	export
 endif
 
-GOOSE_DBSTRING ?= $(DB_URL)
+# Dev/prod migrations use GOOSE_DRIVER / GOOSE_DBSTRING / GOOSE_MIGRATION_DIR from .env directly.
+# Test migrations hit the same Postgres instance with the database swapped to TESTING_DB
+# (created by init-testdb.sh on first container init).
+TEST_DB_URL ?= $(subst /$(POSTGRES_DB),/$(TESTING_DB),$(GOOSE_DBSTRING))
 
-.PHONY: all run goose-migrate-up goose-migrate-down
+.PHONY: all run test goose-migrate-up goose-migrate-down test-migrate-up test-migrate-down
+.PHONY: docker/up docker/down docker/down/v docker/logs
 
-.PHONY: docker/up
-docker/up: # Start DB in backgrounf
-	$(SECRETS) docker compose up -d 
+all: test run
 
-.PHONY: docker/down
+test:
+	@echo "Running tests ..."
+	go test ./tests/...
+
+run:
+	@echo "Starting Go application..."
+	go run .
+
+goose-migrate-up:
+	@echo "Running migrations..."
+	goose up
+
+goose-migrate-down:
+	@echo "Rolling back migrations..."
+	goose down
+
+test-migrate-up:
+	@test -n "$(TESTING_DB)" || { echo "Error: TESTING_DB is not set in .env."; exit 1; }
+	@echo "Running migrations on test DB..."
+	GOOSE_DBSTRING='$(TEST_DB_URL)' goose up
+
+test-migrate-down:
+	@test -n "$(TESTING_DB)" || { echo "Error: TESTING_DB is not set in .env."; exit 1; }
+	@echo "Rolling back migrations on test DB..."
+	GOOSE_DBSTRING='$(TEST_DB_URL)' goose down
+
+docker/up: ## Start DB in background
+	docker compose up -d
+
 docker/down: ## Stop all containers (keeps volumes)
 	docker compose down
 
-.PHONY: docker/down/v
 docker/down/v: ## Stop all containers and delete volumes (wipes DB data)
 	docker compose down -v
 
-.PHONY: docker/logs
 docker/logs: ## Tail DB logs
-	$(SECRETS) docker compose logs -f database
+	docker compose logs -f database
