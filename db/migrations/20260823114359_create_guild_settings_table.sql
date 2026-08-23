@@ -1,12 +1,12 @@
 -- +goose Up
-CREATE TABLE user_permissions (
-    id BIGSERIAL PRIMARY KEY,
-    user_id VARCHAR(20) NOT NULL,
-    guild_id VARCHAR(20) NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
-    role VARCHAR(50) NOT NULL,
-    permissions_json JSONB NOT NULL DEFAULT '{}',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT unique_user_guild_role UNIQUE (user_id, guild_id, role)
+CREATE TABLE guild_settings (
+    guild_id VARCHAR(20) PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE,
+    prefix VARCHAR(10) NOT NULL DEFAULT '!',
+    language VARCHAR(5) NOT NULL DEFAULT 'en',
+    auto_moderation_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    logging_channel_id VARCHAR(20),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 -- +goose Down
 DROP TABLE IF EXISTS guild_settings;
