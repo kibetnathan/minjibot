@@ -5,7 +5,8 @@ import (
 )
 
 type Config struct {
-	DBURL string `env:"DB_URL"`
+	DBURL       string `env:"DB_URL"`
+	DiscordToken string `env:"DISCORD_TOKEN"`
 }
 
 func NewConfig() (*Config, error) {
