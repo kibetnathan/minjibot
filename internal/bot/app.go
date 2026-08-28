@@ -83,6 +83,7 @@ func (a *App) registerHandlers() {
 		Logger:       a.Logger,
 		GuildRepo:    a.GuildRepo,
 		SettingsRepo: a.SettingsRepo,
+		PermRepo:     a.PermRepo,
 		AuditRepo:    a.AuditRepo,
 	})
 }

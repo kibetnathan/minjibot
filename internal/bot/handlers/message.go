@@ -3,27 +3,33 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/domain/commands"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 	"log/slog"
 )
 
+const DefaultPrefix = "!"
+
 type HandlerDeps struct {
 	Logger       *slog.Logger
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
+	PermRepo     repository.UserPermissionRepository
 	AuditRepo    repository.AuditLogRepository
 }
 
 func RegisterMessageHandler(s *discordgo.Session, deps HandlerDeps) {
+	cmdHandler := commands.NewCommandHandler(deps.GuildRepo, deps.SettingsRepo, deps.PermRepo)
 	s.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		onMessageCreate(s, m, deps)
+		onMessageCreate(s, m, deps, cmdHandler)
 	})
 }
 
-func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps HandlerDeps) {
+func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps HandlerDeps, cmdHandler *commands.CommandHandler) {
 	if m.Author.Bot {
 		return
 	}
@@ -58,12 +64,25 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Hand
 
 	// Get guild settings for prefix
 	settings, err := deps.SettingsRepo.Get(ctx, m.GuildID)
-	if err != nil {
-		deps.Logger.Debug("No guild settings found", "guild_id", m.GuildID)
+	prefix := DefaultPrefix
+	if err == nil && settings.Prefix != "" {
+		prefix = settings.Prefix
 	}
 
 	_ = guild
 	_ = settings
 
-	// TODO: Add command handling logic here using settings.Prefix
+	// Check for command
+	if !strings.HasPrefix(m.Content, prefix) {
+		return
+	}
+
+	args := strings.Fields(strings.TrimPrefix(m.Content, prefix))
+	if len(args) == 0 {
+		return
+	}
+
+	if err := cmdHandler.Handle(ctx, s, m, args[0], args[1:]); err != nil {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error: %v", err))
+	}
 }
