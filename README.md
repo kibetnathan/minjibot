@@ -25,13 +25,14 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 | goose   | migrations                  |
 | sqlc    | query codegen               |
 | Node.js | dashboard                   |
+| ngrok   | local tunnel for slash commands (optional) |
 
 ## Getting started
 
 1. Create a `.env` in the repo root (gitignored):
 
    ```dotenv
-   # App / API
+   # App / API / Bot
    DB_URL=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
    DISCORD_TOKEN=
 
@@ -70,7 +71,13 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 5. Run the API:
 
    ```sh
-   make run                # go run . -> http://localhost:8080
+   make run-api            # go run ./cmd/api -> http://localhost:8080
+   ```
+
+6. Run the Bot (in another terminal):
+
+   ```sh
+   make run-bot            # go run ./cmd/bot
    ```
 
 ## Make targets
@@ -79,7 +86,11 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 | --------------------- | --------------------------------------------------- |
 | `make all`            | test + run                                          |
 | `make test`           | `go test ./tests/...`                               |
-| `make run`            | start the API                                       |
+| `make run`            | start the API (`cmd/api`)                           |
+| `make run-api`        | start API server on :8080                           |
+| `make run-bot`        | start Discord bot (gateway)                         |
+| `make ngrok`          | start ngrok tunnel to API (port 8080)               |
+| `make ngrok-url`      | print ngrok public URL (requires ngrok running)     |
 | `make goose-migrate-up/down`     | migrate the dev database                 |
 | `make test-migrate-up/down`      | migrate `TESTING_DB` on the same instance |
 | `make docker/up`      | start Postgres in background                        |
@@ -105,10 +116,12 @@ The Makefile loads and exports `.env`, so no Infisical or extra tooling is requi
 ```
 cmd/api            API entrypoint (:8080)
 cmd/bot            Discord bot entrypoint (gateway + prefix/slash commands)
+cmd/main.go        Unified entrypoint (starts both bot + API)
 internal/api       Echo app wiring
+internal/bot       Discord bot app + handlers
 internal/config    env config (caarlos0/env/v11)
 internal/logger    slog setup
-internal/domain    domain entities
+internal/domain    domain entities (guild, guildsettings, userpermission, auditlog, commands)
 internal/ports     dto + repository interfaces/implementations
 infrastructure/postgres   generated sqlc output (do not edit)
 db/migrations      goose SQL migrations
@@ -132,6 +145,8 @@ Routes: `/` (landing), `/dashboard`, `/commands`, `/docs`, `/auth`.
 ## Running the Bot locally
 
 ```sh
+make run-bot
+# or
 go run ./cmd/bot
 ```
 
@@ -143,11 +158,12 @@ Slash commands require a public HTTPS endpoint for Discord to send interactions.
 
 1. Install ngrok: `brew install ngrok/ngrok/ngrok` (macOS) or download from https://ngrok.com/download
 2. Authenticate: `ngrok config add-authtoken <your-token>`
-3. Start the API locally: `make run` (runs on `:8080`)
+3. Start the API locally: `make run-api` (runs on `:8080`)
 4. In another terminal, start the tunnel:
 
    ```sh
-   ngrok http 8080
+   make ngrok
+   # or manually: ngrok http 8080
    ```
 
 5. Copy the HTTPS forwarding URL (e.g., `https://abc123.ngrok-free.app`)
@@ -157,6 +173,13 @@ Slash commands require a public HTTPS endpoint for Discord to send interactions.
    - Save changes (Discord will send a verification request)
 
 Now slash commands will route to your local machine.
+
+### Get ngrok URL programmatically
+
+```sh
+make ngrok-url
+# or manually: curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+```
 
 ## Deploying to Render
 

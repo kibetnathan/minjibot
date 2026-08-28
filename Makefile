@@ -10,6 +10,7 @@ TEST_DB_URL ?= $(subst /$(POSTGRES_DB),/$(TESTING_DB),$(GOOSE_DBSTRING))
 
 .PHONY: all run test goose-migrate-up goose-migrate-down test-migrate-up test-migrate-down
 .PHONY: docker/up docker/down docker/down/v docker/logs
+.PHONY: run-api run-bot ngrok ngrok-url
 
 all: test run
 
@@ -20,6 +21,22 @@ test:
 run:
 	@echo "Starting Go application..."
 	go run .
+
+run-api:
+	@echo "Starting API server on :8080..."
+	go run ./cmd/api
+
+run-bot:
+	@echo "Starting Discord bot..."
+	go run ./cmd/bot
+
+ngrok:
+	@echo "Starting ngrok tunnel to API (port 8080)..."
+	@echo "Copy the HTTPS URL and set as Discord Interactions Endpoint URL"
+	ngrok http 8080
+
+ngrok-url:
+	@curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
 
 goose-migrate-up:
 	@echo "Running migrations..."
