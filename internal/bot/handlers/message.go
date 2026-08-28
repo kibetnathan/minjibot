@@ -12,9 +12,9 @@ import (
 	"log/slog"
 )
 
-const DefaultPrefix = "!"
+const DefaultPrefix = "-"
 
-type HandlerDeps struct {
+type MessageHandlerDeps struct {
 	Logger       *slog.Logger
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
@@ -22,14 +22,13 @@ type HandlerDeps struct {
 	AuditRepo    repository.AuditLogRepository
 }
 
-func RegisterMessageHandler(s *discordgo.Session, deps HandlerDeps) {
-	cmdHandler := commands.NewCommandHandler(deps.GuildRepo, deps.SettingsRepo, deps.PermRepo)
+func RegisterMessageHandler(s *discordgo.Session, deps MessageHandlerDeps, cmdHandler *commands.CommandHandler) {
 	s.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		onMessageCreate(s, m, deps, cmdHandler)
 	})
 }
 
-func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps HandlerDeps, cmdHandler *commands.CommandHandler) {
+func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps MessageHandlerDeps, cmdHandler *commands.CommandHandler) {
 	if m.Author.Bot {
 		return
 	}
@@ -86,3 +85,4 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Hand
 		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error: %v", err))
 	}
 }
+
