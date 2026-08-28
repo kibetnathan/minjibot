@@ -13,6 +13,8 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 - **goose** — SQL migrations
 - **slog** — structured JSON logging
 - **React + Vite + shadcn/ui** — dashboard (`dashboard/minji-bot`)
+- **react-router-dom** — client-side routing
+- **lucide-react + react-icons** — icons
 
 ## Prerequisites
 
@@ -31,6 +33,7 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
    ```dotenv
    # App / API
    DB_URL=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
+   DISCORD_TOKEN=
 
    # Postgres container (used by docker compose)
    POSTGRES_USER=postgres
@@ -58,7 +61,13 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
    make goose-migrate-up   # dev DB (POSTGRES_DB)
    ```
 
-4. Run the API:
+4. Generate database queries:
+
+   ```sh
+   sqlc generate
+   ```
+
+5. Run the API:
 
    ```sh
    make run                # go run . -> http://localhost:8080
@@ -97,14 +106,14 @@ The Makefile loads and exports `.env`, so no Infisical or extra tooling is requi
 cmd/api            API entrypoint (:8080)
 cmd/bot            Discord bot entrypoint (stub)
 internal/api       Echo app wiring
-internal/config    env config (caarlos0/env)
+internal/config    env config (caarlos0/env/v11)
 internal/logger    slog setup
 internal/domain    domain entities
 internal/ports     dto + repository interfaces/implementations
 infrastructure/postgres   generated sqlc output (do not edit)
 db/migrations      goose SQL migrations
 db/queries         named sqlc queries
-dashboard/minji-bot       React + Vite + shadcn dashboard
+dashboard/minji-bot       React + Vite + shadcn dashboard (with landing page)
 tests              integration tests (WIP)
 ```
 
@@ -117,3 +126,5 @@ npm run dev        # Vite dev server
 ```
 
 Other scripts: `build`, `preview`, `lint`, `format`, `typecheck`.
+
+Routes: `/` (landing), `/dashboard`, `/commands`, `/docs`, `/auth`.

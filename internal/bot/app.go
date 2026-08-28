@@ -58,7 +58,7 @@ func NewApp() (*App, error) {
 
 func (a *App) registerHandlers() {
 	// Identify required gateway intents (adjust based on your bot's needs)
-	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages
+	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
 
 	// Example handler
 	a.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
