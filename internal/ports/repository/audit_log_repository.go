@@ -6,15 +6,15 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
-	"github.com/kibetnathan/minjibot/internal/domain/entities"
+	"github.com/kibetnathan/minjibot/internal/domain/auditlog"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 )
 
 // AuditLog Repository --
 type AuditLogRepository interface {
-	Create(ctx context.Context, arg dto.CreateAuditLogParams) (entities.AuditLog, error)
-	ListForGuild(ctx context.Context, guildID string, limit, offset int32) ([]entities.AuditLog, error)
-	ListByActor(ctx context.Context, guildID, actorID string, limit, offset int32) ([]entities.AuditLog, error)
+	Create(ctx context.Context, arg dto.CreateAuditLogParams) (auditlog.AuditLog, error)
+	ListForGuild(ctx context.Context, guildID string, limit, offset int32) ([]auditlog.AuditLog, error)
+	ListByActor(ctx context.Context, guildID, actorID string, limit, offset int32) ([]auditlog.AuditLog, error)
 	CountForGuild(ctx context.Context, guildID string) (int64, error)
 	DeleteBefore(ctx context.Context, cutoff time.Time) error
 }
@@ -27,7 +27,7 @@ func NewAuditLogRepository(store *SQLStore) AuditLogRepository {
 	return &sqlAuditLogRepository{store: store}
 }
 
-func (r *sqlAuditLogRepository) Create(ctx context.Context, arg dto.CreateAuditLogParams) (entities.AuditLog, error) {
+func (r *sqlAuditLogRepository) Create(ctx context.Context, arg dto.CreateAuditLogParams) (auditlog.AuditLog, error) {
 	log, err := r.store.queries.CreateAuditLog(ctx, postgres.CreateAuditLogParams{
 		GuildID: arg.GuildID,
 		Action:  arg.Action,
@@ -39,13 +39,13 @@ func (r *sqlAuditLogRepository) Create(ctx context.Context, arg dto.CreateAuditL
 		Metadata: arg.Metadata,
 	})
 	if err != nil {
-		return entities.AuditLog{}, err
+		return auditlog.AuditLog{}, err
 	}
 
 	return toentitiesAuditLog(log), nil
 }
 
-func (r *sqlAuditLogRepository) ListForGuild(ctx context.Context, guildID string, limit, offset int32) ([]entities.AuditLog, error) {
+func (r *sqlAuditLogRepository) ListForGuild(ctx context.Context, guildID string, limit, offset int32) ([]auditlog.AuditLog, error) {
 	logs, err := r.store.queries.ListAuditLogsForGuild(ctx, postgres.ListAuditLogsForGuildParams{
 		GuildID:    guildID,
 		PageOffset: offset,
@@ -58,7 +58,7 @@ func (r *sqlAuditLogRepository) ListForGuild(ctx context.Context, guildID string
 	return toentitiesAuditLogs(logs), nil
 }
 
-func (r *sqlAuditLogRepository) ListByActor(ctx context.Context, guildID, actorID string, limit, offset int32) ([]entities.AuditLog, error) {
+func (r *sqlAuditLogRepository) ListByActor(ctx context.Context, guildID, actorID string, limit, offset int32) ([]auditlog.AuditLog, error) {
 	logs, err := r.store.queries.ListAuditLogsByActor(ctx, postgres.ListAuditLogsByActorParams{
 		GuildID:    guildID,
 		ActorID:    actorID,
@@ -83,8 +83,8 @@ func (r *sqlAuditLogRepository) DeleteBefore(ctx context.Context, cutoff time.Ti
 	})
 }
 
-func toentitiesAuditLogs(logs []postgres.AuditLog) []entities.AuditLog {
-	entitiesLogs := make([]entities.AuditLog, len(logs))
+func toentitiesAuditLogs(logs []postgres.AuditLog) []auditlog.AuditLog {
+	entitiesLogs := make([]auditlog.AuditLog, len(logs))
 	for i, l := range logs {
 		entitiesLogs[i] = toentitiesAuditLog(l)
 	}
@@ -92,8 +92,8 @@ func toentitiesAuditLogs(logs []postgres.AuditLog) []entities.AuditLog {
 	return entitiesLogs
 }
 
-func toentitiesAuditLog(l postgres.AuditLog) entities.AuditLog {
-	return entities.AuditLog{
+func toentitiesAuditLog(l postgres.AuditLog) auditlog.AuditLog {
+	return auditlog.AuditLog{
 		ID:        l.ID,
 		GuildID:   l.GuildID,
 		Action:    l.Action,

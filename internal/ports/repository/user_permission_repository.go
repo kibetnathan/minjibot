@@ -4,16 +4,16 @@ import (
 	"context"
 
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
-	"github.com/kibetnathan/minjibot/internal/domain/entities"
+	"github.com/kibetnathan/minjibot/internal/domain/userpermission"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 )
 
 // UserPermission Repository --
 type UserPermissionRepository interface {
-	Get(ctx context.Context, userID, guildID, role string) (entities.UserPermission, error)
-	ListForUser(ctx context.Context, userID, guildID string) ([]entities.UserPermission, error)
-	ListForGuild(ctx context.Context, guildID string) ([]entities.UserPermission, error)
-	Upsert(ctx context.Context, arg dto.UpsertUserPermissionParams) (entities.UserPermission, error)
+	Get(ctx context.Context, userID, guildID, role string) (userpermission.UserPermission, error)
+	ListForUser(ctx context.Context, userID, guildID string) ([]userpermission.UserPermission, error)
+	ListForGuild(ctx context.Context, guildID string) ([]userpermission.UserPermission, error)
+	Upsert(ctx context.Context, arg dto.UpsertUserPermissionParams) (userpermission.UserPermission, error)
 	Delete(ctx context.Context, userID, guildID, role string) error
 }
 
@@ -25,20 +25,20 @@ func NewUserPermissionRepository(store *SQLStore) UserPermissionRepository {
 	return &sqlUserPermissionRepository{store: store}
 }
 
-func (r *sqlUserPermissionRepository) Get(ctx context.Context, userID, guildID, role string) (entities.UserPermission, error) {
+func (r *sqlUserPermissionRepository) Get(ctx context.Context, userID, guildID, role string) (userpermission.UserPermission, error) {
 	permission, err := r.store.queries.GetUserPermission(ctx, postgres.GetUserPermissionParams{
 		UserID:  userID,
 		GuildID: guildID,
 		Role:    role,
 	})
 	if err != nil {
-		return entities.UserPermission{}, err
+		return userpermission.UserPermission{}, err
 	}
 
 	return toentitiesUserPermission(permission), nil
 }
 
-func (r *sqlUserPermissionRepository) ListForUser(ctx context.Context, userID, guildID string) ([]entities.UserPermission, error) {
+func (r *sqlUserPermissionRepository) ListForUser(ctx context.Context, userID, guildID string) ([]userpermission.UserPermission, error) {
 	permissions, err := r.store.queries.ListUserPermissionsForUser(ctx, postgres.ListUserPermissionsForUserParams{
 		UserID:  userID,
 		GuildID: guildID,
@@ -50,7 +50,7 @@ func (r *sqlUserPermissionRepository) ListForUser(ctx context.Context, userID, g
 	return toentitiesUserPermissions(permissions), nil
 }
 
-func (r *sqlUserPermissionRepository) ListForGuild(ctx context.Context, guildID string) ([]entities.UserPermission, error) {
+func (r *sqlUserPermissionRepository) ListForGuild(ctx context.Context, guildID string) ([]userpermission.UserPermission, error) {
 	permissions, err := r.store.queries.ListUserPermissionsForGuild(ctx, guildID)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (r *sqlUserPermissionRepository) ListForGuild(ctx context.Context, guildID 
 	return toentitiesUserPermissions(permissions), nil
 }
 
-func (r *sqlUserPermissionRepository) Upsert(ctx context.Context, arg dto.UpsertUserPermissionParams) (entities.UserPermission, error) {
+func (r *sqlUserPermissionRepository) Upsert(ctx context.Context, arg dto.UpsertUserPermissionParams) (userpermission.UserPermission, error) {
 	permission, err := r.store.queries.UpsertUserPermission(ctx, postgres.UpsertUserPermissionParams{
 		UserID:          arg.UserID,
 		GuildID:         arg.GuildID,
@@ -67,7 +67,7 @@ func (r *sqlUserPermissionRepository) Upsert(ctx context.Context, arg dto.Upsert
 		PermissionsJson: arg.PermissionsJSON,
 	})
 	if err != nil {
-		return entities.UserPermission{}, err
+		return userpermission.UserPermission{}, err
 	}
 
 	return toentitiesUserPermission(permission), nil
@@ -81,8 +81,8 @@ func (r *sqlUserPermissionRepository) Delete(ctx context.Context, userID, guildI
 	})
 }
 
-func toentitiesUserPermissions(perms []postgres.UserPermission) []entities.UserPermission {
-	entitiesPerms := make([]entities.UserPermission, len(perms))
+func toentitiesUserPermissions(perms []postgres.UserPermission) []userpermission.UserPermission {
+	entitiesPerms := make([]userpermission.UserPermission, len(perms))
 	for i, p := range perms {
 		entitiesPerms[i] = toentitiesUserPermission(p)
 	}
@@ -90,8 +90,8 @@ func toentitiesUserPermissions(perms []postgres.UserPermission) []entities.UserP
 	return entitiesPerms
 }
 
-func toentitiesUserPermission(p postgres.UserPermission) entities.UserPermission {
-	return entities.UserPermission{
+func toentitiesUserPermission(p postgres.UserPermission) userpermission.UserPermission {
+	return userpermission.UserPermission{
 		ID:              p.ID,
 		UserID:          p.UserID,
 		GuildID:         p.GuildID,

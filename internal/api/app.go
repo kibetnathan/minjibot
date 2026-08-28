@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/kibetnathan/minjibot/internal/config"
@@ -11,9 +13,10 @@ import (
 )
 
 type App struct {
-	Echo *echo.Echo
-	Cfg  *config.Config
-	Conn *pgx.Conn
+	Echo   *echo.Echo
+	Cfg    *config.Config
+	Conn   *pgx.Conn
+	server *http.Server
 }
 
 func NewApp() (*App, error) {
@@ -34,10 +37,17 @@ func NewApp() (*App, error) {
 		e.Logger.Error(err.Error())
 		return nil, err
 	}
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: e,
+	}
+
 	return &App{
-		Echo: e,
-		Cfg:  cfg,
-		Conn: conn,
+		Echo:   e,
+		Cfg:    cfg,
+		Conn:   conn,
+		server: srv,
 	}, nil
 }
 
@@ -47,5 +57,13 @@ func (a *App) Start() error {
 			a.Echo.Logger.Error("Failed to close database connection", "error", err)
 		}
 	}()
-	return a.Echo.Start(":8080")
+	return a.server.ListenAndServe()
+}
+
+func (a *App) Shutdown(ctx context.Context) error {
+	err := a.server.Shutdown(ctx)
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
 }
