@@ -9,13 +9,20 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/logger"
+	"github.com/kibetnathan/minjibot/internal/bot/handlers"
+	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	"github.com/kibetnathan/minjibot/infrastructure/postgres"
 )
 
 type App struct {
-	Session *discordgo.Session
-	Cfg     *config.Config
-	Conn    *pgx.Conn
-	Logger  *slog.Logger
+	Session     *discordgo.Session
+	Cfg         *config.Config
+	Conn        *pgx.Conn
+	Logger      *slog.Logger
+	GuildRepo   repository.GuildRepository
+	SettingsRepo repository.GuildSettingsRepository
+	PermRepo    repository.UserPermissionRepository
+	AuditRepo   repository.AuditLogRepository
 }
 
 func NewApp() (*App, error) {
@@ -43,11 +50,17 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	store := repository.NewSQLStore(postgres.New(conn))
+
 	app := &App{
-		Session: session,
-		Cfg:     cfg,
-		Conn:    conn,
-		Logger:  log,
+		Session:      session,
+		Cfg:          cfg,
+		Conn:         conn,
+		Logger:       log,
+		GuildRepo:    repository.NewGuildRepository(store),
+		SettingsRepo: repository.NewGuildSettingsRepository(store),
+		PermRepo:     repository.NewUserPermissionRepository(store),
+		AuditRepo:    repository.NewAuditLogRepository(store),
 	}
 
 	// Register event handlers
@@ -60,9 +73,17 @@ func (a *App) registerHandlers() {
 	// Identify required gateway intents (adjust based on your bot's needs)
 	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
 
-	// Example handler
+	// Ready handler
 	a.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		a.Logger.Info(fmt.Sprintf("Logged in as: %s#%s", r.User.Username, r.User.Discriminator))
+	})
+
+	// Message handler
+	handlers.RegisterMessageHandler(a.Session, handlers.HandlerDeps{
+		Logger:       a.Logger,
+		GuildRepo:    a.GuildRepo,
+		SettingsRepo: a.SettingsRepo,
+		AuditRepo:    a.AuditRepo,
 	})
 }
 
