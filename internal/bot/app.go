@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jackc/pgx/v5"
-	"github.com/kibetnathan/minjibot/internal/config"
-	"github.com/kibetnathan/minjibot/internal/logger"
-	"github.com/kibetnathan/minjibot/internal/bot/handlers"
-	"github.com/kibetnathan/minjibot/internal/domain/commands"
-	"github.com/kibetnathan/minjibot/internal/ports/repository"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
+	"github.com/kibetnathan/minjibot/internal/bot/handlers"
+	"github.com/kibetnathan/minjibot/internal/config"
+	"github.com/kibetnathan/minjibot/internal/domain/commands"
+	"github.com/kibetnathan/minjibot/internal/logger"
+	"github.com/kibetnathan/minjibot/internal/ports/repository"
 )
 
 type App struct {
@@ -38,7 +41,6 @@ func NewApp() (*App, error) {
 	}
 
 	// Initialise Discord Session
-	// Note: Bot tokens require the "Bot " prefix in discordgo
 	session, err := discordgo.New("Bot " + cfg.DiscordToken)
 	if err != nil {
 		log.Error("Error creating Discord session", "error", err.Error())
@@ -83,10 +85,16 @@ func (a *App) RegisterHandlers() {
 		a.Logger.Info(fmt.Sprintf("Logged in as: %s#%s", r.User.Username, r.User.Discriminator))
 
 		// Register global slash commands
+		appID := a.Cfg.DiscordClientID
+		if appID == "" {
+			appID = s.State.User.ID
+			a.Logger.Warn("DISCORD_CLIENT_ID not set, falling back to bot user ID for command registration")
+		}
+		a.Logger.Info("Registering slash commands", "app_id", appID)
 		for _, cmd := range commands.SlashCommands {
-			_, err := s.ApplicationCommandCreate(s.State.User.ID, "", cmd)
+			_, err := s.ApplicationCommandCreate(appID, "", cmd)
 			if err != nil {
-				a.Logger.Error("Failed to register slash command", "command", cmd.Name, "error", err)
+				a.Logger.Error("Failed to register slash command", "command", cmd.Name, "error", err, "app_id", appID)
 			} else {
 				a.Logger.Info("Registered slash command", "command", cmd.Name)
 			}
@@ -111,31 +119,29 @@ func (a *App) RegisterHandlers() {
 		AuditRepo:    a.AuditRepo,
 	}, a.cmdHandler)
 }
-
 func (a *App) Start() error {
-	defer func() {
-		if err := a.Conn.Close(context.Background()); err != nil {
-			a.Logger.Error("Failed to close database connection", "error", err)
-		}
-	}()
-
 	// Open WebSocket connection to Discord
 	if err := a.Session.Open(); err != nil {
 		a.Logger.Error("Error opening Discord websocket connection", "error", err.Error())
 		return err
 	}
 
-	defer func() {
-		if err := a.Session.Close(); err != nil {
-			a.Logger.Error("Failed to close Discord session", "error", err)
-		}
-	}()
-
 	a.Logger.Info("Bot is now running. Press CTRL-C to exit.")
 
-	// Block until a signal is received to keep the bot alive
-	sc := make(chan struct{})
-	<-sc
+	// Block until SIGINT or SIGTERM is received
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+
+	a.Logger.Info("Shutting down bot...")
+
+	if err := a.Session.Close(); err != nil {
+		a.Logger.Error("Failed to close Discord session", "error", err)
+	}
+
+	if err := a.Conn.Close(context.Background()); err != nil {
+		a.Logger.Error("Failed to close database connection", "error", err)
+	}
 
 	return nil
 }

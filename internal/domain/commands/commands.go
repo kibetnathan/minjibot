@@ -36,22 +36,34 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Name {
 	case "ping":
-		return h.ping(s, i.ChannelID)
+		return h.pingSlash(s, i)
 	case "help":
-		return h.help(s, i.ChannelID)
+		return h.helpSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
 }
 
 func (h *CommandHandler) ping(s *discordgo.Session, channelID string) error {
-	_, err := s.ChannelMessageSend(channelID, "Pong! 🏓")
-	return err
+	return pingMessageCommandHandler(s, channelID)
+}
+
+func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return pingSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, channelID string) error {
 	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`")
 	return err
+}
+
+func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Available commands: `/ping`, `/help`",
+		},
+	})
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -64,3 +76,4 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Show available commands",
 	},
 }
+
