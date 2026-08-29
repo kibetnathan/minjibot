@@ -147,8 +147,8 @@ func searchChatHistory(s *discordgo.Session, guildID, channelID, query string, l
 
 func buildSearchEmbed(query string, limit int, matches []*discordgo.Message) *discordgo.MessageEmbed {
 	embed := &discordgo.MessageEmbed{
-		Color:      0x5865F2,
-		Title:      fmt.Sprintf("Search results for %q", query),
+		Color:       0x5865F2,
+		Title:       fmt.Sprintf("Search results for %q", query),
 		Description: fmt.Sprintf("Searched the last %d messages in this channel.", limit),
 	}
 

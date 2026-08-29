@@ -55,7 +55,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		Action:   "MESSAGE_CREATE",
 		ActorID:  m.Author.ID,
 		TargetID: m.ChannelID,
-		Metadata: []byte(fmt.Sprintf(`{"content":%q,"channel_id":%q}`, m.Content, m.ChannelID)),
+		Metadata: []byte(fmt.Sprintf(`{"message_id":%q,"content":%q,"channel_id":%q}`, m.ID, m.Content, m.ChannelID)),
 	})
 	if err != nil {
 		deps.Logger.Error("Failed to create audit log", "error", err)
@@ -85,4 +85,3 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error: %v", err))
 	}
 }
-

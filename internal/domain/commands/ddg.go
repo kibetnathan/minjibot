@@ -16,8 +16,8 @@ import (
 // two shapes in RelatedTopics: a plain topic (Text/FirstURL) and a category
 // wrapper (Name/Topics), so both sets of fields live on one struct.
 type ddgTopic struct {
-	Text     string     `json:"Text"`
-	FirstURL string     `json:"FirstURL"`
+	Text     string `json:"Text"`
+	FirstURL string `json:"FirstURL"`
 	Icon     struct {
 		URL string `json:"URL"`
 	} `json:"Icon"`
@@ -26,14 +26,14 @@ type ddgTopic struct {
 }
 
 type ddgResponse struct {
-	Heading        string    `json:"Heading"`
-	AbstractText   string    `json:"AbstractText"`
-	AbstractURL    string    `json:"AbstractURL"`
-	AbstractSource string    `json:"AbstractSource"`
-	Image          string    `json:"Image"`
-	Answer         string    `json:"Answer"`
-	Definition     string    `json:"Definition"`
-	DefinitionURL  string    `json:"DefinitionURL"`
+	Heading        string     `json:"Heading"`
+	AbstractText   string     `json:"AbstractText"`
+	AbstractURL    string     `json:"AbstractURL"`
+	AbstractSource string     `json:"AbstractSource"`
+	Image          string     `json:"Image"`
+	Answer         string     `json:"Answer"`
+	Definition     string     `json:"Definition"`
+	DefinitionURL  string     `json:"DefinitionURL"`
 	RelatedTopics  []ddgTopic `json:"RelatedTopics"`
 	Results        []ddgTopic `json:"Results"`
 }

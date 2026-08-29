@@ -80,6 +80,10 @@ func (a *App) RegisterHandlers() {
 	// Identify required gateway intents (adjust based on your bot's needs)
 	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
 
+	// Keep a rolling cache of recent messages so content of deleted
+	// messages is still available to log to the database.
+	a.Session.State.MaxMessageCount = 2000
+
 	// Ready handler - register slash commands
 	a.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		a.Logger.Info(fmt.Sprintf("Logged in as: %s#%s", r.User.Username, r.User.Discriminator))
@@ -109,6 +113,13 @@ func (a *App) RegisterHandlers() {
 		PermRepo:     a.PermRepo,
 		AuditRepo:    a.AuditRepo,
 	}, a.cmdHandler)
+
+	// Message delete handler
+	handlers.RegisterMessageDeleteHandler(a.Session, handlers.MessageDeleteHandlerDeps{
+		Logger:    a.Logger,
+		GuildRepo: a.GuildRepo,
+		AuditRepo: a.AuditRepo,
+	})
 
 	// Interaction handler
 	handlers.RegisterInteractionHandler(a.Session, handlers.InteractionHandlerDeps{

@@ -72,6 +72,7 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `unpin`          | Removes a message from the channel's pinned list.             |
 | `vid2gif`        | Trims and converts an uploaded video file into a GIF.         |
 | `pinglist`       | Returns all the pings for a certain user/role                 |
+| factcheck        | Factchecks someones message                                   |
 
 ## 4. Fun
 

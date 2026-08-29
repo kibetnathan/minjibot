@@ -38,4 +38,3 @@ func echoSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreat
 		},
 	})
 }
-
