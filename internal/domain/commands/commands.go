@@ -28,6 +28,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.ping(s, m.ChannelID)
 	case "help":
 		return h.help(s, m.ChannelID)
+	case "echo":
+		return h.echo(s, m.ChannelID, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -39,6 +41,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.pingSlash(s, i)
 	case "help":
 		return h.helpSlash(s, i)
+	case "echo":
+		return h.echoSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -53,7 +57,7 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, channelID string) error {
-	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`")
+	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`, `echo`")
 	return err
 }
 
@@ -61,9 +65,17 @@ func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.Interactio
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Available commands: `/ping`, `/help`",
+			Content: "Available commands: `/ping`, `/help`, `/echo`",
 		},
 	})
+}
+
+func (h *CommandHandler) echo(s *discordgo.Session, channelID string, args []string) error {
+	return echoMessageCommandHandler(s, channelID, args)
+}
+
+func (h *CommandHandler) echoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return echoSlashCommandHandler(s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -74,6 +86,18 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "help",
 		Description: "Show available commands",
+	},
+	{
+		Name:        "echo",
+		Description: "Repeat back a message",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "text",
+				Description: "Text to echo",
+				Required:    true,
+			},
+		},
 	},
 }
 
