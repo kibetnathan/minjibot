@@ -65,12 +65,13 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `pin`            | Pins a target message to the channel's pinned list.           |
 | `quote`          | Converts a specific message link into a stylized embed.       |
 | `reminder`       | Sets a delayed system ping for a user-specified task/time.    |
-| `search`         | Performs a general web search and returns top snippets.       |
+| `search`         | Searches for a specific message in chat history               |
 | `sticker add`    | Uploads a custom sticker to the server.                       |
 | `sticker remove` | Removes a custom sticker from the server inventory.           |
 | `translate`      | Translates provided text into a target language.              |
 | `unpin`          | Removes a message from the channel's pinned list.             |
 | `vid2gif`        | Trims and converts an uploaded video file into a GIF.         |
+| `pinglist`       | Returns all the pings for a certain user/role                 |
 
 ## 4. Fun
 

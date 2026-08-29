@@ -30,6 +30,12 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.help(s, m.ChannelID)
 	case "echo":
 		return h.echo(s, m.ChannelID, args)
+	case "userinfo":
+		return h.userInfo(s, m, args)
+	case "ddg":
+		return h.ddg(s, m.ChannelID, args)
+	case "search":
+		return h.search(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -43,6 +49,12 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.helpSlash(s, i)
 	case "echo":
 		return h.echoSlash(s, i)
+	case "userinfo":
+		return h.userInfoSlash(s, i)
+	case "ddg":
+		return h.ddgSlash(s, i)
+	case "search":
+		return h.searchSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -57,7 +69,7 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, channelID string) error {
-	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`, `echo`")
+	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`, `echo`, `userinfo`, `ddg`, `search`")
 	return err
 }
 
@@ -65,7 +77,7 @@ func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.Interactio
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Available commands: `/ping`, `/help`, `/echo`",
+			Content: "Available commands: `/ping`, `/help`, `/echo`, `/userinfo`, `/ddg`, `/search`",
 		},
 	})
 }
@@ -76,6 +88,30 @@ func (h *CommandHandler) echo(s *discordgo.Session, channelID string, args []str
 
 func (h *CommandHandler) echoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return echoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) userInfo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return userInfoMessageCommandHandler(s, m, args)
+}
+
+func (h *CommandHandler) userInfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return userInfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) ddg(s *discordgo.Session, channelID string, args []string) error {
+	return ddgMessageCommandHandler(s, channelID, args)
+}
+
+func (h *CommandHandler) ddgSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return ddgSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) search(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return searchMessageCommandHandler(s, m, args)
+}
+
+func (h *CommandHandler) searchSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return searchSlashCommandHandler(s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -96,6 +132,48 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Name:        "text",
 				Description: "Text to echo",
 				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "userinfo",
+		Description: "Get info about a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "The user to look up (defaults to yourself)",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "ddg",
+		Description: "Fetch quick search results from DuckDuckGo",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "query",
+				Description: "The search query",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "search",
+		Description: "Search chat history for a specific message",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "query",
+				Description: "Text to search for in chat history",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "messages",
+				Description: "How many recent messages to search (default 200, max 1000)",
+				Required:    false,
 			},
 		},
 	},
