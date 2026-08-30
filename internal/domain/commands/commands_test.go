@@ -59,7 +59,7 @@ func TestSubcommandSlashShapes(t *testing.T) {
 }
 
 func TestCommandHandlerDispatchUnknown(t *testing.T) {
-	h := NewCommandHandler(nil, nil, nil)
+	h := NewCommandHandler(nil, nil, nil, nil)
 	if err := h.Handle(nil, nil, &discordgo.MessageCreate{}, "does-not-exist", nil); err == nil {
 		t.Error("expected error for unknown prefix command")
 	}

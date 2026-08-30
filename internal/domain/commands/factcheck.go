@@ -6,11 +6,11 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/config"
 )
 
 const (
@@ -22,11 +22,10 @@ const (
 	factCheckColorUnknown = 0x95A5A6
 
 	geminiAPIBase      = "https://generativelanguage.googleapis.com/v1beta"
-	geminiDefaultModel = "gemini-2.5-flash"
+	geminiDefaultModel = "gemini-3.6-flash"
 
-	factCheckSystemPrompt = "You are a careful fact-checking assistant. Based only on the web search results provided by the user, give: 1) a verdict — True, Mostly True, Mixed, Mostly False, False, or Unverifiable; and 2) a 1-2 sentence summary of the current consensus that names the most relevant source. If the results are inconclusive, say Unverifiable and explain why. Do not invent facts or sources."
+	factCheckSystemPrompt = "You are a concise fact-checking assistant. Start directly with the verdict (True, Mostly True, Mixed, Mostly False, False, or Unverifiable) followed by a 1-2 sentence consensus summary. Do not output preamble or bullet markers."
 )
-
 type factCheckClaimReview struct {
 	Publisher struct {
 		Name string `json:"name"`
@@ -54,19 +53,22 @@ type factCheckSource struct {
 	URL     string
 }
 
-func factcheckMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
+func factcheckMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string, cfg *config.Config) error {
 	claim := strings.TrimSpace(strings.Join(args, " "))
 	if claim == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `!factcheck <claim>`")
+		claim = referencedMessageContent(s, m)
+	}
+	if claim == "" {
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!factcheck <claim>` — or reply to a message to fact-check it")
 		return err
 	}
 
-	embed := runFactCheck(claim)
-	_, err := s.ChannelMessageSendEmbed(channelID, embed)
+	embed := runFactCheck(claim, cfg)
+	_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return err
 }
 
-func factcheckSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func factcheckSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate, cfg *config.Config) error {
 	opts := optionMap(i.ApplicationCommandData().Options)
 	claim := strings.TrimSpace(optString(opts, "claim"))
 	if claim == "" {
@@ -76,19 +78,37 @@ func factcheckSlashCommandHandler(s *discordgo.Session, i *discordgo.Interaction
 		})
 	}
 
-	embed := runFactCheck(claim)
+	embed := runFactCheck(claim, cfg)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{embed}},
 	})
 }
 
+// referencedMessageContent returns the text of the message the issuing message
+// replied to, fetching it via REST if the gateway didn't include it.
+func referencedMessageContent(s *discordgo.Session, m *discordgo.MessageCreate) string {
+	target := m.ReferencedMessage
+	if target == nil && m.MessageReference != nil {
+		if ref := m.MessageReference; ref.MessageID != "" {
+			fetched, err := s.ChannelMessage(ref.ChannelID, ref.MessageID)
+			if err == nil {
+				target = fetched
+			}
+		}
+	}
+	if target == nil {
+		return ""
+	}
+	return strings.TrimSpace(target.Content)
+}
+
 // runFactCheck performs the multi-step fact check and returns a formatted embed.
-func runFactCheck(claim string) *discordgo.MessageEmbed {
+func runFactCheck(claim string, cfg *config.Config) *discordgo.MessageEmbed {
 	footer := "Google FactCheck ClaimSearch"
 
 	// Step 1: exact claim match via the Google FactCheck Claim Search API.
-	if key := strings.TrimSpace(os.Getenv("GOOGLE_FACTCHECK_API_KEY")); key != "" {
+	if key := strings.TrimSpace(cfg.GoogleFactCheckKey); key != "" {
 		if matched := queryClaimSearch(key, claim); matched != nil {
 			return buildClaimMatchEmbed(claim, matched)
 		}
@@ -96,26 +116,31 @@ func runFactCheck(claim string) *discordgo.MessageEmbed {
 		footer = "Google FactCheck ClaimSearch (set GOOGLE_FACTCHECK_API_KEY to enable)"
 	}
 
-	// Step 2: fallback to web search consensus.
+	// Step 2: web search for supporting sources (broader query, no strict quotes).
 	sources := factCheckWebSearch(claim)
-	if len(sources) == 0 {
-		embed := &discordgo.MessageEmbed{
-			Color:       factCheckColorUnknown,
-			Title:       "Fact check: unable to verify",
-			Description: fmt.Sprintf("No claim rating or search consensus was found for:\n\n> %q", claim),
-			Footer:      &discordgo.MessageEmbedFooter{Text: footer},
-		}
-		return embed
-	}
 
-	assessment := fmt.Sprintf("No exact claim rating found. Here's what fact-check and news sources currently say. Review the sources yourself before drawing conclusions.")
-	if geminiKey := strings.TrimSpace(os.Getenv("GEMINI_API_KEY")); geminiKey != "" {
-		if summary := llmAssessClaim(geminiKey, claim, sources); summary != "" {
+	// Step 3: AI assessment — always runs as final fallback.
+	// If sources exist, it summarizes them. If not, it uses its own knowledge.
+	assessment := "No exact claim rating found. Here is what search sources say."
+	if len(sources) == 0 {
+		assessment = "No external sources were found. The AI is answering from its training knowledge."
+	}
+	if geminiKey := strings.TrimSpace(cfg.GeminiAPIKey); geminiKey != "" {
+		if summary := llmAssessClaim(cfg, geminiKey, claim, sources); summary != "" {
 			assessment = summary
-			footer = "AI assessment based on the sources above (treat as informal)"
+			if len(sources) > 0 {
+				footer = "AI assessment based on the sources above (treat as informal)"
+			} else {
+				footer = "AI assessment from model knowledge (no external sources found; treat as informal)"
+			}
 		}
 	} else {
-		footer = "Web search consensus (no claim rating matched). Set GEMINI_API_KEY for AI summary."
+		if len(sources) > 0 {
+			footer = "Web search consensus (no claim rating matched). Set GEMINI_API_KEY for AI summary."
+		} else {
+			footer = "No sources found. Set GEMINI_API_KEY for AI assessment."
+		}
+		assessment = fmt.Sprintf("No exact claim rating found. Here's what fact-check and news sources currently say. Review the sources yourself before drawing conclusions.")
 	}
 
 	return buildConsensusEmbed(claim, assessment, sources, footer)
@@ -310,7 +335,7 @@ func buildConsensusEmbed(claim, assessment string, sources []factCheckSource, fo
 // because it returns real web results; the Instant Answer API usually omits
 // them for fact-check queries.
 func factCheckWebSearch(claim string) []factCheckSource {
-	query := fmt.Sprintf("%q fact check", claim)
+	query := fmt.Sprintf("%s fact check", claim)
 
 	if sources := newDDGClient().htmlSearch(query, 8); len(sources) > 0 {
 		return sources
@@ -344,21 +369,21 @@ func factCheckWebSearch(claim string) []factCheckSource {
 // from the given sources. Returns "" on any failure so the caller falls back
 // to its own assessment text. The model defaults to gemini-2.5-flash and can
 // be overridden with GEMINI_MODEL.
-func llmAssessClaim(apiKey, claim string, sources []factCheckSource) string {
-	model := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
+func llmAssessClaim(cfg *config.Config, apiKey, claim string, sources []factCheckSource) string {
+	model := strings.TrimSpace(cfg.GeminiModel)
 	if model == "" {
 		model = geminiDefaultModel
 	}
 
 	payload := map[string]any{
-		"systemInstruction": map[string]any{
+		"system_instruction": map[string]any{
 			"parts": []map[string]string{{"text": factCheckSystemPrompt}},
 		},
 		"contents": []map[string]any{
 			{"role": "user", "parts": []map[string]string{{"text": buildLLMSourcesText(claim, sources)}}},
 		},
 		"generationConfig": map[string]any{
-			"maxOutputTokens": 300,
+			"maxOutputTokens": 800,
 			"temperature":     0.2,
 		},
 	}
@@ -383,6 +408,8 @@ func llmAssessClaim(apiKey, claim string, sources []factCheckSource) string {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		bodyErr, _ := io.ReadAll(io.LimitReader(resp.Body, 4*1024))
+		fmt.Printf("[Gemini API Error] Status: %d, Response: %s\n", resp.StatusCode, string(bodyErr))
 		return ""
 	}
 	bodyResp, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
@@ -392,14 +419,23 @@ func llmAssessClaim(apiKey, claim string, sources []factCheckSource) string {
 
 	var out struct {
 		Candidates []struct {
-			Content struct {
+			FinishReason string `json:"finishReason"`
+			Content      struct {
 				Parts []struct {
 					Text string `json:"text"`
 				} `json:"parts"`
 			} `json:"content"`
 		} `json:"candidates"`
 	}
-	if err := json.Unmarshal(bodyResp, &out); err != nil || len(out.Candidates) == 0 {
+	if err := json.Unmarshal(bodyResp, &out); err != nil {
+		return ""
+	}
+	if len(out.Candidates) == 0 {
+		fmt.Printf("[Gemini API Error] No candidates returned\n")
+		return ""
+	}
+	if out.Candidates[0].FinishReason != "STOP" {
+		fmt.Printf("[Gemini API Error] Non-STOP finish reason: %s\n", out.Candidates[0].FinishReason)
 		return ""
 	}
 

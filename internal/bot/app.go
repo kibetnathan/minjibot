@@ -68,7 +68,7 @@ func NewApp() (*App, error) {
 	}
 
 	// Initialize command handler
-	app.cmdHandler = commands.NewCommandHandler(app.GuildRepo, app.SettingsRepo, app.PermRepo)
+	app.cmdHandler = commands.NewCommandHandler(app.Cfg, app.GuildRepo, app.SettingsRepo, app.PermRepo)
 
 	// Register event handlers
 	app.RegisterHandlers()

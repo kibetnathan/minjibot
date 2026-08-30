@@ -5,17 +5,20 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 )
 
 type CommandHandler struct {
+	Cfg          *config.Config
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
 	PermRepo     repository.UserPermissionRepository
 }
 
-func NewCommandHandler(guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository) *CommandHandler {
+func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository) *CommandHandler {
 	return &CommandHandler{
+		Cfg:          cfg,
 		GuildRepo:    guildRepo,
 		SettingsRepo: settingsRepo,
 		PermRepo:     permRepo,
@@ -65,7 +68,7 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "autogif":
 		return h.autogif(s, m, args)
 	case "factcheck":
-		return h.factcheck(s, m.ChannelID, args)
+		return h.factcheck(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -286,12 +289,12 @@ func (h *CommandHandler) autogifSlash(s *discordgo.Session, i *discordgo.Interac
 	return autogifSlashCommandHandler(s, i)
 }
 
-func (h *CommandHandler) factcheck(s *discordgo.Session, channelID string, args []string) error {
-	return factcheckMessageCommandHandler(s, channelID, args)
+func (h *CommandHandler) factcheck(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return factcheckMessageCommandHandler(s, m, args, h.Cfg)
 }
 
 func (h *CommandHandler) factcheckSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	return factcheckSlashCommandHandler(s, i)
+	return factcheckSlashCommandHandler(s, i, h.Cfg)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -464,24 +467,24 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Name:        "pin",
 		Description: "Pin a message",
 		Options: []*discordgo.ApplicationCommandOption{
-			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "message", Description: "Message ID or link", Required: true},
+			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 		},
 	},
 	{
 		Name:        "unpin",
 		Description: "Unpin a message",
 		Options: []*discordgo.ApplicationCommandOption{
-			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "message", Description: "Message ID or link", Required: true},
+			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 		},
 	},
 	{
 		Name:        "quote",
 		Description: "Quote a message as a styled embed",
 		Options: []*discordgo.ApplicationCommandOption{
-			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "message", Description: "Message ID or link", Required: true},
+			{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel (defaults to this one)", Required: false},
 		},
 	},
 	{
