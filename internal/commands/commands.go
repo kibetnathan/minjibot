@@ -597,6 +597,12 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Description: "Role to show pings for",
 				Required:    false,
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "messages",
+				Description: "How many recent messages to search (default 1000, max 1000)",
+				Required:    false,
+			},
 		},
 	},
 	{

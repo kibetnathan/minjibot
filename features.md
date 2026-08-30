@@ -52,6 +52,7 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | ---------------- | ------------------------------------------------------------- |
 | `autogif`        | Automatically fetches and converts relevant media to GIFs.    |
 | `caption`        | Generates a meme image by attaching custom text to an image.  |
+| `compress`       | Pixelates an image to a low-quality but still readable mosaic. |
 | `ddg`            | Fetches quick search results directly from DuckDuckGo.        |
 | `emoji add`      | Uploads an emoji to the server via URL or attachment.         |
 | `emoji add many` | Bulk-uploads multiple custom emojis at once.                  |
@@ -89,20 +90,21 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `diary add`          | Saves a private journal entry into the user's database.          |
 | `diary delete`       | Removes a specific saved diary entry by ID.                      |
 | `diary view`         | Shows past diary entries in a private embed.                     |
-| `hits`               | Displays your smoking counter.                                   |
+| `hits`               | Displays everyone's blunt hit count.                             |
 | `howautism`          | Randomized fun percentage reading.                               |
 | `howgay`             | Randomized fun percentage reading.                               |
 | `howlesbian`         | Randomized fun percentage reading.                               |
 | `howsimp`            | Randomized fun percentage reading.                               |
 | `IQ`                 | Generates a fun, randomized IQ score readout.                    |
-| `lurk`               | Deletes every message and reaction you post after a 1s wait .    |
+| `lurk`               | Toggle lurk mode: your messages auto-delete after 2s and you auto-unlurk after 1 hour. |
+| `lurkers`            | Shows who is currently lurking.                                 |
 | `poll`               | Creates an interactive reaction- or button-based poll embed.     |
 | `pp`                 | Generates a randomized pp length                                 |
 | `puh`                | Generates random puh tightness percentage.                       |
 | `quickpoll`          | Instantly creates a simple Yes/No reaction poll.                 |
 | `ship`               | Calculates a romance compatibility score between two users.      |
-| `smoke`              | Smoke the blunt.                                                 |
-| `spark`              | Light the blunt.                                                 |
+| `smoke`              | Take a hit off the blunt (spark it first; grabbing resets the spark). |
+| `spark`              | Light the blunt before anyone can smoke.                         |
 | `vape`               | Hit the vape.                                                    |
 | `vape flavor`        | Sets or changes your virtual vapeflavor.                         |
 | `vape hits`          | Displays total recorded virtual vape hits.                       |

@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	pinglistBatchSize  = searchBatchSize
-	pinglistMaxLimit   = 500
-	PinglistMaxResults = 10
+	pinglistBatchSize    = searchBatchSize
+	pinglistDefaultLimit = 1000
+	pinglistMaxLimit     = 1000
+	PinglistMaxResults   = 10
 )
 
 type PingTarget struct {
@@ -21,7 +22,7 @@ type PingTarget struct {
 }
 
 func pinglistMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	target, err := resolvePingTarget(s, m.GuildID, args)
+	target, limit, err := ParsePinglistArgs(s, m.ChannelID, args)
 	if err != nil {
 		if _, serr := s.ChannelMessageSend(m.ChannelID, err.Error()); serr != nil {
 			return serr
@@ -29,18 +30,56 @@ func pinglistMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCre
 		return nil
 	}
 
-	matches, err := searchMentions(s, m.GuildID, m.ChannelID, target, pinglistMaxLimit)
+	matches, err := searchMentions(s, m.GuildID, m.ChannelID, target, limit)
 	if err != nil {
 		return err
 	}
 
-	embed := BuildPinglistEmbed(target, matches)
+	embed := BuildPinglistEmbed(target, matches, limit)
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return err
 }
 
+// ParsePinglistArgs resolves the target (user/role) and an optional trailing
+// message-count limit from a prefix command's args. The limit defaults to
+// pinglistDefaultLimit and clamps to [1, pinglistMaxLimit].
+func ParsePinglistArgs(s *discordgo.Session, channelID string, args []string) (*PingTarget, int, error) {
+	if len(args) == 0 {
+		return nil, 0, fmt.Errorf("Usage: `-pinglist @user [count]` or `-pinglist @role [count]`")
+	}
+
+	limit := pinglistDefaultLimit
+	rest := make([]string, 0, len(args))
+	for _, arg := range args {
+		lower := strings.ToLower(arg)
+		if strings.HasPrefix(lower, "messages:") {
+			if n := strings.TrimPrefix(lower, "messages:"); n != "" {
+				fmt.Sscanf(n, "%d", &limit)
+			}
+			continue
+		}
+		if n := 0; len(arg) > 0 {
+			if _, err := fmt.Sscanf(arg, "%d", &n); err == nil {
+				limit = n
+				continue
+			}
+		}
+		rest = append(rest, arg)
+	}
+	if limit < 1 || limit > pinglistMaxLimit {
+		limit = pinglistDefaultLimit
+	}
+
+	target, err := resolvePingTarget(s, channelID, rest)
+	if err != nil {
+		return nil, 0, err
+	}
+	return target, limit, nil
+}
+
 func pinglistSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	target := &PingTarget{}
+	limit := pinglistDefaultLimit
 	for _, opt := range i.ApplicationCommandData().Options {
 		switch opt.Name {
 		case "user":
@@ -49,6 +88,8 @@ func pinglistSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionC
 		case "role":
 			target.Kind = "role"
 			target.ID = SnowflakeFromValue(opt.Value)
+		case "messages":
+			limit = int(opt.IntValue())
 		}
 	}
 
@@ -56,18 +97,21 @@ func pinglistSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionC
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Usage: `/pinglist user:<user>` or `/pinglist role:<role>`",
+				Content: "Usage: `/pinglist user:<user> [messages:<n>]` or `/pinglist role:<role> [messages:<n>]`",
 			},
 		})
 	}
+	if limit < 1 || limit > pinglistMaxLimit {
+		limit = pinglistDefaultLimit
+	}
 	target = resolvePingTargetByName(s, i.GuildID, target)
 
-	matches, err := searchMentions(s, i.GuildID, i.ChannelID, target, pinglistMaxLimit)
+	matches, err := searchMentions(s, i.GuildID, i.ChannelID, target, limit)
 	if err != nil {
 		return err
 	}
 
-	embed := BuildPinglistEmbed(target, matches)
+	embed := BuildPinglistEmbed(target, matches, limit)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -186,7 +230,7 @@ func fetchChannelMessages(s *discordgo.Session, channelID string, limit int) ([]
 	return all, nil
 }
 
-func BuildPinglistEmbed(target *PingTarget, matches []*discordgo.Message) *discordgo.MessageEmbed {
+func BuildPinglistEmbed(target *PingTarget, matches []*discordgo.Message, limit int) *discordgo.MessageEmbed {
 	name := target.Name
 	if name == "" {
 		name = target.ID
@@ -195,7 +239,7 @@ func BuildPinglistEmbed(target *PingTarget, matches []*discordgo.Message) *disco
 	embed := &discordgo.MessageEmbed{
 		Color:       0xED4245,
 		Title:       fmt.Sprintf("Pings for %s", name),
-		Description: fmt.Sprintf("Recent messages mentioning %s in this channel (last %d messages).", target.Kind, pinglistMaxLimit),
+		Description: fmt.Sprintf("Recent messages mentioning %s in this channel (last %d messages).", target.Kind, limit),
 	}
 
 	if len(matches) == 0 {

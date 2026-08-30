@@ -32,7 +32,7 @@ func TestSnowflakeFromValue(t *testing.T) {
 }
 
 func TestBuildPinglistEmbedNoMatches(t *testing.T) {
-	embed := commands.BuildPinglistEmbed(&commands.PingTarget{Kind: "user", ID: "123"}, nil)
+	embed := commands.BuildPinglistEmbed(&commands.PingTarget{Kind: "user", ID: "123"}, nil, commands.PinglistMaxResults)
 	if !strings.Contains(embed.Description, "No pings found.") {
 		t.Errorf("description = %q", embed.Description)
 	}
@@ -51,7 +51,7 @@ func TestBuildPinglistEmbedMatches(t *testing.T) {
 		{ID: "m1", GuildID: "", ChannelID: "c", Author: &discordgo.User{Username: "alice"}, Content: "hey <@&999> here",
 			Timestamp: time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC)},
 	}
-	embed := commands.BuildPinglistEmbed(target, msgs)
+	embed := commands.BuildPinglistEmbed(target, msgs, 1000)
 	if !strings.Contains(embed.Title, "admins") {
 		t.Errorf("title should prefer name: %q", embed.Title)
 	}
@@ -78,7 +78,7 @@ func TestBuildPinglistEmbedTruncates(t *testing.T) {
 			Content: "x",
 		})
 	}
-	embed := commands.BuildPinglistEmbed(&commands.PingTarget{Kind: "user", ID: "1"}, msgs)
+	embed := commands.BuildPinglistEmbed(&commands.PingTarget{Kind: "user", ID: "1"}, msgs, 1000)
 	if len(embed.Fields) != commands.PinglistMaxResults {
 		t.Errorf("len(fields) = %d, want %d", len(embed.Fields), commands.PinglistMaxResults)
 	}

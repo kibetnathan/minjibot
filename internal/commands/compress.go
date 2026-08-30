@@ -75,9 +75,9 @@ func minInt(a, b int) int {
 	return b
 }
 
-// compressCells is the default grid width used to "barely legible" an image;
-// the exact block size scales with the source dimensions.
-const compressCells = 24
+// compressCells is the default grid width used to make an image low-quality
+// but still readable; the exact block size scales with the source dimensions.
+const compressCells = 80
 
 func compressMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if m.ReferencedMessage == nil && len(m.Attachments) == 0 && len(args) == 0 {
