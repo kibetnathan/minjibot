@@ -18,11 +18,34 @@ type AuditLog struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type Birthday struct {
+	ID        int64              `json:"id"`
+	GuildID   string             `json:"guild_id"`
+	UserID    string             `json:"user_id"`
+	Birthday  pgtype.Date        `json:"birthday"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DiaryEntry struct {
+	ID        int64              `json:"id"`
+	UserID    string             `json:"user_id"`
+	Content   string             `json:"content"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Guild struct {
 	ID          string             `json:"id"`
 	Name        string             `json:"name"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	PremiumTier int32              `json:"premium_tier"`
+}
+
+type GuildBirthdaySetting struct {
+	GuildID   string             `json:"guild_id"`
+	ChannelID pgtype.Text        `json:"channel_id"`
+	RoleID    pgtype.Text        `json:"role_id"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type GuildSetting struct {
@@ -32,6 +55,16 @@ type GuildSetting struct {
 	AutoModerationEnabled bool               `json:"auto_moderation_enabled"`
 	LoggingChannelID      pgtype.Text        `json:"logging_channel_id"`
 	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
+}
+
+type User struct {
+	ID           int64              `json:"id"`
+	UserID       string             `json:"user_id"`
+	Email        pgtype.Text        `json:"email"`
+	Passwordhash pgtype.Text        `json:"passwordhash"`
+	IsActive     bool               `json:"is_active"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type UserPermission struct {

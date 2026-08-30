@@ -5,15 +5,15 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
-	"github.com/kibetnathan/minjibot/internal/domain/entities"
+	"github.com/kibetnathan/minjibot/internal/domain/guildsettings"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 )
 
 // GuildSettings Repository --
 type GuildSettingsRepository interface {
-	Get(ctx context.Context, guildID string) (entities.GuildSettings, error)
-	Upsert(ctx context.Context, arg dto.UpsertGuildSettingsParams) (entities.GuildSettings, error)
-	Update(ctx context.Context, guildID string, arg dto.UpdateGuildSettingsParams) (entities.GuildSettings, error)
+	Get(ctx context.Context, guildID string) (guildsettings.GuildSettings, error)
+	Upsert(ctx context.Context, arg dto.UpsertGuildSettingsParams) (guildsettings.GuildSettings, error)
+	Update(ctx context.Context, guildID string, arg dto.UpdateGuildSettingsParams) (guildsettings.GuildSettings, error)
 	Delete(ctx context.Context, guildID string) error
 }
 
@@ -25,16 +25,16 @@ func NewGuildSettingsRepository(store *SQLStore) GuildSettingsRepository {
 	return &sqlGuildSettingsRepository{store: store}
 }
 
-func (r *sqlGuildSettingsRepository) Get(ctx context.Context, guildID string) (entities.GuildSettings, error) {
+func (r *sqlGuildSettingsRepository) Get(ctx context.Context, guildID string) (guildsettings.GuildSettings, error) {
 	settings, err := r.store.queries.GetGuildSettings(ctx, guildID)
 	if err != nil {
-		return entities.GuildSettings{}, err
+		return guildsettings.GuildSettings{}, err
 	}
 
 	return toentitiesGuildSettings(settings), nil
 }
 
-func (r *sqlGuildSettingsRepository) Upsert(ctx context.Context, arg dto.UpsertGuildSettingsParams) (entities.GuildSettings, error) {
+func (r *sqlGuildSettingsRepository) Upsert(ctx context.Context, arg dto.UpsertGuildSettingsParams) (guildsettings.GuildSettings, error) {
 	settings, err := r.store.queries.UpsertGuildSettings(ctx, postgres.UpsertGuildSettingsParams{
 		GuildID:               arg.GuildID,
 		Prefix:                arg.Prefix,
@@ -46,13 +46,13 @@ func (r *sqlGuildSettingsRepository) Upsert(ctx context.Context, arg dto.UpsertG
 		},
 	})
 	if err != nil {
-		return entities.GuildSettings{}, err
+		return guildsettings.GuildSettings{}, err
 	}
 
 	return toentitiesGuildSettings(settings), nil
 }
 
-func (r *sqlGuildSettingsRepository) Update(ctx context.Context, guildID string, arg dto.UpdateGuildSettingsParams) (entities.GuildSettings, error) {
+func (r *sqlGuildSettingsRepository) Update(ctx context.Context, guildID string, arg dto.UpdateGuildSettingsParams) (guildsettings.GuildSettings, error) {
 	settings, err := r.store.queries.UpdateGuildSettings(ctx, postgres.UpdateGuildSettingsParams{
 		GuildID:               guildID,
 		Prefix:                arg.Prefix,
@@ -64,7 +64,7 @@ func (r *sqlGuildSettingsRepository) Update(ctx context.Context, guildID string,
 		},
 	})
 	if err != nil {
-		return entities.GuildSettings{}, err
+		return guildsettings.GuildSettings{}, err
 	}
 
 	return toentitiesGuildSettings(settings), nil
@@ -74,8 +74,8 @@ func (r *sqlGuildSettingsRepository) Delete(ctx context.Context, guildID string)
 	return r.store.queries.DeleteGuildSettings(ctx, guildID)
 }
 
-func toentitiesGuildSettings(s postgres.GuildSetting) entities.GuildSettings {
-	return entities.GuildSettings{
+func toentitiesGuildSettings(s postgres.GuildSetting) guildsettings.GuildSettings {
+	return guildsettings.GuildSettings{
 		GuildID:               s.GuildID,
 		Prefix:                s.Prefix,
 		Language:              s.Language,
