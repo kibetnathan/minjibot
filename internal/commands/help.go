@@ -61,6 +61,12 @@ func HelpSections() []HelpSection {
 			{"choose <a, b, c>", "Pick an option from a comma-separated list"},
 			{"ship <@user> <@user>", "Calculate romance compatibility"},
 			{"colors avatar [@user]", "Extract dominant colours from an avatar"},
+			{"lurk", "Toggle yourself in/out of lurking mode"},
+			{"lurkers", "Show who is currently lurking"},
+			{"spark", "Spark the blunt before you can smoke"},
+			{"smoke", "Take a hit off the blunt (spark it first)"},
+			{"hits", "Show everyone's blunt hit count"},
+			{"compress <url>", "Compress an image until it's barely legible"},
 		}},
 	}
 }

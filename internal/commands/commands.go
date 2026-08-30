@@ -93,6 +93,18 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.ship(s, m, args)
 	case "colors":
 		return h.colorsAvatar(s, m, args)
+	case "lurk":
+		return h.lurk(s, m, args)
+	case "lurkers":
+		return h.lurkers(s, m, args)
+	case "spark":
+		return h.spark(s, m, args)
+	case "smoke":
+		return h.smoke(s, m, args)
+	case "hits":
+		return h.hits(s, m, args)
+	case "compress":
+		return h.compress(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -166,6 +178,18 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.shipSlash(s, i)
 	case "colors":
 		return h.colorsAvatarSlash(s, i)
+	case "lurk":
+		return h.lurkSlash(s, i)
+	case "lurkers":
+		return h.lurkersSlash(s, i)
+	case "spark":
+		return h.sparkSlash(s, i)
+	case "smoke":
+		return h.smokeSlash(s, i)
+	case "hits":
+		return h.hitsSlash(s, i)
+	case "compress":
+		return h.compressSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -443,6 +467,48 @@ func (h *CommandHandler) colorsAvatar(s *discordgo.Session, m *discordgo.Message
 }
 func (h *CommandHandler) colorsAvatarSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return colorsAvatarSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) lurk(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return lurkMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) lurkSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return lurkSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) lurkers(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return lurkersMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) lurkersSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return lurkersSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) spark(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return sparkMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) sparkSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return sparkSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) smoke(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return smokeMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) smokeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return smokeSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) hits(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return hitsMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) hitsSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return hitsSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) compress(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return compressMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) compressSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return compressSlashCommandHandler(s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -767,6 +833,33 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Description: "Dominant colours from a member's avatar",
 				Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
 			},
+		},
+	},
+	{
+		Name:        "lurk",
+		Description: "Toggle yourself in/out of lurking mode",
+	},
+	{
+		Name:        "lurkers",
+		Description: "Show who is currently lurking",
+	},
+	{
+		Name:        "spark",
+		Description: "Spark the blunt before you can smoke",
+	},
+	{
+		Name:        "smoke",
+		Description: "Take a hit off the blunt (spark it first)",
+	},
+	{
+		Name:        "hits",
+		Description: "Show everyone's blunt hit count",
+	},
+	{
+		Name:        "compress",
+		Description: "Compress an image until it's barely legible",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "url", Description: "Image URL", Required: false},
 		},
 	},
 }

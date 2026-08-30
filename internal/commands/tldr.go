@@ -49,6 +49,12 @@ var tldrEntries = map[string]TldrEntry{
 	"choose":     {"choose", "`choose <a, b, c>`", "Randomly picks one option from a comma-separated list."},
 	"ship":       {"ship", "`ship <@a> <@b>`", "Calculates a romance compatibility score between two members."},
 	"colors":     {"colors", "`colors avatar [@user]`", "Extract the dominant colours from a member's avatar."},
+	"lurk":       {"lurk", "`lurk`", "Toggle yourself in/out of lurking mode (in-memory, per server)."},
+	"lurkers":    {"lurkers", "`lurkers`", "List who is currently lurking in this server."},
+	"spark":      {"spark", "`spark`", "Spark (light) the blunt before you can smoke it. Resets to whoever sparks."},
+	"smoke":      {"smoke", "`smoke`", "Take a hit off the blunt and add one to your hit count (must spark first)."},
+	"hits":       {"hits", "`hits`", "Show everyone's blunt hit count in this server."},
+	"compress":   {"compress", "`compress <url>`", "Pixelate/compress an image until it's barely legible."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).

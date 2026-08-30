@@ -33,6 +33,15 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		return
 	}
 
+	// Easter egg: delete messages containing "scat" AND a mention of the
+	// owner (Kruegen / Nathan / @Kruegenn) — then 👀.
+	content := strings.ToLower(m.Content)
+	if strings.Contains(content, "scat") && (strings.Contains(content, "kruegen") || strings.Contains(content, "nathan") || strings.Contains(content, "@kruegenn")) {
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "👀")
+		return
+	}
+
 	ctx := context.Background()
 
 	// Ensure guild exists in DB
