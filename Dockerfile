@@ -1,36 +1,30 @@
-# ---- Build stage ----
-FROM golang:1.26-alpine AS build
-WORKDIR /src
+# Runtime image that keeps the Go toolchain and source so the startup script
+# (scripts/migrate.sh) can build the binary, run migrations, and launch the bot.
 
-# Cache dependencies
+FROM golang:1.26-alpine AS runtime
+
+RUN apk add --no-cache ca-certificates tzdata git
+
+# Install the goose migration CLI.
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+
+WORKDIR /app
+
+# Cache dependencies.
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the source
+# Copy the rest of the source.
 COPY . .
 
-# Build the unified entrypoint (bot + API)
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/minjibot ./cmd/main.go
+RUN chmod +x /app/scripts/migrate.sh
 
-# Build the goose migration CLI so it can run at deploy time.
-RUN CGO_ENABLED=0 GOOS=linux go install github.com/pressly/goose/v3/cmd/goose@latest
-
-# ---- Runtime stage ----
-FROM alpine:3.20
-RUN apk add --no-cache ca-certificates tzdata
-WORKDIR /app
-
-# Copy the app binary, goose binary, migration script and migrations.
-COPY --from=build /out/minjibot /app/minjibot
-COPY --from=build /go/bin/goose /usr/local/bin/goose
-COPY --from=build /src/scripts/migrate.sh /app/scripts/migrate.sh
-COPY --from=build /src/db/migrations /app/db/migrations
-
-RUN chmod +x /app/minjibot /app/scripts/migrate.sh
-
-ENV GOOSE_DRIVER=postgres
-ENV GOOSE_MIGRATION_DIR=/app/db/migrations
+ENV GOOSE_DRIVER=postgres \
+    GOOSE_MIGRATION_DIR=/app/db/migrations \
+    GOCACHE=/tmp/.gocache
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/minjibot"]
+# The startup script is the default command; Render overrides it via
+# dockerCommand (render.yaml). It builds, migrates, then runs the bot.
+CMD ["sh", "/app/scripts/migrate.sh"]

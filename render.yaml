@@ -3,10 +3,11 @@
 # Services
 #   - minjibot-db  : managed Postgres
 #   - minjibot-bot : background worker running the Discord bot (gateway).
-#                    Migrations run automatically on deploy (preDeployCommand).
 #
 # The bot connects outbound to Discord over the gateway, so it is a
-# background worker (no inbound web traffic required).
+# background worker (no inbound web traffic required). It uses the Dockerfile
+# with the startup command set to scripts/migrate.sh, which builds the binary,
+# runs migrations, then starts the bot. (Free tier has no pre-deploy hooks.)
 
 databases:
   - name: minjibot-db
@@ -22,9 +23,8 @@ services:
     repo: https://github.com/kibetnathan/minjibot
     branch: develop
     dockerfilePath: ./Dockerfile
+    dockerCommand: ./scripts/migrate.sh
     plan: free
-    # Run database migrations before the bot container starts (on every deploy).
-    preDeployCommand: ./scripts/migrate.sh
     envVars:
       - key: DB_URL
         fromDatabase:
