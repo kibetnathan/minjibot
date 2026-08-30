@@ -14,16 +14,19 @@ type Querier interface {
 	CountAuditLogsForGuild(ctx context.Context, guildID string) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (AuditLog, error)
+	CreateDiaryEntry(ctx context.Context, arg CreateDiaryEntryParams) (DiaryEntry, error)
 	CreateGuild(ctx context.Context, arg CreateGuildParams) (Guild, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeactivateUser(ctx context.Context, id int64) error
 	DeleteAuditLogsBefore(ctx context.Context, cutoff pgtype.Timestamptz) error
 	DeleteBirthday(ctx context.Context, arg DeleteBirthdayParams) error
+	DeleteDiaryEntry(ctx context.Context, arg DeleteDiaryEntryParams) error
 	DeleteGuild(ctx context.Context, id string) error
 	DeleteGuildSettings(ctx context.Context, guildID string) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserPermission(ctx context.Context, arg DeleteUserPermissionParams) error
 	GetBirthday(ctx context.Context, arg GetBirthdayParams) (Birthday, error)
+	GetDiaryEntry(ctx context.Context, arg GetDiaryEntryParams) (DiaryEntry, error)
 	GetGuild(ctx context.Context, id string) (Guild, error)
 	GetGuildBirthdaySettings(ctx context.Context, guildID string) (GuildBirthdaySetting, error)
 	GetGuildSettings(ctx context.Context, guildID string) (GuildSetting, error)
@@ -35,6 +38,7 @@ type Querier interface {
 	ListAuditLogsForGuild(ctx context.Context, arg ListAuditLogsForGuildParams) ([]AuditLog, error)
 	ListBirthdaysByGuild(ctx context.Context, guildID string) ([]Birthday, error)
 	ListBirthdaysTodayByGuild(ctx context.Context, arg ListBirthdaysTodayByGuildParams) ([]Birthday, error)
+	ListDiaryEntriesByUser(ctx context.Context, userID string) ([]DiaryEntry, error)
 	ListGuilds(ctx context.Context) ([]Guild, error)
 	ListUserPermissionsForGuild(ctx context.Context, guildID string) ([]UserPermission, error)
 	ListUserPermissionsForUser(ctx context.Context, arg ListUserPermissionsForUserParams) ([]UserPermission, error)

@@ -30,6 +30,7 @@ type App struct {
 	UserRepo     repository.UserRepository
 	BirthdayRepo repository.BirthdayRepository
 	BirthdaySett repository.GuildBirthdaySettingsRepository
+	DiaryRepo    repository.DiaryRepository
 	cmdHandler   *commands.CommandHandler
 }
 
@@ -75,10 +76,11 @@ func NewApp() (*App, error) {
 		UserRepo:     repository.NewUserRepository(store),
 		BirthdayRepo: repository.NewBirthdayRepository(store),
 		BirthdaySett: repository.NewGuildBirthdaySettingsRepository(store),
+		DiaryRepo:    repository.NewDiaryRepository(store),
 	}
 
 	// Initialize command handler
-	app.cmdHandler = commands.NewCommandHandler(app.Cfg, app.GuildRepo, app.SettingsRepo, app.PermRepo)
+	app.cmdHandler = commands.NewCommandHandler(app.Cfg, app.GuildRepo, app.SettingsRepo, app.PermRepo, app.BirthdayRepo, app.BirthdaySett, app.DiaryRepo)
 
 	// Register event handlers
 	app.RegisterHandlers()

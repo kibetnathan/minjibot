@@ -70,3 +70,8 @@ type SetGuildBirthdayRoleParams struct {
 	GuildID string
 	RoleID  string
 }
+
+type CreateDiaryEntryParams struct {
+	UserID  string
+	Content string
+}

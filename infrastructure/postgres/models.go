@@ -27,6 +27,13 @@ type Birthday struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type DiaryEntry struct {
+	ID        int64              `json:"id"`
+	UserID    string             `json:"user_id"`
+	Content   string             `json:"content"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Guild struct {
 	ID          string             `json:"id"`
 	Name        string             `json:"name"`

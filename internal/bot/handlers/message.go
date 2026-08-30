@@ -50,13 +50,13 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		return
 	}
 
-	// Auto-delete messages from lurkers after 2 seconds — but not lurk
+	// Auto-delete messages from lurkers after 0.5 seconds — but not lurk
 	// commands themselves (otherwise they can never stop lurking).
 	if !isLurkCommand(m.Content, prefix) {
 		if commands.IsLurking(m.GuildID, m.Author.ID) {
 			chID, msgID := m.ChannelID, m.ID
 			go func() {
-				time.Sleep(2 * time.Second)
+				time.Sleep(500 * time.Millisecond)
 				_ = s.ChannelMessageDelete(chID, msgID)
 			}()
 		}

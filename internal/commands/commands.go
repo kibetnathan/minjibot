@@ -14,14 +14,20 @@ type CommandHandler struct {
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
 	PermRepo     repository.UserPermissionRepository
+	BirthdayRepo repository.BirthdayRepository
+	BirthdaySett repository.GuildBirthdaySettingsRepository
+	DiaryRepo    repository.DiaryRepository
 }
 
-func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository) *CommandHandler {
+func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository, birthdayRepo repository.BirthdayRepository, birthdaySett repository.GuildBirthdaySettingsRepository, diaryRepo repository.DiaryRepository) *CommandHandler {
 	return &CommandHandler{
 		Cfg:          cfg,
 		GuildRepo:    guildRepo,
 		SettingsRepo: settingsRepo,
 		PermRepo:     permRepo,
+		BirthdayRepo: birthdayRepo,
+		BirthdaySett: birthdaySett,
+		DiaryRepo:    diaryRepo,
 	}
 }
 
@@ -105,6 +111,16 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.hits(s, m, args)
 	case "compress":
 		return h.compress(s, m, args)
+	case "vape":
+		return h.vape(s, m, args)
+	case "poll":
+		return h.poll(s, m, args)
+	case "quickpoll":
+		return h.quickpoll(s, m, args)
+	case "birthday":
+		return h.birthday(s, m, args)
+	case "diary":
+		return h.diary(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -190,6 +206,16 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.hitsSlash(s, i)
 	case "compress":
 		return h.compressSlash(s, i)
+	case "vape":
+		return h.vapeSlash(s, i)
+	case "poll":
+		return h.pollSlash(s, i)
+	case "quickpoll":
+		return h.quickpollSlash(s, i)
+	case "birthday":
+		return h.birthdaySlash(s, i)
+	case "diary":
+		return h.diarySlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -509,6 +535,41 @@ func (h *CommandHandler) compress(s *discordgo.Session, m *discordgo.MessageCrea
 }
 func (h *CommandHandler) compressSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return compressSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) vape(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return vapeMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) vapeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return vapeSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) poll(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return pollMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) pollSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return pollSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) quickpoll(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return quickpollMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) quickpollSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return quickpollSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) birthday(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return birthdayMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) birthdaySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return birthdaySlashCommandHandler(h, s, i)
+}
+
+func (h *CommandHandler) diary(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return diaryMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) diarySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return diarySlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -866,6 +927,66 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Compress an image until it's barely legible",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "url", Description: "Image URL", Required: false},
+		},
+	},
+	{
+		Name:        "vape",
+		Description: "Hit, configure, or check the server vape",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "hit", Description: "Take a hit off the vape"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "flavor", Description: "Set or clear the vape flavour", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "flavour", Description: "Flavour text", Required: false},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "hits", Description: "Show everyone's vape hit count"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "steal", Description: "Steal the vape"},
+		},
+	},
+	{
+		Name:        "poll",
+		Description: "Create a reaction-based poll",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "question", Description: "The poll question", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "options", Description: "Options separated by | (2-10)", Required: true},
+		},
+	},
+	{
+		Name:        "quickpoll",
+		Description: "Create a quick Yes/No poll",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "question", Description: "The poll question", Required: true},
+		},
+	},
+	{
+		Name:        "birthday",
+		Description: "Manage server birthdays",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Save a birthday", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "date", Description: "Date e.g. 07-14 or 1998-07-14", Required: true},
+				userOption(false),
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "list", Description: "List upcoming birthdays"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "celebrate", Description: "Celebrate a birthday", Options: []*discordgo.ApplicationCommandOption{
+				userOption(false),
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "channel", Description: "Set the birthday celebration channel", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "Channel", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "role", Description: "Set the temporary birthday role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionRole, Name: "role", Description: "Role", Required: true},
+			}},
+		},
+	},
+	{
+		Name:        "diary",
+		Description: "Private per-user diary",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Save a diary entry", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "text", Description: "Entry text", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "view", Description: "View your diary (DMed privately)"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "delete", Description: "Delete a diary entry", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionInteger, Name: "id", Description: "Entry ID", Required: true},
+			}},
 		},
 	},
 }
