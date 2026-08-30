@@ -22,7 +22,7 @@ services:
     name: minjibot-bot
     runtime: docker
     repo: https://github.com/kibetnathan/minjibot
-    branch: develop
+    branch: main
     dockerfilePath: ./Dockerfile
     dockerCommand: ./scripts/migrate.sh
     healthCheckPath: /healthz
