@@ -26,11 +26,15 @@ if [ -z "$GOOSE_DBSTRING" ]; then
   exit 1
 fi
 
+# goose reads DRIVER/DBSTRING/MIGRATION_DIR from the environment. Export them so
+# the plain `goose up` / `goose status` commands pick them up.
+export GOOSE_DRIVER GOOSE_MIGRATION_DIR GOOSE_DBSTRING
+
 echo "[startup] Running database migrations (driver=$GOOSE_DRIVER, dir=$GOOSE_MIGRATION_DIR)..."
 if [ -n "$GOOSE_VERBOSE" ]; then
-  goose -dir "$GOOSE_MIGRATION_DIR" "$GOOSE_DRIVER" "$GOOSE_DBSTRING" status
+  goose status
 fi
-goose -dir "$GOOSE_MIGRATION_DIR" "$GOOSE_DRIVER" "$GOOSE_DBSTRING" up
+goose up
 
 echo "[startup] Database migrations complete. Starting bot..."
 exec /app/minjibot

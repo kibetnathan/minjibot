@@ -22,8 +22,8 @@ FROM golang:1.26-alpine AS runtime
 
 RUN apk add --no-cache ca-certificates tzdata git
 
-# Install the goose migration CLI.
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+# Install the goose migration CLI (pinned for a stable CLI syntax).
+RUN go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 
 WORKDIR /app
 
