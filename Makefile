@@ -16,7 +16,7 @@ all: test run
 
 test:
 	@echo "Running tests ..."
-	go test ./tests/...
+	go test ./...
 
 run:
 	@echo "Starting Go application..."

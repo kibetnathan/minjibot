@@ -129,7 +129,8 @@ func parseConvertArgs(args []string) (startSec, durSec float64, url string) {
 		case strings.HasPrefix(strings.ToLower(arg), "start:"):
 			fmt.Sscanf(strings.TrimSpace(arg[len("start:"):]), "%f", &startSec)
 		case strings.HasPrefix(strings.ToLower(arg), "dur:"), strings.HasPrefix(strings.ToLower(arg), "trim:"):
-			fmt.Sscanf(strings.TrimSpace(arg[4:]), "%f", &durSec)
+			i := strings.Index(arg, ":")
+			fmt.Sscanf(strings.TrimSpace(arg[i+1:]), "%f", &durSec)
 		case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
 			url = arg
 		}

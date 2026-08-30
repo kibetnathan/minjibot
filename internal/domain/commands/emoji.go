@@ -41,9 +41,13 @@ func parseEmoji(arg string) (name, id string, animated bool, ok bool) {
 	arg = strings.TrimSuffix(arg, ">")
 
 	parts := strings.Split(arg, ":")
-	if len(parts) == 2 {
+	switch {
+	case len(parts) == 2:
 		name, id = parts[0], parts[1]
-	} else if len(parts) == 1 && parts[0] != "" {
+	case len(parts) == 3 && parts[0] == "" && parts[1] != "":
+		// :wave:1234
+		name, id = parts[1], parts[2]
+	case len(parts) == 1 && parts[0] != "":
 		id = parts[0]
 	}
 
@@ -129,7 +133,12 @@ func optionMap(opts []*discordgo.ApplicationCommandInteractionDataOption) map[st
 
 func optString(opts map[string]*discordgo.ApplicationCommandInteractionDataOption, name string) string {
 	if o, ok := opts[name]; ok && o != nil {
-		return o.StringValue()
+		// String options carry the text directly; channel options carry their
+		// ID as a plain string. Assert instead of discrodgo's StringValue(),
+		// which panics on any non-string option type.
+		if s, ok := o.Value.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -253,14 +262,10 @@ func emojiAddMany(s *discordgo.Session, m *discordgo.MessageCreate, args []strin
 }
 
 func emojiEnlarge(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji enlarge <emoji>`")
-		return err
-	}
-
-	_, id, animated, ok := parseEmoji(args[0])
+	_, id, animated, ok := emojiTarget(m, args)
 	if !ok {
-		return fmt.Errorf("couldn't parse an emoji from %q", args[0])
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji enlarge <emoji>` — or reply to a message containing an emoji")
+		return err
 	}
 
 	_, err := s.ChannelMessageSend(m.ChannelID, emojiImageURL(id, animated, 256))
@@ -337,14 +342,11 @@ func emojiSteal(s *discordgo.Session, m *discordgo.MessageCreate, args []string)
 	if guildID == "" {
 		return fmt.Errorf("emoji commands can only be used in a server")
 	}
-	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji steal <emoji>`")
-		return err
-	}
 
-	name, id, animated, ok := parseEmoji(args[0])
+	name, id, animated, ok := emojiTarget(m, args)
 	if !ok {
-		return fmt.Errorf("couldn't parse an emoji from %q", args[0])
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji steal <emoji>` — or reply to a message containing an emoji")
+		return err
 	}
 
 	md, err := fetchURL(emojiImageURL(id, animated, 128))

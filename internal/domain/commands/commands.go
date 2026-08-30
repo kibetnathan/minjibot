@@ -64,6 +64,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.vid2gif(s, m, args)
 	case "autogif":
 		return h.autogif(s, m, args)
+	case "factcheck":
+		return h.factcheck(s, m.ChannelID, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -111,6 +113,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.vid2gifSlash(s, i)
 	case "autogif":
 		return h.autogifSlash(s, i)
+	case "factcheck":
+		return h.factcheckSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -125,7 +129,7 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, channelID string) error {
-	_, err := s.ChannelMessageSend(channelID, "Available commands: `ping`, `help`, `echo`, `userinfo`, `ddg`, `search`, `pinglist`, `gifsearch`, `emoji`, `sticker`, `pin`, `unpin`, `quote`, `translate`, `reminder`, `isearch`, `caption`, `img2gif`, `vid2gif`, `autogif`")
+	_, err := s.ChannelMessageSendEmbed(channelID, buildHelpEmbed())
 	return err
 }
 
@@ -133,7 +137,7 @@ func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.Interactio
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Available commands: `/ping`, `/help`, `/echo`, `/userinfo`, `/ddg`, `/search`, `/pinglist`, `/gifsearch`, `/emoji`, `/sticker`, `/pin`, `/unpin`, `/quote`, `/translate`, `/reminder`, `/isearch`, `/caption`, `/img2gif`, `/vid2gif`, `/autogif`",
+			Embeds: []*discordgo.MessageEmbed{buildHelpEmbed()},
 		},
 	})
 }
@@ -280,6 +284,14 @@ func (h *CommandHandler) autogif(s *discordgo.Session, m *discordgo.MessageCreat
 
 func (h *CommandHandler) autogifSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return autogifSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) factcheck(s *discordgo.Session, channelID string, args []string) error {
+	return factcheckMessageCommandHandler(s, channelID, args)
+}
+
+func (h *CommandHandler) factcheckSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return factcheckSlashCommandHandler(s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -523,6 +535,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Convert any media into a GIF",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "url", Description: "Image or video URL", Required: true},
+		},
+	},
+	{
+		Name:        "factcheck",
+		Description: "Fact-check a claim against searchable ratings",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "claim", Description: "The claim to fact-check", Required: true},
 		},
 	},
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var messageLinkRe = regexp.MustCompile(`discord(?:app)?\.com/channels/(\d+)/(\d+)/(\d+)`)
+var messageLinkRe = regexp.MustCompile(`discord(?:app)?\.com/channels/([^/]+)/(\d+)/(\d+)`)
 
 // parseMessageLink extracts (guildID, channelID, messageID) from a Discord
 // message link. The first component may be @me for DMs.

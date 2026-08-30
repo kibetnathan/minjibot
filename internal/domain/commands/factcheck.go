@@ -14,16 +14,21 @@ import (
 )
 
 const (
-	factCheckAPI      = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
-	factCheckMinScore = 0.55
-	factCheckColorTrue   = 0x57F287
-	factCheckColorMixed  = 0xFEE75C
-	factCheckColorFalse  = 0xED4245
+	factCheckAPI          = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
+	factCheckMinScore     = 0.55
+	factCheckColorTrue    = 0x57F287
+	factCheckColorMixed   = 0xFEE75C
+	factCheckColorFalse   = 0xED4245
 	factCheckColorUnknown = 0x95A5A6
+
+	geminiAPIBase      = "https://generativelanguage.googleapis.com/v1beta"
+	geminiDefaultModel = "gemini-2.5-flash"
+
+	factCheckSystemPrompt = "You are a careful fact-checking assistant. Based only on the web search results provided by the user, give: 1) a verdict — True, Mostly True, Mixed, Mostly False, False, or Unverifiable; and 2) a 1-2 sentence summary of the current consensus that names the most relevant source. If the results are inconclusive, say Unverifiable and explain why. Do not invent facts or sources."
 )
 
 type factCheckClaimReview struct {
-	Publisher      struct {
+	Publisher struct {
 		Name string `json:"name"`
 	} `json:"publisher"`
 	URL           string `json:"url"`
@@ -104,13 +109,13 @@ func runFactCheck(claim string) *discordgo.MessageEmbed {
 	}
 
 	assessment := fmt.Sprintf("No exact claim rating found. Here's what fact-check and news sources currently say. Review the sources yourself before drawing conclusions.")
-	if openaiKey := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); openaiKey != "" {
-		if summary := llmAssessClaim(openaiKey, claim, sources); summary != "" {
+	if geminiKey := strings.TrimSpace(os.Getenv("GEMINI_API_KEY")); geminiKey != "" {
+		if summary := llmAssessClaim(geminiKey, claim, sources); summary != "" {
 			assessment = summary
 			footer = "AI assessment based on the sources above (treat as informal)"
 		}
 	} else {
-		footer = "Web search consensus (no claim rating matched). Set OPENAI_API_KEY for AI summary."
+		footer = "Web search consensus (no claim rating matched). Set GEMINI_API_KEY for AI summary."
 	}
 
 	return buildConsensusEmbed(claim, assessment, sources, footer)
@@ -158,7 +163,11 @@ func queryClaimSearch(apiKey, claim string) *factCheckClaim {
 	}
 
 	var out factCheckResponse
-	if err := json.Unmarshal(resp.Body, &out); err != nil {
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 2*1024*1024))
+	if err != nil {
+		return nil
+	}
+	if err := json.Unmarshal(body, &out); err != nil {
 		return nil
 	}
 
@@ -297,9 +306,16 @@ func buildConsensusEmbed(claim, assessment string, sources []factCheckSource, fo
 }
 
 // factCheckWebSearch runs a DuckDuckGo search for the claim and turns the
-// relevant hits into a small source list.
+// relevant hits into a small source list. The HTML endpoint is preferred
+// because it returns real web results; the Instant Answer API usually omits
+// them for fact-check queries.
 func factCheckWebSearch(claim string) []factCheckSource {
 	query := fmt.Sprintf("%q fact check", claim)
+
+	if sources := newDDGClient().htmlSearch(query, 8); len(sources) > 0 {
+		return sources
+	}
+
 	res, err := newDDGClient().Search(query)
 	if err != nil {
 		return nil
@@ -324,39 +340,40 @@ func factCheckWebSearch(claim string) []factCheckSource {
 	return sources
 }
 
-// llmAssessClaim asks an OpenAI-compatible chat model to summarise the
-// consensus from the given sources. Returns "" on any failure.
+// llmAssessClaim asks Google Gemini (free tier) to summarise the consensus
+// from the given sources. Returns "" on any failure so the caller falls back
+// to its own assessment text. The model defaults to gemini-2.5-flash and can
+// be overridden with GEMINI_MODEL.
 func llmAssessClaim(apiKey, claim string, sources []factCheckSource) string {
-	body := fmt.Sprintf(`{
-  "model": "gpt-4o-mini",
-  "max_tokens": 300,
-  "temperature": 0.2,
-  "messages": [
-    {"role": "system", "content": "You are a careful fact-checking assistant. Based only on the web search results provided by the user, give: 1) a verdict — True, Mostly True, Mixed, Mostly False, False, or Unverifiable; and 2) a 1-2 sentence summary of the current consensus that names the most relevant source. If the results are inconclusive, say Unverifiable and explain why. Do not invent facts or sources."},
-    {"role": "user", "content": %q}
-  ]
-}`, buildLLMSourcesText(claim, sources))
-
-	data := []byte(strings.ReplaceAll(body, "%q", ""))
-	_ = data
+	model := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
+	if model == "" {
+		model = geminiDefaultModel
+	}
 
 	payload := map[string]any{
-		"model":       "gpt-4o-mini",
-		"max_tokens":  300,
-		"temperature": 0.2,
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a careful fact-checking assistant. Based only on the web search results provided by the user, give: 1) a verdict — True, Mostly True, Mixed, Mostly False, False, or Unverifiable; and 2) a 1-2 sentence summary of the current consensus that names the most relevant source. If the results are inconclusive, say Unverifiable and explain why. Do not invent facts or sources."},
-			{"role": "user", "content": buildLLMSourcesText(claim, sources)},
+		"systemInstruction": map[string]any{
+			"parts": []map[string]string{{"text": factCheckSystemPrompt}},
+		},
+		"contents": []map[string]any{
+			{"role": "user", "parts": []map[string]string{{"text": buildLLMSourcesText(claim, sources)}}},
+		},
+		"generationConfig": map[string]any{
+			"maxOutputTokens": 300,
+			"temperature":     0.2,
 		},
 	}
-	raw, _ := json.Marshal(payload)
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return ""
+	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", strings.NewReader(string(raw)))
+	u := fmt.Sprintf("%s/models/%s:generateContent", geminiAPIBase, url.PathEscape(model))
+	req, err := http.NewRequest(http.MethodPost, u, strings.NewReader(string(raw)))
 	if err != nil {
 		return ""
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("x-goog-api-key", apiKey)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
@@ -374,16 +391,23 @@ func llmAssessClaim(apiKey, claim string, sources []factCheckSource) string {
 	}
 
 	var out struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
 	}
-	if err := json.Unmarshal(bodyResp, &out); err != nil || len(out.Choices) == 0 {
+	if err := json.Unmarshal(bodyResp, &out); err != nil || len(out.Candidates) == 0 {
 		return ""
 	}
-	return strings.TrimSpace(out.Choices[0].Message.Content)
+
+	var b strings.Builder
+	for _, part := range out.Candidates[0].Content.Parts {
+		b.WriteString(part.Text)
+	}
+	return strings.TrimSpace(b.String())
 }
 
 func buildLLMSourcesText(claim string, sources []factCheckSource) string {
@@ -408,7 +432,7 @@ func orEmptyText(s string) string {
 func factCheckColorFor(verdict string) int {
 	v := strings.ToLower(verdict)
 	switch {
-	case strings.Contains(v, "true") && !strings.Contains(v, "mostly"):
+	case strings.Contains(v, "true") && !strings.Contains(v, "mostly") && !strings.Contains(v, "half"):
 		return factCheckColorTrue
 	case strings.Contains(v, "mostly"), strings.Contains(v, "half"), strings.Contains(v, "mixed"):
 		return factCheckColorMixed

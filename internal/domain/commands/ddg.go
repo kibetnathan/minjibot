@@ -3,13 +3,21 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+)
+
+var (
+	ddgHTMLResultLinkRE = regexp.MustCompile(`class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>`)
+	ddgHTMLSnippetRE    = regexp.MustCompile(`class="result__snippet"[^>]*>(.*?)</a>`)
+	ddgHTMLStripTagRE   = regexp.MustCompile(`<[^>]+>`)
 )
 
 // ddgTopic models a DuckDuckGo Instant Answer topic. The API interleaves
@@ -75,6 +83,70 @@ func (c *ddgClient) Search(query string) (*ddgResponse, error) {
 	}
 
 	return &out, nil
+}
+
+// htmlSearch queries the plain-HTML DuckDuckGo endpoint, which returns real
+// web results that the Instant Answer API usually omits.
+func (c *ddgClient) htmlSearch(query string, limit int) []factCheckSource {
+	u := url.URL{Scheme: "https", Host: "html.duckduckgo.com", Path: "/html/"}
+	q := u.Query()
+	q.Set("q", query)
+	u.RawQuery = q.Encode()
+
+	resp, err := c.do(u.String())
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 512*1024))
+	if err != nil {
+		return nil
+	}
+	return parseDDGHTMLResults(string(body), limit)
+}
+
+// parseDDGHTMLResults extracts titles, URLs and snippets from the HTML
+// DuckDuckGo result page, unwrapping the redirect links.
+func parseDDGHTMLResults(body string, limit int) []factCheckSource {
+	links := ddgHTMLResultLinkRE.FindAllStringSubmatch(body, -1)
+	snippets := ddgHTMLSnippetRE.FindAllStringSubmatch(body, -1)
+
+	out := make([]factCheckSource, 0, len(links))
+	for i, m := range links {
+		if len(out) >= limit {
+			break
+		}
+
+		target := html.UnescapeString(m[1])
+		if u, err := url.Parse(target); err == nil && u.Host == "duckduckgo.com" && u.Path == "/l/" {
+			if dd := u.Query().Get("uddg"); dd != "" {
+				if un, err := url.QueryUnescape(dd); err == nil {
+					target = un
+				}
+			}
+		}
+		if strings.HasPrefix(target, "//") {
+			target = "https://" + strings.TrimPrefix(target, "//")
+		}
+
+		title := ddgStripTags(html.UnescapeString(m[2]))
+		if title == "" {
+			title = target
+		}
+
+		src := factCheckSource{Title: title, URL: target}
+		if i < len(snippets) {
+			src.Snippet = ddgStripTags(html.UnescapeString(snippets[i][1]))
+		}
+		out = append(out, src)
+	}
+	return out
+}
+
+func ddgStripTags(s string) string {
+	s = ddgHTMLStripTagRE.ReplaceAllString(s, "")
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func (c *ddgClient) do(rawURL string) (*http.Response, error) {

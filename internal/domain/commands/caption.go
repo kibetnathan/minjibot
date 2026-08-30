@@ -16,13 +16,13 @@ import (
 // memegenText converts user text into memegen.link's path-safe form
 // (spaces -> dashes, underscores preserved via ~).
 func memegenText(s string) string {
-	s = strings.NewReplacer(
-		" ", "-",
-		"_", "~",
-		"--", "-",
-	).Replace(strings.TrimSpace(s))
-	s = strings.Trim(s, "-")
-	return s
+	s = strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
+	s = strings.ReplaceAll(s, " ", "-")
+	s = strings.ReplaceAll(s, "_", "~")
+	for strings.Contains(s, "--") {
+		s = strings.ReplaceAll(s, "--", "-")
+	}
+	return strings.Trim(s, "-")
 }
 
 func parseCaptionArgs(args []string) (top, bottom, imageURL string) {
