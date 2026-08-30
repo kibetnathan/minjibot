@@ -13,9 +13,9 @@ func RandomReading() int {
 	return rand.IntN(101)
 }
 
-// RandomPP returns a randomized "pp length" in cm (range enforced for humour).
+// RandomPP returns a randomized "pp length" in inches (range enforced for humour).
 func RandomPP() int {
-	return rand.IntN(21) // 0..20cm
+	return rand.IntN(13) // 0..12in
 }
 
 // RandomPuh returns a randomized "puh tightness" percentage.
@@ -127,17 +127,17 @@ func howsimpSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 
 func ppMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	id := funTargetID(m, args)
-	cm := RandomPP()
-	visual := strings.Repeat("=", cm) + "D"
-	_, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("<@%s>'s pp: `%s` **%dcm**", id, visual, cm))
+	in := RandomPP()
+	visual := strings.Repeat("=", in) + "D"
+	_, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("<@%s>'s pp: `%s` **%din**", id, visual, in))
 	return err
 }
 func ppSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	opts := OptionMap(i.ApplicationCommandData().Options)
 	id := OptUserID(opts, "user", i)
-	cm := RandomPP()
-	visual := strings.Repeat("=", cm) + "D"
-	content := fmt.Sprintf("<@%s>'s pp: `%s` **%dcm**", id, visual, cm)
+	in := RandomPP()
+	visual := strings.Repeat("=", in) + "D"
+	content := fmt.Sprintf("<@%s>'s pp: `%s` **%din**", id, visual, in)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Content: content},
@@ -145,13 +145,17 @@ func ppSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate)
 }
 
 func puhMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	_, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Puh tightness: **%d%%**", RandomPuh()))
+	id := funTargetID(m, args)
+	_, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("<@%s>'s puh tightness: **%d%%**", id, RandomPuh()))
 	return err
 }
 func puhSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	opts := OptionMap(i.ApplicationCommandData().Options)
+	id := OptUserID(opts, "user", i)
+	content := fmt.Sprintf("<@%s>'s puh tightness: **%d%%**", id, RandomPuh())
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{Content: fmt.Sprintf("Puh tightness: **%d%%**", RandomPuh())},
+		Data: &discordgo.InteractionResponseData{Content: content},
 	})
 }
 

@@ -730,6 +730,7 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "puh",
 		Description: "Check the puh tightness",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
 	},
 	{
 		Name:        "iq",

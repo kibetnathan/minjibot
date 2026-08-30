@@ -12,8 +12,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
 	"github.com/kibetnathan/minjibot/internal/bot/handlers"
-	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/commands"
+	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/logger"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 )
@@ -88,7 +88,7 @@ func NewApp() (*App, error) {
 
 func (a *App) RegisterHandlers() {
 	// Identify required gateway intents (adjust based on your bot's needs)
-	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
+	a.Session.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentMessageContent | discordgo.IntentsGuildMessageReactions
 
 	// Keep a rolling cache of recent messages so content of deleted
 	// messages is still available to log to the database.
