@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type CreateGuildParams struct {
 	ID          string
 	Name        string

@@ -30,7 +30,9 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "ping":
 		return h.ping(s, m.ChannelID)
 	case "help":
-		return h.help(s, m.ChannelID)
+		return h.help(s, m, args)
+	case "tldr":
+		return h.tldr(s, m, args)
 	case "echo":
 		return h.echo(s, m, args)
 	case "userinfo":
@@ -69,6 +71,28 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.autogif(s, m, args)
 	case "factcheck":
 		return h.factcheck(s, m, args)
+	case "howgay":
+		return h.howgay(s, m, args)
+	case "howautism":
+		return h.howautism(s, m, args)
+	case "howlesbian":
+		return h.howlesbian(s, m, args)
+	case "howsimp":
+		return h.howsimp(s, m, args)
+	case "pp":
+		return h.pp(s, m, args)
+	case "puh":
+		return h.puh(s, m, args)
+	case "iq":
+		return h.iq(s, m, args)
+	case "bitches":
+		return h.bitches(s, m, args)
+	case "choose":
+		return h.choose(s, m, args)
+	case "ship":
+		return h.ship(s, m, args)
+	case "colors":
+		return h.colorsAvatar(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -80,6 +104,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.pingSlash(s, i)
 	case "help":
 		return h.helpSlash(s, i)
+	case "tldr":
+		return h.tldrSlash(s, i)
 	case "echo":
 		return h.echoSlash(s, i)
 	case "userinfo":
@@ -118,6 +144,28 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.autogifSlash(s, i)
 	case "factcheck":
 		return h.factcheckSlash(s, i)
+	case "howgay":
+		return h.howgaySlash(s, i)
+	case "howautism":
+		return h.howautismSlash(s, i)
+	case "howlesbian":
+		return h.howlesbianSlash(s, i)
+	case "howsimp":
+		return h.howsimpSlash(s, i)
+	case "pp":
+		return h.ppSlash(s, i)
+	case "puh":
+		return h.puhSlash(s, i)
+	case "iq":
+		return h.iqSlash(s, i)
+	case "bitches":
+		return h.bitchesSlash(s, i)
+	case "choose":
+		return h.chooseSlash(s, i)
+	case "ship":
+		return h.shipSlash(s, i)
+	case "colors":
+		return h.colorsAvatarSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -131,18 +179,41 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 	return pingSlashCommandHandler(s, i)
 }
 
-func (h *CommandHandler) help(s *discordgo.Session, channelID string) error {
-	_, err := s.ChannelMessageSendEmbed(channelID, BuildHelpEmbed())
-	return err
+func (h *CommandHandler) help(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	// -help <category> shows a single page; plain -help paginates.
+	if len(args) > 0 {
+		if idx := FindHelpSection(args[0]); idx >= 0 {
+			_, err := s.ChannelMessageSendEmbed(m.ChannelID, BuildHelpPageEmbed(idx))
+			return err
+		}
+	}
+	return paginateReactions(s, m.ChannelID, m.Author.ID, NumHelpPages(), BuildHelpPageEmbed)
 }
 
 func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{Label: "◀", Style: discordgo.SecondaryButton, CustomID: helpPrevCustomID},
+				discordgo.Button{Label: "▶", Style: discordgo.SecondaryButton, CustomID: helpNextCustomID},
+			},
+		},
+	}
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{BuildHelpEmbed()},
+			Embeds:     []*discordgo.MessageEmbed{BuildHelpPageEmbed(0)},
+			Components: components,
 		},
 	})
+}
+
+func (h *CommandHandler) tldr(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return tldrMessageCommandHandler(s, m, args)
+}
+
+func (h *CommandHandler) tldrSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return tldrSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) echo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -297,6 +368,83 @@ func (h *CommandHandler) factcheckSlash(s *discordgo.Session, i *discordgo.Inter
 	return factcheckSlashCommandHandler(s, i, h.Cfg)
 }
 
+func (h *CommandHandler) howgay(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return howgayMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) howgaySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return howgaySlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) howautism(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return howautismMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) howautismSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return howautismSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) howlesbian(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return howlesbianMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) howlesbianSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return howlesbianSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) howsimp(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return howsimpMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) howsimpSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return howsimpSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) pp(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return ppMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) ppSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return ppSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) puh(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return puhMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) puhSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return puhSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) iq(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return iqMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) iqSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return iqSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) bitches(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bitchesMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bitchesSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bitchesSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) choose(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return chooseMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) chooseSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return chooseSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) ship(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return shipMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) shipSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return shipSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) colorsAvatar(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return colorsAvatarMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) colorsAvatarSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return colorsAvatarSlashCommandHandler(s, i)
+}
+
 var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ping",
@@ -305,6 +453,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "help",
 		Description: "Show available commands",
+	},
+	{
+		Name:        "tldr",
+		Description: "Get a brief how-to for a command",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "command", Description: "The command to explain", Required: true},
+		},
 	},
 	{
 		Name:        "echo",
@@ -547,4 +702,79 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "claim", Description: "The claim to fact-check", Required: true},
 		},
 	},
+	{
+		Name:        "howgay",
+		Description: "Measure how gay a member is",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "howautism",
+		Description: "Measure how autistic a member is",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "howlesbian",
+		Description: "Measure how lesbian a member is",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "howsimp",
+		Description: "Measure how much of a simp a member is",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "pp",
+		Description: "Measure a member's pp length",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "puh",
+		Description: "Check the puh tightness",
+	},
+	{
+		Name:        "iq",
+		Description: "Measure a member's IQ",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "bitches",
+		Description: "See how many bitches a member has",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "choose",
+		Description: "Pick an option from a comma-separated list",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "choices", Description: "Comma-separated options, e.g. a, b, c", Required: true},
+		},
+	},
+	{
+		Name:        "ship",
+		Description: "Calculate romance compatibility between two members",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user1", Description: "First user", Required: true},
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user2", Description: "Second user", Required: true},
+		},
+	},
+	{
+		Name:        "colors",
+		Description: "Extract dominant colours from an avatar",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "avatar",
+				Description: "Dominant colours from a member's avatar",
+				Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+			},
+		},
+	},
+}
+
+func userOption(required bool) *discordgo.ApplicationCommandOption {
+	return &discordgo.ApplicationCommandOption{
+		Type:        discordgo.ApplicationCommandOptionUser,
+		Name:        "user",
+		Description: "The user (defaults to yourself)",
+		Required:    required,
+	}
 }

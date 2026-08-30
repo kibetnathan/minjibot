@@ -25,6 +25,15 @@ func RegisterInteractionHandler(s *discordgo.Session, deps InteractionHandlerDep
 }
 
 func onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate, deps InteractionHandlerDeps, cmdHandler *commands.CommandHandler) {
+	// Component interactions (e.g. help pagination buttons) are routed to the
+	// relevant handler directly.
+	if i.Type == discordgo.InteractionMessageComponent {
+		if err := commands.HelpButtonHandler(s, i); err != nil {
+			deps.Logger.Error("Failed to handle component interaction", "custom_id", i.MessageComponentData().CustomID, "error", err)
+		}
+		return
+	}
+
 	if i.Type != discordgo.InteractionApplicationCommand {
 		return
 	}

@@ -76,37 +76,37 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 
 ## 4. Fun
 
-| Command              | Description                                                   |
-| -------------------- | ------------------------------------------------------------- |
-| `birthday add`       | Saves a user's birthday to the bot's database.                |
-| `birthday celebrate` | Triggers an immediate birthday celebration message/embed.     |
-| `birthday channel`   | Sets the channel for automated birthday notices.              |
-| `birthday list`      | Displays upcoming server birthdays sorted by date.            |
-| `birthday role`      | Configures the temporary role awarded on a member's birthday. |
-| `bitches`            | Gives a number for how many bitches a specific member has     |
-| `choose`             | Picks an option from a comma-separated list.                  |
-| `colors avatar`      | Extracts dominant hex colors from an avatar.                  |
-| `diary add`          | Saves a private journal entry into the user's database.       |
-| `diary delete`       | Removes a specific saved diary entry by ID.                   |
-| `diary view`         | Shows past diary entries in a private embed.                  |
-| `hits`               | Increments and displays your smoking counter.                 |
-| `howautism`          | Randomized fun percentage reading.                            |
-| `howgay`             | Randomized fun percentage reading.                            |
-| `howlesbian`         | Randomized fun percentage reading.                            |
-| `howsimp`            | Randomized fun percentage reading.                            |
-| `IQ`                 | Generates a fun, randomized IQ score readout.                 |
-| `lurk`               | Sets an AFK status indicating you are silently reading chat.  |
-| `poll`               | Creates an interactive reaction- or button-based poll embed.  |
-| `pp`                 | Generates a randomized pp length                              |
-| `puh`                | Generates random puh tightness percentage.                    |
-| `quickpoll`          | Instantly creates a simple Yes/No reaction poll.              |
-| `ship`               | Calculates a romance compatibility score between two users.   |
-| `smoke`              | Smoke the blunt.                                              |
-| `spark`              | Light the blunt.                                              |
-| `vape`               | Hit the vape.                                                 |
-| `vape flavor`        | Sets or changes your virtual vapeflavor.                      |
-| `vape hits`          | Displays total recorded virtual vape hits.                    |
-| `vape steal`         | Steal the vape.                                               |
+| Command              | Description                                                      |
+| -------------------- | ---------------------------------------------------------------- |
+| `birthday add`       | Saves a user's birthday to the bot's database.                   |
+| `birthday celebrate` | Triggers an immediate birthday celebration message/embed.        |
+| `birthday channel`   | Sets the channel for automated birthday notices.                 |
+| `birthday list`      | Displays upcoming server birthdays sorted by date.               |
+| `birthday role`      | Configures the temporary role awarded on a member's birthday.    |
+| `bitches`            | Gives a random number for how many bitches a specific member has |
+| `choose`             | Picks an option from a comma-separated list.                     |
+| `colors avatar`      | Extracts dominant hex colors from an avatar.                     |
+| `diary add`          | Saves a private journal entry into the user's database.          |
+| `diary delete`       | Removes a specific saved diary entry by ID.                      |
+| `diary view`         | Shows past diary entries in a private embed.                     |
+| `hits`               | Displays your smoking counter.                                   |
+| `howautism`          | Randomized fun percentage reading.                               |
+| `howgay`             | Randomized fun percentage reading.                               |
+| `howlesbian`         | Randomized fun percentage reading.                               |
+| `howsimp`            | Randomized fun percentage reading.                               |
+| `IQ`                 | Generates a fun, randomized IQ score readout.                    |
+| `lurk`               | Deletes every message and reaction you post after a 1s wait .    |
+| `poll`               | Creates an interactive reaction- or button-based poll embed.     |
+| `pp`                 | Generates a randomized pp length                                 |
+| `puh`                | Generates random puh tightness percentage.                       |
+| `quickpoll`          | Instantly creates a simple Yes/No reaction poll.                 |
+| `ship`               | Calculates a romance compatibility score between two users.      |
+| `smoke`              | Smoke the blunt.                                                 |
+| `spark`              | Light the blunt.                                                 |
+| `vape`               | Hit the vape.                                                    |
+| `vape flavor`        | Sets or changes your virtual vapeflavor.                         |
+| `vape hits`          | Displays total recorded virtual vape hits.                       |
+| `vape steal`         | Steal the vape.                                                  |
 
 ## 5. Roleplay (RP)
 

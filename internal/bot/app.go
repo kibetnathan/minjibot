@@ -28,6 +28,8 @@ type App struct {
 	PermRepo     repository.UserPermissionRepository
 	AuditRepo    repository.AuditLogRepository
 	UserRepo     repository.UserRepository
+	BirthdayRepo repository.BirthdayRepository
+	BirthdaySett repository.GuildBirthdaySettingsRepository
 	cmdHandler   *commands.CommandHandler
 }
 
@@ -71,6 +73,8 @@ func NewApp() (*App, error) {
 		PermRepo:     repository.NewUserPermissionRepository(store),
 		AuditRepo:    repository.NewAuditLogRepository(store),
 		UserRepo:     repository.NewUserRepository(store),
+		BirthdayRepo: repository.NewBirthdayRepository(store),
+		BirthdaySett: repository.NewGuildBirthdaySettingsRepository(store),
 	}
 
 	// Initialize command handler
