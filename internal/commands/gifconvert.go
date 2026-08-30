@@ -57,9 +57,9 @@ func ImageBytesToGIF(data []byte, ext string) ([]byte, error) {
 }
 
 const (
-	// maxVideoBytes caps how large an uploaded video may be before conversion.
+	// MaxVideoBytes caps how large an uploaded video may be before conversion.
 	// Videos above this are rejected outright to keep conversions fast.
-	maxVideoBytes = 25 * 1024 * 1024
+	MaxVideoBytes = 25 * 1024 * 1024
 
 	// defaultClipSec caps how much of a video is converted when the caller
 	// doesn't request a duration. Trimming to a short clip keeps the GIF small
@@ -69,16 +69,25 @@ const (
 	// Video encoding knobs tuned for aggressive compression (small GIFs, fast
 	// encodes). Lower fps/scale and stronger palette dithering all trade off a
 	// little fidelity for a much smaller output.
-	videoFPS  = "fps=12"
+	videoFPS   = "fps=12"
 	videoScale = "scale=480:-1:flags=lanczos"
 )
+
+// ValidateVideoSize returns an error if a video exceeds MaxVideoBytes. It's
+// called before downloading/encoding so oversized uploads are rejected early.
+func ValidateVideoSize(bytes int) error {
+	if bytes > MaxVideoBytes {
+		return fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", bytes, MaxVideoBytes)
+	}
+	return nil
+}
 
 // ffmpegToGIF converts an uploaded video to an animated GIF via ffmpeg. It
 // uses a two-pass palettegen/paletteuse filter and scales down aggressively so
 // source videos render quickly into small GIFs.
 func ffmpegToGIF(data []byte, ext string, startSec, durSec float64) ([]byte, error) {
-	if len(data) > maxVideoBytes {
-		return nil, fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", len(data), maxVideoBytes)
+	if err := ValidateVideoSize(len(data)); err != nil {
+		return nil, err
 	}
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		return nil, fmt.Errorf("ffmpeg is not installed on this machine — can't convert videos to GIF")
@@ -120,7 +129,7 @@ func ffmpegToGIF(data []byte, ext string, startSec, durSec float64) ([]byte, err
 	// Pass 2: render the GIF using that palette with heavy Bayer dithering.
 	args = []string{"-y", "-i", in, "-i", palette}
 	args = append(args, clip...)
-	args = append(args, "-lavfi", videoFPS+","+videoScale+"[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=7:diff_mode=rectangle", "-loop", "0", out)
+	args = append(args, "-lavfi", videoFPS+","+videoScale+"[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle", "-loop", "0", out)
 	if err := runFFmpeg(args); err != nil {
 		return nil, err
 	}
@@ -219,8 +228,10 @@ func img2gifSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 func vid2gifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	startSec, durSec, url := ParseConvertArgs(args)
 	if url == "" {
-		if att := mediaAttachment(m); att != nil && att.Size > maxVideoBytes {
-			return fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", att.Size, maxVideoBytes)
+		if att := mediaAttachment(m); att != nil {
+			if err := ValidateVideoSize(att.Size); err != nil {
+				return err
+			}
 		}
 	}
 	md, err := resolveMedia(s, m, url)
@@ -279,8 +290,10 @@ func autogifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCrea
 		return err
 	}
 	if url == "" {
-		if att := mediaAttachment(m); att != nil && att.Size > maxVideoBytes {
-			return fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", att.Size, maxVideoBytes)
+		if att := mediaAttachment(m); att != nil {
+			if err := ValidateVideoSize(att.Size); err != nil {
+				return err
+			}
 		}
 	}
 

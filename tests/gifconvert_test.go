@@ -136,6 +136,17 @@ func TestOrEmpty(t *testing.T) {
 	}
 }
 
+// The video size cap is enforced before any ffmpeg lookup, so it can be
+// tested without ffmpeg or a real video file.
+func TestValidateVideoSize(t *testing.T) {
+	if err := commands.ValidateVideoSize(commands.MaxVideoBytes); err != nil {
+		t.Errorf("video at exactly the cap should be allowed, got %v", err)
+	}
+	if err := commands.ValidateVideoSize(commands.MaxVideoBytes + 1); err == nil {
+		t.Error("expected video over the cap to be rejected")
+	}
+}
+
 func makePNG(t *testing.T) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, 2, 2))

@@ -43,7 +43,7 @@ func BuildHelpEmbed() *discordgo.MessageEmbed {
 			}),
 			helpField("Media & AI", [][2]string{
 				{"img2gif <url>", "Convert an image into a GIF"},
-				{"vid2gif <url>", "Convert a video into a GIF"},
+				{"vid2gif <url>", "Convert a video into a GIF (≤25MB, clips to 10s)"},
 				{"autogif <url>", "Convert any media into a GIF"},
 				{"factcheck <claim>", "Fact-check a claim against searchable ratings"},
 			}),

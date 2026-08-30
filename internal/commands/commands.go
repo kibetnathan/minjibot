@@ -32,7 +32,7 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "help":
 		return h.help(s, m.ChannelID)
 	case "echo":
-		return h.echo(s, m.ChannelID, args)
+		return h.echo(s, m, args)
 	case "userinfo":
 		return h.userInfo(s, m, args)
 	case "ddg":
@@ -145,8 +145,8 @@ func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.Interactio
 	})
 }
 
-func (h *CommandHandler) echo(s *discordgo.Session, channelID string, args []string) error {
-	return echoMessageCommandHandler(s, channelID, args)
+func (h *CommandHandler) echo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return echoMessageCommandHandler(s, m, args)
 }
 
 func (h *CommandHandler) echoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -528,7 +528,7 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "vid2gif",
-		Description: "Convert a video into a GIF",
+		Description: "Convert a video into a GIF (≤25MB, clips to 10s)",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "url", Description: "Video URL", Required: true},
 		},
