@@ -40,3 +40,31 @@ type CreateAuditLogParams struct {
 	TargetID string
 	Metadata []byte
 }
+
+type CreateUserParams struct {
+	UserID       string
+	Email        *string
+	Passwordhash *string
+}
+
+type UpdateUserParams struct {
+	Email        *string
+	Passwordhash *string
+	IsActive     bool
+}
+
+type SetBirthdayParams struct {
+	GuildID  string
+	UserID   string
+	Birthday time.Time
+}
+
+type SetGuildBirthdayChannelParams struct {
+	GuildID   string
+	ChannelID string
+}
+
+type SetGuildBirthdayRoleParams struct {
+	GuildID string
+	RoleID  string
+}

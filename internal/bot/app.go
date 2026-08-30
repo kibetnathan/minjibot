@@ -27,6 +27,7 @@ type App struct {
 	SettingsRepo repository.GuildSettingsRepository
 	PermRepo     repository.UserPermissionRepository
 	AuditRepo    repository.AuditLogRepository
+	UserRepo     repository.UserRepository
 	cmdHandler   *commands.CommandHandler
 }
 
@@ -69,6 +70,7 @@ func NewApp() (*App, error) {
 		SettingsRepo: repository.NewGuildSettingsRepository(store),
 		PermRepo:     repository.NewUserPermissionRepository(store),
 		AuditRepo:    repository.NewAuditLogRepository(store),
+		UserRepo:     repository.NewUserRepository(store),
 	}
 
 	// Initialize command handler
