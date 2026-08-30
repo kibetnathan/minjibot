@@ -7,8 +7,9 @@
 # The bot connects outbound to Discord over the gateway. On the free tier only
 # `web` services are available, so this is a web service whose health check
 # hits the API's `/healthz` endpoint (see internal/api/app.go). The container
-# command is scripts/migrate.sh, which builds the binary, runs migrations,
-# then starts the bot + API on :8080.
+# command is scripts/migrate.sh, which runs migrations, then starts the
+# prebuilt bot + API on :8080. The binary is compiled at image build time
+# (multi-stage Dockerfile) so startup is fast enough to pass Render's port scan.
 
 databases:
   - name: minjibot-db

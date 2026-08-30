@@ -1,6 +1,6 @@
 #!/bin/sh
-# Container startup script: builds the app, runs DB migrations, then starts the
-# bot. Used as the container command (see render.yaml dockerCommand).
+# Container startup script: runs DB migrations, then starts the prebuilt bot
+# binary. Used as the container command (see render.yaml dockerCommand).
 #
 # Requires:
 #   GOOSE_DRIVER      (defaults to postgres)
@@ -12,9 +12,6 @@
 set -e
 
 cd /app
-
-echo "[startup] Building minjibot binary..."
-CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/minjibot ./cmd/main.go
 
 : "${GOOSE_DRIVER:=postgres}"
 : "${GOOSE_MIGRATION_DIR:=/app/db/migrations}"
