@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kibetnathan/minjibot/internal/domain/commands"
+	"github.com/kibetnathan/minjibot/internal/commands"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 	"log/slog"
 )

@@ -1,0 +1,53 @@
+package tests
+
+import (
+	"testing"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/commands"
+)
+
+func TestExtensionFromContentType(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"image/png", "png"},
+		{"image/png; charset=utf-8", "png"},
+		{"image/jpeg", "jpg"},
+		{"image/jpg", "jpg"},
+		{"IMAGE/JPEG", "jpg"},
+		{"image/gif", "gif"},
+		{"image/webp", "webp"},
+		{"video/mp4", "mp4"},
+		{"video/webm", "webm"},
+		{"image/avif", "avif"},
+		{"text/html", "bin"},
+		{"", "bin"},
+		{"application/octet-stream", "bin"},
+	}
+	for _, tc := range cases {
+		if got := commands.ExtensionFromContentType(tc.in); got != tc.want {
+			t.Errorf("commands.ExtensionFromContentType(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestFirstAttachment(t *testing.T) {
+	if got := commands.FirstAttachment(nil); got != nil {
+		t.Errorf("expected nil for nil message")
+	}
+	empty := &discordgo.Message{}
+	if got := commands.FirstAttachment(empty); got != nil {
+		t.Errorf("expected nil for no attachments")
+	}
+	emptyURL := &discordgo.Message{Attachments: []*discordgo.MessageAttachment{{ID: "1"}}}
+	if got := commands.FirstAttachment(emptyURL); got != nil {
+		t.Errorf("expected nil when attachment has no URL")
+	}
+	with := []*discordgo.MessageAttachment{{ID: "1", URL: "u1"}, {ID: "2", URL: "u2"}}
+	msg := &discordgo.Message{Attachments: with}
+	if got := commands.FirstAttachment(msg); got == nil || got.URL != "u1" {
+		t.Errorf("expected first attachment, got %+v", got)
+	}
+}

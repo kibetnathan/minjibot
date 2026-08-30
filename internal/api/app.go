@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/logger"
 	"github.com/labstack/echo/v5"
@@ -15,7 +15,7 @@ import (
 type App struct {
 	Echo   *echo.Echo
 	Cfg    *config.Config
-	Conn   *pgx.Conn
+	Pool   *pgxpool.Pool
 	server *http.Server
 }
 
@@ -31,8 +31,8 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	// DB Conn
-	conn, err := pgx.Connect(context.Background(), cfg.DBURL)
+	// DB Pool (concurrency-safe connection pool)
+	pool, err := pgxpool.New(context.Background(), cfg.DBURL)
 	if err != nil {
 		e.Logger.Error(err.Error())
 		return nil, err
@@ -46,16 +46,14 @@ func NewApp() (*App, error) {
 	return &App{
 		Echo:   e,
 		Cfg:    cfg,
-		Conn:   conn,
+		Pool:   pool,
 		server: srv,
 	}, nil
 }
 
 func (a *App) Start() error {
 	defer func() {
-		if err := a.Conn.Close(context.Background()); err != nil {
-			a.Echo.Logger.Error("Failed to close database connection", "error", err)
-		}
+		a.Pool.Close()
 	}()
 	return a.server.ListenAndServe()
 }

@@ -17,4 +17,4 @@ Go Discord bot + API (module `github.com/kibetnathan/minjibot`, Go 1.26, pgx/v5 
 
 ## Layout
 
-- `cmd/bot` and `cmd/api` = entrypoints; `internal/{bot,api,domain,ports}` = app code; `infrastructure/postgres` = generated-only sqlc output (don't hand-edit); `dashboard/` and `tests/` are empty placeholders.
+- `cmd/bot` and `cmd/api` = entrypoints; `internal/{bot,api,commands,config,domain,logger,ports}` = app code (commands and its tests moved out of `domain`); `infrastructure/postgres` = generated-only sqlc output (don't hand-edit); `dashboard/` is an empty placeholder; `tests/` holds the external unit tests for the `commands` package.

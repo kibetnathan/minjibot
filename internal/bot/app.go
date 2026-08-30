@@ -9,11 +9,11 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
 	"github.com/kibetnathan/minjibot/internal/bot/handlers"
 	"github.com/kibetnathan/minjibot/internal/config"
-	"github.com/kibetnathan/minjibot/internal/domain/commands"
+	"github.com/kibetnathan/minjibot/internal/commands"
 	"github.com/kibetnathan/minjibot/internal/logger"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 )
@@ -21,7 +21,7 @@ import (
 type App struct {
 	Session      *discordgo.Session
 	Cfg          *config.Config
-	Conn         *pgx.Conn
+	Pool         *pgxpool.Pool
 	Logger       *slog.Logger
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
@@ -47,19 +47,23 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	// DB Conn
-	conn, err := pgx.Connect(context.Background(), cfg.DBURL)
+	// DB Pool (concurrency-safe connection pool for parallel event handlers)
+	pool, err := pgxpool.New(context.Background(), cfg.DBURL)
 	if err != nil {
 		log.Error("Error connecting to database", "error", err.Error())
 		return nil, err
 	}
+	if err := pool.Ping(context.Background()); err != nil {
+		log.Error("Error pinging database", "error", err.Error())
+		return nil, err
+	}
 
-	store := repository.NewSQLStore(postgres.New(conn))
+	store := repository.NewSQLStore(postgres.New(pool))
 
 	app := &App{
 		Session:      session,
 		Cfg:          cfg,
-		Conn:         conn,
+		Pool:         pool,
 		Logger:       log,
 		GuildRepo:    repository.NewGuildRepository(store),
 		SettingsRepo: repository.NewGuildSettingsRepository(store),
@@ -150,9 +154,8 @@ func (a *App) Start() error {
 		a.Logger.Error("Failed to close Discord session", "error", err)
 	}
 
-	if err := a.Conn.Close(context.Background()); err != nil {
-		a.Logger.Error("Failed to close database connection", "error", err)
-	}
+	a.Pool.Close()
+	a.Logger.Info("Closed database pool")
 
 	return nil
 }

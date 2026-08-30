@@ -57,9 +57,8 @@ func main() {
 		botApp.Logger.Error("Error closing Discord session", "error", err.Error())
 	}
 
-	if err := botApp.Conn.Close(context.Background()); err != nil {
-		botApp.Logger.Error("Error closing database connection", "error", err)
-	}
+	botApp.Pool.Close()
+	apiApp.Pool.Close()
 
 	botApp.Logger.Info("Shutdown complete")
 }
