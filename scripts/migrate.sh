@@ -16,8 +16,13 @@ cd /app
 : "${GOOSE_DRIVER:=postgres}"
 : "${GOOSE_MIGRATION_DIR:=/app/db/migrations}"
 
+# goose needs a connection string. Prefer GOOSE_DBSTRING, then fall back to
+# DB_URL (used by the app itself), then DATABASE_URL (the Railway Postgres
+# plugin convention).
+: "${GOOSE_DBSTRING:=${DB_URL:-$DATABASE_URL}}"
+
 if [ -z "$GOOSE_DBSTRING" ]; then
-  echo "[startup] ERROR: GOOSE_DBSTRING is not set. Provide the Postgres connection string." >&2
+  echo "[startup] ERROR: No Postgres connection string. Set GOOSE_DBSTRING, DB_URL, or DATABASE_URL." >&2
   exit 1
 fi
 
