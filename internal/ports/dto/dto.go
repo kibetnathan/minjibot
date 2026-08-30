@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type CreateGuildParams struct {
 	ID          string
 	Name        string
@@ -39,4 +41,37 @@ type CreateAuditLogParams struct {
 	ActorID  string
 	TargetID string
 	Metadata []byte
+}
+
+type CreateUserParams struct {
+	UserID       string
+	Email        *string
+	Passwordhash *string
+}
+
+type UpdateUserParams struct {
+	Email        *string
+	Passwordhash *string
+	IsActive     bool
+}
+
+type SetBirthdayParams struct {
+	GuildID  string
+	UserID   string
+	Birthday time.Time
+}
+
+type SetGuildBirthdayChannelParams struct {
+	GuildID   string
+	ChannelID string
+}
+
+type SetGuildBirthdayRoleParams struct {
+	GuildID string
+	RoleID  string
+}
+
+type CreateDiaryEntryParams struct {
+	UserID  string
+	Content string
 }

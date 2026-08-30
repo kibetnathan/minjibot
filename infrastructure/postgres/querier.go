@@ -12,22 +12,45 @@ import (
 
 type Querier interface {
 	CountAuditLogsForGuild(ctx context.Context, guildID string) (int64, error)
+	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (AuditLog, error)
+	CreateDiaryEntry(ctx context.Context, arg CreateDiaryEntryParams) (DiaryEntry, error)
 	CreateGuild(ctx context.Context, arg CreateGuildParams) (Guild, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeactivateUser(ctx context.Context, id int64) error
 	DeleteAuditLogsBefore(ctx context.Context, cutoff pgtype.Timestamptz) error
+	DeleteBirthday(ctx context.Context, arg DeleteBirthdayParams) error
+	DeleteDiaryEntry(ctx context.Context, arg DeleteDiaryEntryParams) error
 	DeleteGuild(ctx context.Context, id string) error
 	DeleteGuildSettings(ctx context.Context, guildID string) error
+	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserPermission(ctx context.Context, arg DeleteUserPermissionParams) error
+	GetBirthday(ctx context.Context, arg GetBirthdayParams) (Birthday, error)
+	GetDiaryEntry(ctx context.Context, arg GetDiaryEntryParams) (DiaryEntry, error)
 	GetGuild(ctx context.Context, id string) (Guild, error)
+	GetGuildBirthdaySettings(ctx context.Context, guildID string) (GuildBirthdaySetting, error)
 	GetGuildSettings(ctx context.Context, guildID string) (GuildSetting, error)
+	GetUser(ctx context.Context, id int64) (User, error)
+	GetUserByDiscordID(ctx context.Context, userID string) (User, error)
+	GetUserByEmail(ctx context.Context, email pgtype.Text) (User, error)
 	GetUserPermission(ctx context.Context, arg GetUserPermissionParams) (UserPermission, error)
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
 	ListAuditLogsForGuild(ctx context.Context, arg ListAuditLogsForGuildParams) ([]AuditLog, error)
+	ListBirthdaysByGuild(ctx context.Context, guildID string) ([]Birthday, error)
+	ListBirthdaysTodayByGuild(ctx context.Context, arg ListBirthdaysTodayByGuildParams) ([]Birthday, error)
+	ListDiaryEntriesByUser(ctx context.Context, userID string) ([]DiaryEntry, error)
 	ListGuilds(ctx context.Context) ([]Guild, error)
 	ListUserPermissionsForGuild(ctx context.Context, guildID string) ([]UserPermission, error)
 	ListUserPermissionsForUser(ctx context.Context, arg ListUserPermissionsForUserParams) ([]UserPermission, error)
+	ListUsers(ctx context.Context) ([]User, error)
+	ReactivateUser(ctx context.Context, id int64) error
+	SetUserPassword(ctx context.Context, arg SetUserPasswordParams) (User, error)
 	UpdateGuild(ctx context.Context, arg UpdateGuildParams) (Guild, error)
 	UpdateGuildSettings(ctx context.Context, arg UpdateGuildSettingsParams) (GuildSetting, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpsertBirthday(ctx context.Context, arg UpsertBirthdayParams) (Birthday, error)
+	UpsertGuildBirthdayChannel(ctx context.Context, arg UpsertGuildBirthdayChannelParams) (GuildBirthdaySetting, error)
+	UpsertGuildBirthdayRole(ctx context.Context, arg UpsertGuildBirthdayRoleParams) (GuildBirthdaySetting, error)
 	UpsertGuildSettings(ctx context.Context, arg UpsertGuildSettingsParams) (GuildSetting, error)
 	UpsertUserPermission(ctx context.Context, arg UpsertUserPermissionParams) (UserPermission, error)
 }

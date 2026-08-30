@@ -10,14 +10,14 @@ import (
 
 const (
 	searchBatchSize      = 100
-	searchDefaultLimit   = 200
+	SearchDefaultLimit   = 200
 	searchMaxLimit       = 1000
-	searchMaxResults     = 5
-	searchMaxFieldLength = 1024
+	SearchMaxResults     = 5
+	SearchMaxFieldLength = 1024
 )
 
 func searchMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	query, limit, err := parseSearchArgs(s, m.ChannelID, args)
+	query, limit, err := ParseSearchArgs(s, m.ChannelID, args)
 	if err != nil {
 		return err
 	}
@@ -27,14 +27,14 @@ func searchMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreat
 		return err
 	}
 
-	embed := buildSearchEmbed(query, limit, matches)
+	embed := BuildSearchEmbed(query, limit, matches)
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return err
 }
 
 func searchSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	query := ""
-	limit := searchDefaultLimit
+	limit := SearchDefaultLimit
 	for _, opt := range i.ApplicationCommandData().Options {
 		switch opt.Name {
 		case "query":
@@ -54,7 +54,7 @@ func searchSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCre
 		})
 	}
 	if limit < 1 || limit > searchMaxLimit {
-		limit = searchDefaultLimit
+		limit = SearchDefaultLimit
 	}
 
 	matches, err := searchChatHistory(s, i.GuildID, i.ChannelID, query, limit)
@@ -62,7 +62,7 @@ func searchSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCre
 		return err
 	}
 
-	embed := buildSearchEmbed(query, limit, matches)
+	embed := BuildSearchEmbed(query, limit, matches)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -71,18 +71,18 @@ func searchSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCre
 	})
 }
 
-// parseSearchArgs handles `!search <query>` and optional trailing
+// ParseSearchArgs handles `-search <query>` and optional trailing
 // `messages:<n>` or `<n>` to control how far back to look.
-func parseSearchArgs(s *discordgo.Session, channelID string, args []string) (string, int, error) {
+func ParseSearchArgs(s *discordgo.Session, channelID string, args []string) (string, int, error) {
 	if len(args) == 0 {
-		if _, err := s.ChannelMessageSend(channelID, "Usage: `!search <query>`"); err != nil {
+		if _, err := s.ChannelMessageSend(channelID, "Usage: `-search <query>`"); err != nil {
 			return "", 0, err
 		}
 		return "", 0, fmt.Errorf("search requires a query")
 	}
 
 	query := ""
-	limit := searchDefaultLimit
+	limit := SearchDefaultLimit
 	rest := make([]string, 0, len(args))
 	for _, arg := range args {
 		lower := strings.ToLower(arg)
@@ -103,7 +103,7 @@ func parseSearchArgs(s *discordgo.Session, channelID string, args []string) (str
 
 	query = strings.TrimSpace(strings.Join(rest, " "))
 	if limit < 1 || limit > searchMaxLimit {
-		limit = searchDefaultLimit
+		limit = SearchDefaultLimit
 	}
 	return query, limit, nil
 }
@@ -145,10 +145,10 @@ func searchChatHistory(s *discordgo.Session, guildID, channelID, query string, l
 	return matches, nil
 }
 
-func buildSearchEmbed(query string, limit int, matches []*discordgo.Message) *discordgo.MessageEmbed {
+func BuildSearchEmbed(query string, limit int, matches []*discordgo.Message) *discordgo.MessageEmbed {
 	embed := &discordgo.MessageEmbed{
-		Color:      0x5865F2,
-		Title:      fmt.Sprintf("Search results for %q", query),
+		Color:       0x5865F2,
+		Title:       fmt.Sprintf("Search results for %q", query),
 		Description: fmt.Sprintf("Searched the last %d messages in this channel.", limit),
 	}
 
@@ -161,7 +161,7 @@ func buildSearchEmbed(query string, limit int, matches []*discordgo.Message) *di
 		Text: fmt.Sprintf("%d match(es) found", len(matches)),
 	}
 
-	count := searchMaxResults
+	count := SearchMaxResults
 	if len(matches) < count {
 		count = len(matches)
 	}
@@ -171,8 +171,8 @@ func buildSearchEmbed(query string, limit int, matches []*discordgo.Message) *di
 			author += " [bot]"
 		}
 		content := msg.Content
-		if len(content) > searchMaxFieldLength {
-			content = content[:searchMaxFieldLength-3] + "..."
+		if len(content) > SearchMaxFieldLength {
+			content = content[:SearchMaxFieldLength-3] + "..."
 		}
 
 		value := content

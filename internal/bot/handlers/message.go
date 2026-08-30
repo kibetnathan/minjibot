@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kibetnathan/minjibot/internal/domain/commands"
+	"github.com/kibetnathan/minjibot/internal/commands"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
 	"log/slog"
@@ -35,6 +36,32 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 
 	ctx := context.Background()
 
+	// Resolve the guild's command prefix (fall back to the default). Looked up
+	// early so both the auto-delete guard and command dispatch see the same
+	// prefix.
+	settings, sErr := deps.SettingsRepo.Get(ctx, m.GuildID)
+	prefix := DefaultPrefix
+	if sErr == nil && settings.Prefix != "" {
+		prefix = settings.Prefix
+	}
+
+	// Check for one-off easter eggs (scat, etc.).
+	if checkEasterEggs(s, m) {
+		return
+	}
+
+	// Auto-delete messages from lurkers after 0.5 seconds — but not lurk
+	// commands themselves (otherwise they can never stop lurking).
+	if !isLurkCommand(m.Content, prefix) {
+		if commands.IsLurking(m.GuildID, m.Author.ID) {
+			chID, msgID := m.ChannelID, m.ID
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				_ = s.ChannelMessageDelete(chID, msgID)
+			}()
+		}
+	}
+
 	// Ensure guild exists in DB
 	guild, err := deps.GuildRepo.GetByID(ctx, m.GuildID)
 	if err != nil {
@@ -55,17 +82,10 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		Action:   "MESSAGE_CREATE",
 		ActorID:  m.Author.ID,
 		TargetID: m.ChannelID,
-		Metadata: []byte(fmt.Sprintf(`{"content":%q,"channel_id":%q}`, m.Content, m.ChannelID)),
+		Metadata: []byte(fmt.Sprintf(`{"message_id":%q,"content":%q,"channel_id":%q}`, m.ID, m.Content, m.ChannelID)),
 	})
 	if err != nil {
 		deps.Logger.Error("Failed to create audit log", "error", err)
-	}
-
-	// Get guild settings for prefix
-	settings, err := deps.SettingsRepo.Get(ctx, m.GuildID)
-	prefix := DefaultPrefix
-	if err == nil && settings.Prefix != "" {
-		prefix = settings.Prefix
 	}
 
 	_ = guild
@@ -86,3 +106,14 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 	}
 }
 
+// isLurkCommand reports whether a raw message content is a lurk or lurkers
+// command using the given prefix. This lets lurkers toggle their state without
+// the auto-delete kicking in.
+func isLurkCommand(content, prefix string) bool {
+	low := strings.ToLower(strings.TrimSpace(content))
+	if prefix != "" && strings.HasPrefix(low, prefix) {
+		low = strings.TrimSpace(strings.TrimPrefix(low, prefix))
+	}
+	return low == "lurk" || strings.HasPrefix(low, "lurk ") ||
+		low == "lurkers" || strings.HasPrefix(low, "lurkers ")
+}

@@ -12,7 +12,7 @@ import (
 func userInfoMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	targetID := m.Author.ID
 	for _, arg := range args {
-		if id := parseMentionID(arg); id != "" {
+		if id := ParseMentionID(arg); id != "" {
 			targetID = id
 			break
 		}
@@ -120,9 +120,11 @@ func formatRoleNames(s *discordgo.Session, guildID string, roleIDs []string) str
 	return strings.Join(names, ", ")
 }
 
-func parseMentionID(arg string) string {
+func ParseMentionID(arg string) string {
+	arg = strings.TrimSpace(arg)
+	arg = strings.TrimPrefix(arg, "<@&")
+	arg = strings.TrimPrefix(arg, "<@!")
 	arg = strings.TrimPrefix(arg, "<@")
-	arg = strings.TrimPrefix(arg, "!")
 	arg = strings.TrimSuffix(arg, ">")
 	if id, err := strconv.ParseInt(arg, 10, 64); err == nil && id > 0 {
 		return strconv.FormatInt(id, 10)

@@ -6,15 +6,18 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func echoMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
+func echoMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	text := strings.Join(args, " ")
 	if strings.TrimSpace(text) == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `-echo <text>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-echo <text>`")
 		return err
 	}
 
-	_, err := s.ChannelMessageSend(channelID, text)
-	return err
+	_, err := s.ChannelMessageSend(m.ChannelID, text)
+	if err != nil {
+		return err
+	}
+	return s.ChannelMessageDelete(m.ChannelID, m.ID)
 }
 
 func echoSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -38,4 +41,3 @@ func echoSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreat
 		},
 	})
 }
-

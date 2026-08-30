@@ -10,13 +10,18 @@ TEST_DB_URL ?= $(subst /$(POSTGRES_DB),/$(TESTING_DB),$(GOOSE_DBSTRING))
 
 .PHONY: all run test goose-migrate-up goose-migrate-down test-migrate-up test-migrate-down
 .PHONY: docker/up docker/down docker/down/v docker/logs
-.PHONY: run-api run-bot ngrok ngrok-url
+.PHONY: run-api run-bot ngrok ngrok-url integration-test
 
 all: test run
 
 test:
-	@echo "Running tests ..."
-	go test ./tests/...
+	@echo "Running unit tests ..."
+	go test ./...
+
+integration-test:
+	@test -n "$(TESTING_DB)" || { echo "Error: TESTING_DB is not set in .env."; exit 1; }
+	@echo "Running integration tests ..."
+	cd integration_tests && go test -v -count=1
 
 run:
 	@echo "Starting Go application..."

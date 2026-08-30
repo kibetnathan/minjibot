@@ -9,6 +9,9 @@ type Config struct {
 	DiscordToken        string `env:"DISCORD_TOKEN"`
 	DiscordClientID     string `env:"DISCORD_CLIENT_ID"`
 	DiscordClientSecret string `env:"DISCORD_CLIENT_SECRET"`
+	GoogleFactCheckKey  string `env:"GOOGLE_FACTCHECK_API_KEY"`
+	GeminiAPIKey        string `env:"GEMINI_API_KEY"`
+	GeminiModel         string `env:"GEMINI_MODEL"`
 }
 
 func NewConfig() (*Config, error) {

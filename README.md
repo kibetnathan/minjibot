@@ -2,7 +2,7 @@
 
 A Discord bot with a companion REST API and web dashboard, built in Go.
 
-> **Status:** early development. Both the API (`cmd/api`) and bot (`cmd/bot`) entrypoints are functional. The bot supports prefix commands (`!`) and slash commands.
+> **Status:** early development. Both the API (`cmd/api`) and bot (`cmd/bot`) entrypoints are functional. The bot supports prefix commands (`-`) and slash commands.
 
 ## Tech stack
 
@@ -25,7 +25,7 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 | goose   | migrations                  |
 | sqlc    | query codegen               |
 | Node.js | dashboard                   |
-| ngrok   | local tunnel for slash commands (optional) |
+| ngrok   | exposing the API / future HTTP interactions endpoint (optional) |
 
 ## Getting started
 
@@ -35,6 +35,11 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
    # App / API / Bot
    DB_URL=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
    DISCORD_TOKEN=
+   DISCORD_CLIENT_ID=            # used for slash command registration (falls back to bot user ID)
+   DISCORD_CLIENT_SECRET=
+   GOOGLE_FACTCHECK_API_KEY=     # optional, for the factcheck command
+   GEMINI_API_KEY=               # optional
+   GEMINI_MODEL=                 # optional, default model
 
    # Postgres container (used by docker compose)
    POSTGRES_USER=postgres
@@ -85,8 +90,9 @@ A Discord bot with a companion REST API and web dashboard, built in Go.
 | Target                | Action                                              |
 | --------------------- | --------------------------------------------------- |
 | `make all`            | test + run                                          |
-| `make test`           | `go test ./tests/...`                               |
-| `make run`            | start the API (`cmd/api`)                           |
+| `make test`           | `go test ./...`                                     |
+| `make integration-test` | runs `integration_tests/db_test.go` against `TESTING_DB` |
+| `make run`            | run unified entrypoint `cmd/main.go` (bot + API)    |
 | `make run-api`        | start API server on :8080                           |
 | `make run-bot`        | start Discord bot (gateway)                         |
 | `make ngrok`          | start ngrok tunnel to API (port 8080)               |
@@ -117,17 +123,18 @@ The Makefile loads and exports `.env`, so no Infisical or extra tooling is requi
 cmd/api            API entrypoint (:8080)
 cmd/bot            Discord bot entrypoint (gateway + prefix/slash commands)
 cmd/main.go        Unified entrypoint (starts both bot + API)
-internal/api       Echo app wiring
-internal/bot       Discord bot app + handlers
+internal/api       Echo app wiring (no HTTP routes yet)
+internal/bot       Discord bot app + handlers (message / interaction / delete)
+internal/commands  bot commands (message + slash handlers, help pagination, tldr)
 internal/config    env config (caarlos0/env/v11)
-internal/logger    slog setup
-internal/domain    domain entities (guild, guildsettings, userpermission, auditlog, commands)
+internal/domain    domain entities (guild, guildsettings, userpermission, auditlog, user, birthday)
 internal/ports     dto + repository interfaces/implementations
 infrastructure/postgres   generated sqlc output (do not edit)
 db/migrations      goose SQL migrations
 db/queries         named sqlc queries
+integration_tests  DB integration tests (db_test.go)
 dashboard/minji-bot       React + Vite + shadcn dashboard (with landing page)
-tests              integration tests (WIP)
+tests              external unit tests for the commands package
 ```
 
 ## Dashboard
@@ -150,11 +157,17 @@ make run-bot
 go run ./cmd/bot
 ```
 
-The bot connects to Discord gateway and listens for both prefix commands (default `!`) and slash commands.
+The bot connects to Discord gateway and listens for both prefix commands (default `-`) and slash commands.
 
-## Local development with ngrok (for slash commands & webhooks)
+> **Note on slash command delivery:** this bot handles slash (and other) commands over the Discord **gateway (WebSocket)**, not via an HTTP interactions endpoint. Global slash commands are registered automatically on `Ready`. You do **not** need ngrok or a public endpoint just to run slash commands locally — `make run-bot` is enough.
 
-Slash commands require a public HTTPS endpoint for Discord to send interactions. Use ngrok to tunnel your local API:
+The bot's `help` command is paginated by category: prefix `-help` flips pages with ◀️/▶️ reactions, while `/help` uses ◀/▶ buttons. `-tldr <command>` / `/tldr command:<name>` shows a brief usage and description for any command.
+
+## Local development with ngrok (for webhooks / API — aspirational)
+
+> ⚠️ The HTTP **Interactions Endpoint** (`/interactions`) is **not implemented yet** — `internal/api/app.go` wires Echo with no routes. Discord's HTTP interactions will only work once a `POST /interactions` handler that verifies `X-Signature-Ed25519` / `X-Signature-Timestamp` is added. The steps below document the intended flow and are useful **today** only for exposing the API generally.
+
+ngrok tunnels your local API (port `:8080`) to a public HTTPS URL:
 
 1. Install ngrok: `brew install ngrok/ngrok/ngrok` (macOS) or download from https://ngrok.com/download
 2. Authenticate: `ngrok config add-authtoken <your-token>`
@@ -167,12 +180,10 @@ Slash commands require a public HTTPS endpoint for Discord to send interactions.
    ```
 
 5. Copy the HTTPS forwarding URL (e.g., `https://abc123.ngrok-free.app`)
-6. Set it as your Discord application's **Interactions Endpoint URL** in the Developer Portal:
+6. Once the `/interactions` endpoint is implemented, set it as your Discord application's **Interactions Endpoint URL**:
    - Go to Applications → Your Bot → General Information
    - Set "Interactions Endpoint URL" to `https://abc123.ngrok-free.app/interactions`
    - Save changes (Discord will send a verification request)
-
-Now slash commands will route to your local machine.
 
 ### Get ngrok URL programmatically
 
