@@ -24,6 +24,13 @@ func NewApp() (*App, error) {
 	e.Logger = logger.New()
 	e.Use(middleware.Recover())
 
+	// Health check endpoint so the bot's web service (Render free tier) can
+	// report as live and receive its ping.
+	var healthHandler echo.HandlerFunc = func(c *echo.Context) error {
+		return c.String(http.StatusOK, "ok")
+	}
+	e.GET("/healthz", healthHandler)
+
 	// Initialise Config
 	cfg, err := config.NewConfig()
 	if err != nil {
