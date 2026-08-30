@@ -145,7 +145,7 @@ func OptString(opts map[string]*discordgo.ApplicationCommandInteractionDataOptio
 
 func emojiMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji add <name> [url]`, `!emoji add many name1=url1 name2=url2`, `!emoji enlarge <emoji>`, `!emoji list`, `!emoji remove <emoji>`, `!emoji steal <emoji>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-emoji add <name> [url]`, `-emoji add many name1=url1 name2=url2`, `-emoji enlarge <emoji>`, `-emoji list`, `-emoji remove <emoji>`, `-emoji steal <emoji>`")
 		return err
 	}
 
@@ -174,7 +174,7 @@ func emojiAdd(s *discordgo.Session, m *discordgo.MessageCreate, args []string) e
 		return fmt.Errorf("emoji commands can only be used in a server")
 	}
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji add <name> [url]` (attach the emoji image or pass a URL)")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-emoji add <name> [url]` (attach the emoji image or pass a URL)")
 		return err
 	}
 
@@ -249,7 +249,7 @@ func emojiAddMany(s *discordgo.Session, m *discordgo.MessageCreate, args []strin
 	}
 
 	if len(emojis) == 0 {
-		return fmt.Errorf("no emojis were added — use `!emoji add many name1=url1 name2=url2` or attach images")
+		return fmt.Errorf("no emojis were added — use `-emoji add many name1=url1 name2=url2` or attach images")
 	}
 
 	formatted := make([]string, 0, len(emojis))
@@ -264,7 +264,7 @@ func emojiAddMany(s *discordgo.Session, m *discordgo.MessageCreate, args []strin
 func emojiEnlarge(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	_, id, animated, ok := EmojiTarget(m, args)
 	if !ok {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji enlarge <emoji>` — or reply to a message containing an emoji")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-emoji enlarge <emoji>` — or reply to a message containing an emoji")
 		return err
 	}
 
@@ -320,7 +320,7 @@ func emojiRemove(s *discordgo.Session, m *discordgo.MessageCreate, args []string
 		return fmt.Errorf("emoji commands can only be used in a server")
 	}
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji remove <emoji>` (or an emoji ID)")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-emoji remove <emoji>` (or an emoji ID)")
 		return err
 	}
 
@@ -345,7 +345,7 @@ func emojiSteal(s *discordgo.Session, m *discordgo.MessageCreate, args []string)
 
 	name, id, animated, ok := EmojiTarget(m, args)
 	if !ok {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!emoji steal <emoji>` — or reply to a message containing an emoji")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-emoji steal <emoji>` — or reply to a message containing an emoji")
 		return err
 	}
 

@@ -160,7 +160,7 @@ func ParseGifSearchArgs(args []string) (query, creator string) {
 func gifsearchMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
 	query, creator := ParseGifSearchArgs(args)
 	if query == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `!gifsearch <query> [creator:<name>]`")
+		_, err := s.ChannelMessageSend(channelID, "Usage: `-gifsearch <query> [creator:<name>]`")
 		return err
 	}
 

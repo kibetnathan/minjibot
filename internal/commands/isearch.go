@@ -76,7 +76,7 @@ func (c *isearchClient) search(query string) ([]isearchResult, error) {
 func isearchMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
 	query := strings.TrimSpace(strings.Join(args, " "))
 	if query == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `!isearch <query>`")
+		_, err := s.ChannelMessageSend(channelID, "Usage: `-isearch <query>`")
 		return err
 	}
 

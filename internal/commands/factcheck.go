@@ -60,7 +60,7 @@ func factcheckMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCr
 		claim = referencedMessageContent(s, m)
 	}
 	if claim == "" {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!factcheck <claim>` — or reply to a message to fact-check it")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-factcheck <claim>` — or reply to a message to fact-check it")
 		return err
 	}
 

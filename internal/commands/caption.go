@@ -58,7 +58,7 @@ func ParseCaptionArgs(args []string) (top, bottom, imageURL string) {
 func captionMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	top, bottom, imageURL := ParseCaptionArgs(args)
 	if top == "" && bottom == "" {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!caption top:<text> bottom:<text> url:<image-url>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-caption top:<text> bottom:<text> url:<image-url>`")
 		return err
 	}
 

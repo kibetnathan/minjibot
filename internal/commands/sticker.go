@@ -12,7 +12,7 @@ import (
 
 func stickerMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!sticker add <name> [url]`, `!sticker remove <sticker-id|message-link>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker add <name> [url]`, `-sticker remove <sticker-id|message-link>`")
 		return err
 	}
 
@@ -29,7 +29,7 @@ func stickerMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCrea
 
 func stickerAddMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!sticker add <name> [url]` (attach the sticker image or pass a URL)")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker add <name> [url]` (attach the sticker image or pass a URL)")
 		return err
 	}
 	name := strings.TrimSpace(args[0])
@@ -57,7 +57,7 @@ func stickerAddMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []
 
 func stickerRemoveMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!sticker remove <sticker-id|message-link>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker remove <sticker-id|message-link>`")
 		return err
 	}
 	id := strings.TrimSpace(args[0])

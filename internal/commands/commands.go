@@ -54,7 +54,7 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "quote":
 		return h.quote(s, m, args)
 	case "translate":
-		return h.translate(s, m.ChannelID, args)
+		return h.translate(s, m, args)
 	case "reminder":
 		return h.reminder(s, m, args)
 	case "isearch":
@@ -233,8 +233,8 @@ func (h *CommandHandler) quoteSlash(s *discordgo.Session, i *discordgo.Interacti
 	return quoteSlashCommandHandler(s, i)
 }
 
-func (h *CommandHandler) translate(s *discordgo.Session, channelID string, args []string) error {
-	return translateMessageCommandHandler(s, channelID, args)
+func (h *CommandHandler) translate(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return translateMessageCommandHandler(s, m, args)
 }
 
 func (h *CommandHandler) translateSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {

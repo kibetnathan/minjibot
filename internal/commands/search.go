@@ -71,11 +71,11 @@ func searchSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCre
 	})
 }
 
-// ParseSearchArgs handles `!search <query>` and optional trailing
+// ParseSearchArgs handles `-search <query>` and optional trailing
 // `messages:<n>` or `<n>` to control how far back to look.
 func ParseSearchArgs(s *discordgo.Session, channelID string, args []string) (string, int, error) {
 	if len(args) == 0 {
-		if _, err := s.ChannelMessageSend(channelID, "Usage: `!search <query>`"); err != nil {
+		if _, err := s.ChannelMessageSend(channelID, "Usage: `-search <query>`"); err != nil {
 			return "", 0, err
 		}
 		return "", 0, fmt.Errorf("search requires a query")

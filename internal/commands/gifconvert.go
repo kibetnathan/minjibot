@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"image/color/palette"
-	"image/draw"
 	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -51,23 +49,37 @@ func ImageBytesToGIF(data []byte, ext string) ([]byte, error) {
 		}
 	}
 
-	bounds := src.Bounds()
-	paletted := image.NewPaletted(bounds, palette.Plan9[:256])
-	draw.Draw(paletted, bounds, src, image.Point{}, draw.Src)
-
-	anim := &gif.GIF{
-		Image: []*image.Paletted{paletted, paletted},
-		Delay: []int{5, 5},
-	}
-	var buf bytes.Buffer
-	if err := gif.EncodeAll(&buf, anim); err != nil {
+	out, err := imageToGIF(src)
+	if err != nil {
 		return nil, fmt.Errorf("encoding gif: %w", err)
 	}
-	return buf.Bytes(), nil
+	return out, nil
 }
 
-// ffmpegToGIF converts an uploaded video to an animated GIF via ffmpeg.
+const (
+	// maxVideoBytes caps how large an uploaded video may be before conversion.
+	// Videos above this are rejected outright to keep conversions fast.
+	maxVideoBytes = 25 * 1024 * 1024
+
+	// defaultClipSec caps how much of a video is converted when the caller
+	// doesn't request a duration. Trimming to a short clip keeps the GIF small
+	// and fast, which matters because GIF encoding scales with frame count.
+	defaultClipSec = 10.0
+
+	// Video encoding knobs tuned for aggressive compression (small GIFs, fast
+	// encodes). Lower fps/scale and stronger palette dithering all trade off a
+	// little fidelity for a much smaller output.
+	videoFPS  = "fps=12"
+	videoScale = "scale=480:-1:flags=lanczos"
+)
+
+// ffmpegToGIF converts an uploaded video to an animated GIF via ffmpeg. It
+// uses a two-pass palettegen/paletteuse filter and scales down aggressively so
+// source videos render quickly into small GIFs.
 func ffmpegToGIF(data []byte, ext string, startSec, durSec float64) ([]byte, error) {
+	if len(data) > maxVideoBytes {
+		return nil, fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", len(data), maxVideoBytes)
+	}
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		return nil, fmt.Errorf("ffmpeg is not installed on this machine — can't convert videos to GIF")
 	}
@@ -83,21 +95,34 @@ func ffmpegToGIF(data []byte, ext string, startSec, durSec float64) ([]byte, err
 		return nil, err
 	}
 	out := filepath.Join(dir, "output.gif")
+	palette := filepath.Join(dir, "palette.png")
 
-	args := []string{"-y", "-i", in}
+	// Cap the clip length so long videos don't churn out huge, slow GIFs.
+	if durSec <= 0 {
+		durSec = defaultClipSec
+	}
+
+	// Shared clip selection: frame-accurate start/time on the input.
+	clip := []string{}
 	if startSec > 0 {
-		args = append(args, "-ss", fmt.Sprintf("%.2f", startSec))
+		clip = append(clip, "-ss", fmt.Sprintf("%.2f", startSec))
 	}
-	if durSec > 0 {
-		args = append(args, "-t", fmt.Sprintf("%.2f", durSec))
-	}
-	args = append(args, "-vf", "fps=15,scale=480:-1:flags=lanczos", "-loop", "0", out)
+	clip = append(clip, "-t", fmt.Sprintf("%.2f", durSec))
 
-	cmd := exec.Command("ffmpeg", args...)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("ffmpeg failed: %v: %s", err, strings.TrimSpace(stderr.String()))
+	// Pass 1: generate an optimized 256-colour palette for the clip.
+	args := []string{"-y", "-i", in}
+	args = append(args, clip...)
+	args = append(args, "-vf", videoFPS+","+videoScale+",palettegen=stats_mode=diff", palette)
+	if err := runFFmpeg(args); err != nil {
+		return nil, err
+	}
+
+	// Pass 2: render the GIF using that palette with heavy Bayer dithering.
+	args = []string{"-y", "-i", in, "-i", palette}
+	args = append(args, clip...)
+	args = append(args, "-lavfi", videoFPS+","+videoScale+"[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=7:diff_mode=rectangle", "-loop", "0", out)
+	if err := runFFmpeg(args); err != nil {
+		return nil, err
 	}
 
 	result, err := os.ReadFile(out)
@@ -105,6 +130,16 @@ func ffmpegToGIF(data []byte, ext string, startSec, durSec float64) ([]byte, err
 		return nil, fmt.Errorf("reading converted gif: %w", err)
 	}
 	return result, nil
+}
+
+func runFFmpeg(args []string) error {
+	cmd := exec.Command("ffmpeg", args...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("ffmpeg failed: %v: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return nil
 }
 
 func Slugify(s string) string {
@@ -145,7 +180,7 @@ func img2gifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCrea
 		return err
 	}
 	if IsVideoExt(md.Ext) {
-		return fmt.Errorf("that's a video — use `!vid2gif` instead")
+		return fmt.Errorf("that's a video — use `-vid2gif` instead")
 	}
 	if !IsImageExt(md.Ext) {
 		return fmt.Errorf("unsupported image type: %s", OrEmpty(md.Ext))
@@ -183,12 +218,17 @@ func img2gifSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 
 func vid2gifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	startSec, durSec, url := ParseConvertArgs(args)
+	if url == "" {
+		if att := mediaAttachment(m); att != nil && att.Size > maxVideoBytes {
+			return fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", att.Size, maxVideoBytes)
+		}
+	}
 	md, err := resolveMedia(s, m, url)
 	if err != nil {
 		return err
 	}
 	if !IsVideoExt(md.Ext) {
-		return fmt.Errorf("that file isn't a video (got %q) — use `!img2gif` for images", OrEmpty(md.Ext))
+		return fmt.Errorf("that file isn't a video (got %q) — use `-img2gif` for images", OrEmpty(md.Ext))
 	}
 
 	out, err := ffmpegToGIF(md.Data, md.Ext, startSec, durSec)
@@ -198,6 +238,15 @@ func vid2gifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCrea
 
 	_, err = s.ChannelFileSend(m.ChannelID, "vid2gif.gif", bytes.NewReader(out))
 	return err
+}
+
+// mediaAttachment mirrors resolveMedia's attachment selection (referenced
+// message first, then the issuing message) and returns the chosen attachment.
+func mediaAttachment(m *discordgo.MessageCreate) *discordgo.MessageAttachment {
+	if att := FirstAttachment(m.ReferencedMessage); att != nil {
+		return att
+	}
+	return FirstAttachment(m.Message)
 }
 
 func vid2gifSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -226,8 +275,13 @@ func vid2gifSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 func autogifMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	_, _, url := ParseConvertArgs(args)
 	if url == "" && m.ReferencedMessage == nil && len(m.Attachments) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!autogif` on a message with media, or `!autogif <url>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-autogif` on a message with media, or `-autogif <url>`")
 		return err
+	}
+	if url == "" {
+		if att := mediaAttachment(m); att != nil && att.Size > maxVideoBytes {
+			return fmt.Errorf("video is too large (%d bytes > %d max), try a shorter or smaller clip", att.Size, maxVideoBytes)
+		}
 	}
 
 	md, err := resolveMedia(s, m, url)

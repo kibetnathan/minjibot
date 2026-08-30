@@ -2,7 +2,7 @@
 
 A Discord bot with a companion REST API and web dashboard, built in Go.
 
-> **Status:** early development. Both the API (`cmd/api`) and bot (`cmd/bot`) entrypoints are functional. The bot supports prefix commands (`!`) and slash commands.
+> **Status:** early development. Both the API (`cmd/api`) and bot (`cmd/bot`) entrypoints are functional. The bot supports prefix commands (`-`) and slash commands.
 
 ## Tech stack
 
@@ -150,7 +150,7 @@ make run-bot
 go run ./cmd/bot
 ```
 
-The bot connects to Discord gateway and listens for both prefix commands (default `!`) and slash commands.
+The bot connects to Discord gateway and listens for both prefix commands (default `-`) and slash commands.
 
 ## Local development with ngrok (for slash commands & webhooks)
 

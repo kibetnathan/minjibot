@@ -11,3 +11,4 @@ type AuditLog struct {
 	Metadata  []byte
 	CreatedAt time.Time
 }
+

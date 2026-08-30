@@ -146,7 +146,7 @@ func IsClock(s string) bool {
 func reminderMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	text, delay := ParseReminderArgs(args)
 	if text == "" || delay <= 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `!reminder in 30m buy milk`, `!reminder 2h take a break`, or `!reminder in 14:00 lunch`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-reminder in 30m buy milk`, `-reminder 2h take a break`, or `-reminder in 14:00 lunch`")
 		return err
 	}
 

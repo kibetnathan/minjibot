@@ -200,7 +200,7 @@ func (r *ddgResponse) FlattenedTopics() []ddgTopic {
 func ddgMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
 	query := strings.TrimSpace(strings.Join(args, " "))
 	if query == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `!ddg <query>`")
+		_, err := s.ChannelMessageSend(channelID, "Usage: `-ddg <query>`")
 		return err
 	}
 

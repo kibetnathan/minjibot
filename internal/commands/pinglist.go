@@ -80,7 +80,7 @@ func pinglistSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionC
 // a user mention, role mention, plain ID, or role name.
 func resolvePingTarget(s *discordgo.Session, guildID string, args []string) (*PingTarget, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("Usage: `!pinglist @user` or `!pinglist @role`")
+		return nil, fmt.Errorf("Usage: `-pinglist @user` or `-pinglist @role`")
 	}
 
 	arg := args[0]

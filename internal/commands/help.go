@@ -8,12 +8,12 @@ import (
 )
 
 // BuildHelpEmbed renders the command list grouped by category. Both prefix
-// (!) and slash (/) invocations share it.
+// (-) and slash (/) invocations share it.
 func BuildHelpEmbed() *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Color: 0x5865F2,
 		Title: "MinjiBot commands",
-		Description: "Commands work as prefix commands (`!help`) or slash commands (`/help`). " +
+		Description: "Commands work as prefix commands (`-help`) or slash commands (`/help`). " +
 			"Angle brackets are required, square brackets optional.",
 		Fields: []*discordgo.MessageEmbedField{
 			helpField("General", [][2]string{

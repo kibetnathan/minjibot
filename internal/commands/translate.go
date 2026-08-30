@@ -17,14 +17,38 @@ type translateClient struct {
 }
 
 func newTranslateClient() *translateClient {
-	return &translateClient{http: &http.Client{Timeout: 10 * time.Second}}
+	return &translateClient{http: &http.Client{Timeout: 15 * time.Second}}
 }
 
-// translate uses the public Google Translate gtx endpoint (no API key needed).
+// google translates using the public (keyless) Google Translate web endpoints.
+// The gtx client is preferred, but Google occasionally 403s datacenter IPs, so
+// we fall back across alternative hosts/clients before giving up.
 func (c *translateClient) translate(text, target, source string) (string, error) {
-	u := url.URL{Scheme: "https", Host: "translate.googleapis.com", Path: "/translate_a/single"}
+	attempts := []struct {
+		host   string
+		path   string
+		client string
+	}{
+		{"translate.googleapis.com", "/translate_a/single", "gtx"},
+		{"translate.googleapis.com", "/translate_a/single", "dict-chrome-ex"},
+		{"clients5.google.com", "/translate_a/t", "dict-chrome-ex"},
+	}
+
+	var lastErr error
+	for _, a := range attempts {
+		out, err := c.call(a.host, a.path, a.client, text, target, source)
+		if err == nil {
+			return out, nil
+		}
+		lastErr = err
+	}
+	return "", lastErr
+}
+
+func (c *translateClient) call(host, path, client, text, target, source string) (string, error) {
+	u := url.URL{Scheme: "https", Host: host, Path: path}
 	q := u.Query()
-	q.Set("client", "gtx")
+	q.Set("client", client)
 	q.Set("sl", source) // "auto" when the caller wants auto-detection
 	q.Set("tl", target)
 	q.Set("dt", "t")
@@ -36,6 +60,10 @@ func (c *translateClient) translate(text, target, source string) (string, error)
 		return "", err
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "application/json, text/plain, */*")
+	req.Header.Set("Referer", "https://translate.google.com/")
+	req.Header.Set("Origin", "https://translate.google.com")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -44,6 +72,10 @@ func (c *translateClient) translate(text, target, source string) (string, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		// 403/429 are retryable against a different endpoint; anything else fatal.
+		if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests {
+			return "", errRetryable
+		}
 		return "", fmt.Errorf("translate returned status %d", resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
@@ -56,6 +88,9 @@ func (c *translateClient) translate(text, target, source string) (string, error)
 	var raw []json.RawMessage
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return "", err
+	}
+	if len(raw) == 0 {
+		return "", errRetryable
 	}
 	var segments []json.RawMessage
 	if err := json.Unmarshal(raw[0], &segments); err != nil {
@@ -73,8 +108,15 @@ func (c *translateClient) translate(text, target, source string) (string, error)
 			b.WriteString(part)
 		}
 	}
+	if b.Len() == 0 {
+		return "", errRetryable
+	}
 	return strings.TrimSpace(b.String()), nil
 }
+
+// errRetryable signals an unsupported path that should be retried against a
+// different translate endpoint.
+var errRetryable = fmt.Errorf("translate endpoint rejected request")
 
 func ParseTranslateArgs(args []string) (target, text string) {
 	target = "en"
@@ -92,10 +134,13 @@ func ParseTranslateArgs(args []string) (target, text string) {
 	return target, strings.TrimSpace(strings.Join(rest, " "))
 }
 
-func translateMessageCommandHandler(s *discordgo.Session, channelID string, args []string) error {
+func translateMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	target, text := ParseTranslateArgs(args)
 	if text == "" {
-		_, err := s.ChannelMessageSend(channelID, "Usage: `!translate [to:<lang>] <text>`")
+		text = referencedMessageContent(s, m)
+	}
+	if text == "" {
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-translate [to:<lang>] <text>` — or reply to a message to translate it")
 		return err
 	}
 
@@ -112,7 +157,7 @@ func translateMessageCommandHandler(s *discordgo.Session, channelID string, args
 			{Name: "Translation", Value: TruncateForEmbed(result, 1024)},
 		},
 	}
-	_, err = s.ChannelMessageSendEmbed(channelID, embed)
+	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return err
 }
 

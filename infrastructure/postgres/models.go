@@ -34,6 +34,16 @@ type GuildSetting struct {
 	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
 }
 
+type User struct {
+	ID           int64              `json:"id"`
+	UserID       string             `json:"user_id"`
+	Email        pgtype.Text        `json:"email"`
+	Passwordhash pgtype.Text        `json:"passwordhash"`
+	IsActive     bool               `json:"is_active"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
 type UserPermission struct {
 	ID              int64              `json:"id"`
 	UserID          string             `json:"user_id"`
