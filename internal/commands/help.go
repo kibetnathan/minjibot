@@ -23,6 +23,16 @@ func HelpSections() []HelpSection {
 			{"tldr <command>", "Get a brief how-to for a command"},
 			{"userinfo [@user]", "Get info about a user"},
 		}},
+		{Name: "Information", Items: [][2]string{
+			{"avatar [@user]", "Show a user's full-resolution profile picture"},
+			{"banner [@user]", "Show a user's profile banner"},
+			{"botinfo", "Show bot info (version, uptime, latency)"},
+			{"channelinfo [channel]", "Get info about a channel"},
+			{"guild stats|icon|banner", "Server stats, icon, or banner"},
+			{"roles", "List all server roles with member counts"},
+			{"emojis", "List all custom emojis in the server"},
+			{"stickers", "List all custom stickers in the server"},
+		}},
 		{Name: "Search", Items: [][2]string{
 			{"ddg <query>", "Fetch quick search results from DuckDuckGo"},
 			{"search <query> [count]", "Search chat history for a message"},
@@ -32,7 +42,7 @@ func HelpSections() []HelpSection {
 		{Name: "Server & messages", Items: [][2]string{
 			{"pinglist [user|role]", "Show pings for a user or role"},
 			{"emoji add|list|remove|steal", "Manage server emojis"},
-			{"sticker add|remove", "Manage server stickers"},
+			{"sticker add|steal|remove", "Manage server stickers"},
 			{"pin <message> [channel]", "Pin a message"},
 			{"unpin <message> [channel]", "Unpin a message"},
 			{"quote <message> [channel]", "Quote a message as a styled embed"},
@@ -67,6 +77,11 @@ func HelpSections() []HelpSection {
 			{"smoke", "Take a hit off the blunt (spark it first)"},
 			{"hits", "Show everyone's blunt hit count"},
 			{"compress <url>", "Compress an image until it's barely legible"},
+			{"vape hit|flavor|hits|steal", "Hit, configure, or check the server vape"},
+			{"poll <question> <a|b|c>", "Create a reaction poll (2-10 options)"},
+			{"quickpoll <question>", "Create a Yes/No poll"},
+			{"birthday add|list|celebrate|channel|role", "Manage server birthdays"},
+			{"diary add|view|delete", "Private per-user diary"},
 		}},
 	}
 }

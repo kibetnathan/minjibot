@@ -27,6 +27,7 @@ func TestSlashCommandsRegistered(t *testing.T) {
 		"ping", "help", "echo", "userinfo", "ddg", "search", "pinglist",
 		"gifsearch", "emoji", "sticker", "pin", "unpin", "quote", "translate",
 		"reminder", "isearch", "caption", "img2gif", "vid2gif", "autogif", "factcheck",
+		"avatar", "banner", "botinfo", "channelinfo", "roles", "guild", "emojis", "stickers",
 	}
 	for _, name := range want {
 		if !seen[name] {
@@ -60,7 +61,7 @@ func TestSubcommandSlashShapes(t *testing.T) {
 }
 
 func TestCommandHandlerDispatchUnknown(t *testing.T) {
-	h := commands.NewCommandHandler(nil, nil, nil, nil)
+	h := commands.NewCommandHandler(nil, nil, nil, nil, nil, nil, nil)
 	if err := h.Handle(nil, nil, &discordgo.MessageCreate{}, "does-not-exist", nil); err == nil {
 		t.Error("expected error for unknown prefix command")
 	}
