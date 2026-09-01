@@ -20,7 +20,7 @@ var (
 
 const ttysMaxDuration = time.Hour
 
-const ttyIntroMessage = "I'll talk to myself for a while. Say anything in this channel to shut me up — or wait an hour and I'll stop on my own."
+const ttyIntroMessage = "Dead Chat? I'll talk to myself for a while. Say anything in this channel to shut me up, or wait an hour and I'll stop on my own."
 
 var ttyLines = []string{
 	"you guys ever just",
@@ -57,7 +57,7 @@ var ttyLines = []string{
 
 func ttysMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, _ []string) error {
 	if !ttysBegin(s, m.ChannelID) {
-		_, err := s.ChannelMessageSend(m.ChannelID, "I'm already talking to myself here — say something to stop me.")
+		_, err := s.ChannelMessageSend(m.ChannelID, "I'm already talking to myself here, say something to stop me.")
 		return err
 	}
 	_, err := s.ChannelMessageSend(m.ChannelID, ttyIntroMessage)
@@ -68,7 +68,7 @@ func ttysSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreat
 	if !ttysBegin(s, i.ChannelID) {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{Content: "I'm already talking to myself here — say something to stop me."},
+			Data: &discordgo.InteractionResponseData{Content: "I'm already talking to myself here, say something to stop me."},
 		})
 	}
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -113,7 +113,7 @@ func ttyLoop(s *discordgo.Session, channelID string, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			_, _ = s.ChannelMessageSend(channelID, "phew — someone said something, I'll shut up.")
+			_, _ = s.ChannelMessageSend(channelID, "phew,someone said something, I'll shut up.")
 			return
 		case <-duration.C:
 			_, _ = s.ChannelMessageSend(channelID, "ok, that's a full hour of me talking to myself. taking a break.")

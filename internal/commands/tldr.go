@@ -66,7 +66,7 @@ var tldrEntries = map[string]TldrEntry{
 	"bans":            {"bans", "`bans`", "List all active bans in the server (paginated)."},
 	"boomer":          {"boomer", "`boomer [@user]`", "Score a user's account age as a lighthearted 0-100 boomer rating."},
 	"perms":           {"perms", "`perms [@user] [channel]`", "Show a user's effective server and channel permissions."},
-	"tz":              {"tz", "`tz <zone>`", "Show the current local time for a time zone (e.g. `-tz America/New_York` or `-tz pst`)."},
+	"tz":              {"tz", "`tz <place>`", "Show the current local time for a place (e.g. `-tz Tokyo` or `-tz New York`)."},
 	"urbandictionary": {"urbandictionary", "`urbandictionary <term>`", "Search Urban Dictionary and show the top definition for a term."},
 	"ttys":            {"ttys", "`ttys`", "The bot talks to itself in the channel until someone speaks or an hour passes."},
 	"vape":            {"vape", "`vape hit|flavor|hits|steal`", "Hit the server vape, set/clear its flavour, show hit counts, or steal it."},

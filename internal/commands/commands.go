@@ -838,12 +838,12 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "tz",
-		Description: "Show the current local time for a time zone",
+		Description: "Show the current local time for a place",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "timezone",
-				Description: "IANA zone (e.g. America/New_York) or a shorthand like pst",
+				Name:        "place",
+				Description: "A city or town, e.g. Tokyo or New York",
 				Required:    true,
 			},
 		},

@@ -35,7 +35,7 @@ func HelpSections() []HelpSection {
 			{"bans", "List all active bans in the server"},
 			{"boomer [@user]", "Detect potential time-traveler users"},
 			{"perms [@user] [channel]", "Show a user's effective permissions"},
-			{"tz <zone>", "Show the current local time for a time zone"},
+			{"tz <place>", "Show the current local time in a place (e.g. Tokyo)"},
 			{"urbandictionary <term>", "Search Urban Dictionary for a term"},
 		}},
 		{Name: "Search", Items: [][2]string{
