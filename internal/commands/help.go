@@ -36,7 +36,7 @@ func HelpSections() []HelpSection {
 		{Name: "Search", Items: [][2]string{
 			{"ddg <query>", "Fetch quick search results from DuckDuckGo"},
 			{"search <query> [count]", "Search chat history for a message"},
-			{"isearch <query>", "Search the web for images"},
+			{"isearch <url>", "Reverse image search: find similar images & sources"},
 			{"gifsearch <query> [creator]", "Post a relevant GIF from Giphy"},
 		}},
 		{Name: "Server & messages", Items: [][2]string{

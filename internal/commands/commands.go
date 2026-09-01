@@ -82,7 +82,7 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "reminder":
 		return h.reminder(s, m, args)
 	case "isearch":
-		return h.isearch(s, m.ChannelID, args)
+		return h.isearch(s, m, args)
 	case "caption":
 		return h.caption(s, m, args)
 	case "img2gif":
@@ -458,8 +458,8 @@ func (h *CommandHandler) reminderSlash(s *discordgo.Session, i *discordgo.Intera
 	return reminderSlashCommandHandler(s, i)
 }
 
-func (h *CommandHandler) isearch(s *discordgo.Session, channelID string, args []string) error {
-	return isearchMessageCommandHandler(s, channelID, args)
+func (h *CommandHandler) isearch(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return isearchMessageCommandHandler(s, m, args)
 }
 
 func (h *CommandHandler) isearchSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -936,9 +936,9 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "isearch",
-		Description: "Search the web for images",
+		Description: "Reverse image search: find where an image appears online",
 		Options: []*discordgo.ApplicationCommandOption{
-			{Type: discordgo.ApplicationCommandOptionString, Name: "query", Description: "Image search query", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "image_url", Description: "Image URL to search (jpg/png/webp)", Required: true},
 		},
 	},
 	{
