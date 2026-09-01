@@ -48,67 +48,68 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 
 ## 3. Utility
 
-| Command          | Description                                                   |
-| ---------------- | ------------------------------------------------------------- |
-| `autogif`        | Automatically fetches and converts relevant media to GIFs.    |
-| `caption`        | Generates a meme image by attaching custom text to an image.  |
-| `compress`       | Pixelates an image to a low-quality but still readable mosaic. |
-| `ddg`            | Fetches quick search results directly from DuckDuckGo.        |
-| `emoji add`      | Uploads an emoji to the server via URL or attachment.         |
-| `emoji add many` | Bulk-uploads multiple custom emojis at once.                  |
-| `emoji enlarge`  | Renders a high-resolution, full-size version of an emoji.     |
-| `emoji list`     | Displays an inventory of all custom emojis in the server.     |
-| `emoji remove`   | Deletes a target custom emoji from the server.                |
-| `emoji steal`    | Copies an emoji from another server using its message format. |
-| `gifsearch`      | Searches Tenor/Giphy and posts a relevant GIF.                |
-| `img2gif`        | Converts an image file or static link into an animated GIF.   |
+| Command          | Description                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| `autogif`        | Automatically fetches and converts relevant media to GIFs.             |
+| `caption`        | Generates a meme image by attaching custom text to an image.           |
+| `compress`       | Pixelates an image to a low-quality but still readable mosaic.         |
+| `ddg`            | Fetches quick search results directly from DuckDuckGo.                 |
+| `emoji add`      | Uploads an emoji to the server via URL or attachment.                  |
+| `emoji add many` | Bulk-uploads multiple custom emojis at once.                           |
+| `emoji enlarge`  | Renders a high-resolution, full-size version of an emoji.              |
+| `emoji list`     | Displays an inventory of all custom emojis in the server.              |
+| `emoji remove`   | Deletes a target custom emoji from the server.                         |
+| `emoji steal`    | Copies an emoji from another server using its message format.          |
+| `gifsearch`      | Searches Tenor/Giphy and posts a relevant GIF.                         |
+| `img2gif`        | Converts an image file or static link into an animated GIF.            |
 | `isearch`        | Reverse image search: finds similar images and the pages they're from. |
-| `pin`            | Pins a target message to the channel's pinned list.           |
-| `quote`          | Converts a specific message link into a stylized embed.       |
-| `reminder`       | Sets a delayed system ping for a user-specified task/time.    |
-| `search`         | Searches for a specific message in chat history               |
-| `sticker add`    | Uploads a custom sticker to the server.                       |
-| `sticker remove` | Removes a custom sticker from the server inventory.           |
-| `translate`      | Translates provided text into a target language.              |
-| `unpin`          | Removes a message from the channel's pinned list.             |
-| `vid2gif`        | Trims and converts an uploaded video file into a GIF.         |
-| `pinglist`       | Returns all the pings for a certain user/role                 |
-| `factcheck`      | Factchecks someones message                                   |
+| `pin`            | Pins a target message to the channel's pinned list.                    |
+| `quote`          | Converts a specific message link into a stylized embed.                |
+| `reminder`       | Sets a delayed system ping for a user-specified task/time.             |
+| `search`         | Searches for a specific message in chat history                        |
+| `sticker add`    | Uploads a custom sticker to the server.                                |
+| `sticker remove` | Removes a custom sticker from the server inventory.                    |
+| `translate`      | Translates provided text into a target language.                       |
+| `unpin`          | Removes a message from the channel's pinned list.                      |
+| `vid2gif`        | Trims and converts an uploaded video file into a GIF.                  |
+| `pinglist`       | Returns all the pings for a certain user/role                          |
+| `factcheck`      | Factchecks someones message                                            |
 
 ## 4. Fun
 
-| Command              | Description                                                      |
-| -------------------- | ---------------------------------------------------------------- |
-| `birthday add`       | Saves a user's birthday to the bot's database.                   |
-| `birthday celebrate` | Triggers an immediate birthday celebration message/embed.        |
-| `birthday channel`   | Sets the channel for automated birthday notices.                 |
-| `birthday list`      | Displays upcoming server birthdays sorted by date.               |
-| `birthday role`      | Configures the temporary role awarded on a member's birthday.    |
-| `bitches`            | Gives a random number for how many bitches a specific member has |
-| `choose`             | Picks an option from a comma-separated list.                     |
-| `colors avatar`      | Extracts dominant hex colors from an avatar.                     |
-| `diary add`          | Saves a private journal entry into the user's database.          |
-| `diary delete`       | Removes a specific saved diary entry by ID.                      |
-| `diary view`         | Shows past diary entries in a private embed.                     |
-| `hits`               | Displays everyone's blunt hit count.                             |
-| `howautism`          | Randomized fun percentage reading.                               |
-| `howgay`             | Randomized fun percentage reading.                               |
-| `howlesbian`         | Randomized fun percentage reading.                               |
-| `howsimp`            | Randomized fun percentage reading.                               |
-| `IQ`                 | Generates a fun, randomized IQ score readout.                    |
-| `lurk`               | Toggle lurk mode: your messages auto-delete after 2s and you auto-unlurk after 1 hour. |
-| `lurkers`            | Shows who is currently lurking.                                 |
-| `poll`               | Creates an interactive reaction- or button-based poll embed.     |
-| `pp`                 | Generates a randomized pp length                                 |
-| `puh`                | Generates random puh tightness percentage.                       |
-| `quickpoll`          | Instantly creates a simple Yes/No reaction poll.                 |
-| `ship`               | Calculates a romance compatibility score between two users.      |
-| `smoke`              | Take a hit off the blunt (spark it first; grabbing resets the spark). |
-| `spark`              | Light the blunt before anyone can smoke.                         |
-| `vape`               | Hit the vape.                                                    |
-| `vape flavor`        | Sets or changes your virtual vapeflavor.                         |
-| `vape hits`          | Displays total recorded virtual vape hits.                       |
-| `vape steal`         | Steal the vape.                                                  |
+| Command              | Description                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `birthday add`       | Saves a user's birthday to the bot's database.                                                  |
+| `birthday celebrate` | Triggers an immediate birthday celebration message/embed.                                       |
+| `birthday channel`   | Sets the channel for automated birthday notices.                                                |
+| `birthday list`      | Displays upcoming server birthdays sorted by date.                                              |
+| `birthday role`      | Configures the temporary role awarded on a member's birthday.                                   |
+| `bitches`            | Gives a random number for how many bitches a specific member has                                |
+| `choose`             | Picks an option from a comma-separated list.                                                    |
+| `colors avatar`      | Extracts dominant hex colors from an avatar.                                                    |
+| `diary add`          | Saves a private journal entry into the user's database.                                         |
+| `diary delete`       | Removes a specific saved diary entry by ID.                                                     |
+| `diary view`         | Shows past diary entries in a private embed.                                                    |
+| `hits`               | Displays everyone's blunt hit count.                                                            |
+| `howautism`          | Randomized fun percentage reading.                                                              |
+| `howgay`             | Randomized fun percentage reading.                                                              |
+| `howlesbian`         | Randomized fun percentage reading.                                                              |
+| `howsimp`            | Randomized fun percentage reading.                                                              |
+| `IQ`                 | Generates a fun, randomized IQ score readout.                                                   |
+| `lurk`               | Toggle lurk mode: your messages auto-delete after 2s and you auto-unlurk after 1 hour.          |
+| `lurkers`            | Shows who is currently lurking.                                                                 |
+| `poll`               | Creates an interactive reaction- or button-based poll embed.                                    |
+| `pp`                 | Generates a randomized pp length                                                                |
+| `puh`                | Generates random puh tightness percentage.                                                      |
+| `quickpoll`          | Instantly creates a simple Yes/No reaction poll.                                                |
+| `ship`               | Calculates a romance compatibility score between two users.                                     |
+| `smoke`              | Take a hit off the blunt (spark it first; grabbing resets the spark).                           |
+| `spark`              | Light the blunt before anyone can smoke.                                                        |
+| `vape`               | Hit the vape.                                                                                   |
+| `vape flavor`        | Sets or changes your virtual vapeflavor.                                                        |
+| `vape hits`          | Displays total recorded virtual vape hits.                                                      |
+| `vape steal`         | Steal the vape.                                                                                 |
+| `ttys`               | The bot begins to talk to itself until someone sends a message in that channel or after an hour |
 
 ## 5. Roleplay (RP)
 

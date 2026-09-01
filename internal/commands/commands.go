@@ -59,6 +59,16 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.emojis(s, m, args)
 	case "stickers":
 		return h.stickers(s, m, args)
+	case "bans":
+		return h.bans(s, m, args)
+	case "boomer":
+		return h.boomer(s, m, args)
+	case "perms":
+		return h.perms(s, m, args)
+	case "tz":
+		return h.tz(s, m, args)
+	case "urbandictionary":
+		return h.urbandictionary(s, m, args)
 	case "ddg":
 		return h.ddg(s, m.ChannelID, args)
 	case "search":
@@ -137,6 +147,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.birthday(s, m, args)
 	case "diary":
 		return h.diary(s, m, args)
+	case "ttys":
+		return h.ttys(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -170,6 +182,16 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.emojisSlash(s, i)
 	case "stickers":
 		return h.stickersSlash(s, i)
+	case "bans":
+		return h.bansSlash(s, i)
+	case "boomer":
+		return h.boomerSlash(s, i)
+	case "perms":
+		return h.permsSlash(s, i)
+	case "tz":
+		return h.tzSlash(s, i)
+	case "urbandictionary":
+		return h.urbandictionarySlash(s, i)
 	case "ddg":
 		return h.ddgSlash(s, i)
 	case "search":
@@ -248,6 +270,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.birthdaySlash(s, i)
 	case "diary":
 		return h.diarySlash(s, i)
+	case "ttys":
+		return h.ttysSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -368,6 +392,48 @@ func (h *CommandHandler) stickers(s *discordgo.Session, m *discordgo.MessageCrea
 }
 func (h *CommandHandler) stickersSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return stickersSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) bans(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bansMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bansSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bansSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) boomer(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return boomerMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) boomerSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return boomerSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) perms(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return permsMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) permsSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return permsSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) tz(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return tzMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) tzSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return tzSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) urbandictionary(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return urbandictionaryMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) urbandictionarySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return urbandictionarySlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) ttys(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return ttysMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) ttysSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return ttysSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) ddg(s *discordgo.Session, channelID string, args []string) error {
@@ -732,11 +798,12 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "guild",
-		Description: "Server info (stats, icon, banner)",
+		Description: "Server info (stats, icon, banner, splash)",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "stats", Description: "Server stats (members, boosts, owner)"},
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "icon", Description: "Server icon image"},
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "banner", Description: "Server banner image"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "splash", Description: "Server invite splash image"},
 		},
 	},
 	{
@@ -746,6 +813,52 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "stickers",
 		Description: "List all custom stickers in the server",
+	},
+	{
+		Name:        "bans",
+		Description: "List all active bans in the server",
+	},
+	{
+		Name:        "boomer",
+		Description: "Detect potential time-traveler users (spammer detection)",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "perms",
+		Description: "Show a user's effective permissions in a channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			userOption(false),
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "channel",
+				Description: "The channel to check (defaults to this one)",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "tz",
+		Description: "Show the current local time for a time zone",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "timezone",
+				Description: "IANA zone (e.g. America/New_York) or a shorthand like pst",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "urbandictionary",
+		Description: "Search Urban Dictionary for a term",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "term",
+				Description: "The term to look up",
+				Required:    true,
+			},
+		},
 	},
 	{
 		Name:        "ddg",
@@ -1131,6 +1244,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				{Type: discordgo.ApplicationCommandOptionInteger, Name: "id", Description: "Entry ID", Required: true},
 			}},
 		},
+	},
+	{
+		Name:        "ttys",
+		Description: "Bot talks to itself until someone speaks or an hour passes",
 	},
 }
 
