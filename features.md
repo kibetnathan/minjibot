@@ -62,7 +62,7 @@ Every feature ships as both a **Slash Command** (`/`) and a **Classic Prefix Com
 | `emoji steal`    | Copies an emoji from another server using its message format. |
 | `gifsearch`      | Searches Tenor/Giphy and posts a relevant GIF.                |
 | `img2gif`        | Converts an image file or static link into an animated GIF.   |
-| `isearch`        | Searches and fetches web images directly into chat.           |
+| `isearch`        | Reverse image search: finds similar images and the pages they're from. |
 | `pin`            | Pins a target message to the channel's pinned list.           |
 | `quote`          | Converts a specific message link into a stylized embed.       |
 | `reminder`       | Sets a delayed system ping for a user-specified task/time.    |
