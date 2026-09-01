@@ -296,10 +296,10 @@ func rolesSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCrea
 	return respondPaged(s, i, pages)
 }
 
-// maxEmbedTextBudget is a conservative character cap for each embed description
-// so Discord's 6000-char embed limit is never exceeded. Titles/footers/fields
-// also count toward the limit, so we stay well under.
-const maxEmbedTextBudget = 5000
+// maxEmbedTextBudget is a conservative character cap for each embed description.
+// Discord's limit for a single embed description field is 4096 chars (total
+// embed payload is 6000), so we stay comfortably under 4096.
+const maxEmbedTextBudget = 4000
 
 // pageEmbeds chunks raw lines into one embed page per chunk, each whose
 // description stays within budget. Returns a single placeholder embed if lines
