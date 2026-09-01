@@ -278,23 +278,33 @@ func emojiList(s *discordgo.Session, m *discordgo.MessageCreate) error {
 		return fmt.Errorf("emoji commands can only be used in a server")
 	}
 
-	emojis, err := s.GuildEmojis(guildID)
+	pages, err := buildEmojiListPages(s, guildID)
 	if err != nil {
 		return err
 	}
+	return sendPagedEmbeds(s, m.ChannelID, m.Author.ID, pages)
+}
+
+// buildEmojiListPages returns paged embeds describing the server's emojis,
+// chunked so each page stays within Discord's embed size limit.
+func buildEmojiListPages(s *discordgo.Session, guildID string) ([]*discordgo.MessageEmbed, error) {
+	emojis, err := s.GuildEmojis(guildID)
+	if err != nil {
+		return nil, err
+	}
 	if len(emojis) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "This server has no custom emojis.")
-		return err
+		return []*discordgo.MessageEmbed{{
+			Color:       0x5865F2,
+			Title:       "Server Emojis",
+			Description: "This server has no custom emojis.",
+		}}, nil
 	}
 
-	embed := &discordgo.MessageEmbed{
-		Color:  0x5865F2,
-		Title:  fmt.Sprintf("Emojis in this server (%d)", len(emojis)),
-		Fields: ChunkEmojiList(emojis, 1000),
+	lines := make([]string, 0, len(emojis))
+	for _, e := range emojis {
+		lines = append(lines, fmt.Sprintf("%s `:%s:`\n", e.MessageFormat(), e.Name))
 	}
-
-	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-	return err
+	return pageEmbeds(fmt.Sprintf("Server Emojis (%d)", len(emojis)), lines, maxEmbedTextBudget, 0x5865F2), nil
 }
 
 func ChunkEmojiList(emojis []*discordgo.Emoji, maxLen int) []*discordgo.MessageEmbedField {
@@ -403,19 +413,11 @@ func emojiSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCrea
 		content = EmojiImageURL(id, animated, 256)
 
 	case "list":
-		emojis, err := s.GuildEmojis(guildID)
+		pages, err := buildEmojiListPages(s, guildID)
 		if err != nil {
 			return err
 		}
-		if len(emojis) == 0 {
-			content = "This server has no custom emojis."
-		} else {
-			embeds = []*discordgo.MessageEmbed{{
-				Title:  fmt.Sprintf("Emojis in this server (%d)", len(emojis)),
-				Color:  0x5865F2,
-				Fields: ChunkEmojiList(emojis, 1000),
-			}}
-		}
+		return respondPaged(s, i, pages)
 
 	case "remove":
 		_, id, _, ok := ParseEmoji(OptString(opts, "emoji"))

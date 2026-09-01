@@ -131,3 +131,15 @@ func ParseMentionID(arg string) string {
 	}
 	return ""
 }
+
+// ParseChannelMention extracts a channel ID from a <#ID> mention, a bare ID,
+// or an empty result if arg is not a channel reference.
+func ParseChannelMention(arg string) string {
+	arg = strings.TrimSpace(arg)
+	arg = strings.TrimPrefix(arg, "<#")
+	arg = strings.TrimSuffix(arg, ">")
+	if id, err := strconv.ParseInt(arg, 10, 64); err == nil && id > 0 {
+		return strconv.FormatInt(id, 10)
+	}
+	return ""
+}

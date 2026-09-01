@@ -55,6 +55,19 @@ var tldrEntries = map[string]TldrEntry{
 	"smoke":      {"smoke", "`smoke`", "Take a hit off the blunt and add one to your hit count (must spark first)."},
 	"hits":       {"hits", "`hits`", "Show everyone's blunt hit count in this server."},
 	"compress":   {"compress", "`compress <url>`", "Pixelate/compress an image until it's barely legible."},
+	"avatar":     {"avatar", "`avatar [@user]`", "Show a user's full-resolution profile picture."},
+	"banner":     {"banner", "`banner [@user]`", "Show a user's profile banner image."},
+	"botinfo":    {"botinfo", "`botinfo`", "Show bot info: version, Go runtime, uptime, latency, and server count."},
+	"channelinfo": {"channelinfo", "`channelinfo [channel]`", "Show a channel's creation date, ID, type, topic, slowmode, and category."},
+	"roles":      {"roles", "`roles`", "List all server roles with their member counts."},
+	"guild":      {"guild", "`guild stats|icon|banner`", "Show server stats, the server icon, or the server banner."},
+	"emojis":     {"emojis", "`emojis`", "List every custom emoji in the server."},
+	"stickers":   {"stickers", "`stickers`", "List every custom sticker in the server."},
+	"vape":       {"vape", "`vape hit|flavor|hits|steal`", "Hit the server vape, set/clear its flavour, show hit counts, or steal it."},
+	"poll":       {"poll", "`poll <question> <opt1|opt2|...>`", "Create a reaction-based poll with 2-10 options."},
+	"quickpoll":  {"quickpoll", "`quickpoll <question>`", "Create a quick Yes/No reaction poll."},
+	"birthday":   {"birthday", "`birthday add|list|celebrate|channel|role`", "Manage server birthdays: save, list, celebrate, set the channel, or set the celebration role."},
+	"diary":      {"diary", "`diary add|view|delete`", "Private per-user diary: save, view (DMed), or delete entries."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).

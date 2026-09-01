@@ -43,6 +43,22 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.echo(s, m, args)
 	case "userinfo":
 		return h.userInfo(s, m, args)
+	case "avatar":
+		return h.avatar(s, m, args)
+	case "banner":
+		return h.banner(s, m, args)
+	case "botinfo":
+		return h.botinfo(s, m, args)
+	case "channelinfo":
+		return h.channelinfo(s, m, args)
+	case "roles":
+		return h.roles(s, m, args)
+	case "guild":
+		return h.guild(s, m, args)
+	case "emojis":
+		return h.emojis(s, m, args)
+	case "stickers":
+		return h.stickers(s, m, args)
 	case "ddg":
 		return h.ddg(s, m.ChannelID, args)
 	case "search":
@@ -138,6 +154,22 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.echoSlash(s, i)
 	case "userinfo":
 		return h.userInfoSlash(s, i)
+	case "avatar":
+		return h.avatarSlash(s, i)
+	case "banner":
+		return h.bannerSlash(s, i)
+	case "botinfo":
+		return h.botinfoSlash(s, i)
+	case "channelinfo":
+		return h.channelinfoSlash(s, i)
+	case "roles":
+		return h.rolesSlash(s, i)
+	case "guild":
+		return h.guildSlash(s, i)
+	case "emojis":
+		return h.emojisSlash(s, i)
+	case "stickers":
+		return h.stickersSlash(s, i)
 	case "ddg":
 		return h.ddgSlash(s, i)
 	case "search":
@@ -280,6 +312,62 @@ func (h *CommandHandler) userInfo(s *discordgo.Session, m *discordgo.MessageCrea
 
 func (h *CommandHandler) userInfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return userInfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) avatar(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return avatarMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) avatarSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return avatarSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) banner(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bannerMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bannerSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bannerSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) botinfo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return botinfoMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) botinfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return botinfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) channelinfo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return channelinfoMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) channelinfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return channelinfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) roles(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return rolesMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) rolesSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return rolesSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) guild(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return guildMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) guildSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return guildSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) emojis(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return emojisMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) emojisSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return emojisSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) stickers(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return stickersMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) stickersSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return stickersSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) ddg(s *discordgo.Session, channelID string, args []string) error {
@@ -613,6 +701,53 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		},
 	},
 	{
+		Name:        "avatar",
+		Description: "Show a user's full-resolution profile picture",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "banner",
+		Description: "Show a user's profile banner",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "botinfo",
+		Description: "Show bot info (version, uptime, latency)",
+	},
+	{
+		Name:        "channelinfo",
+		Description: "Get info about a channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "channel",
+				Description: "The channel to inspect (defaults to this one)",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "roles",
+		Description: "List all server roles with member counts",
+	},
+	{
+		Name:        "guild",
+		Description: "Server info (stats, icon, banner)",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "stats", Description: "Server stats (members, boosts, owner)"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "icon", Description: "Server icon image"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "banner", Description: "Server banner image"},
+		},
+	},
+	{
+		Name:        "emojis",
+		Description: "List all custom emojis in the server",
+	},
+	{
+		Name:        "stickers",
+		Description: "List all custom stickers in the server",
+	},
+	{
 		Name:        "ddg",
 		Description: "Fetch quick search results from DuckDuckGo",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -739,6 +874,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Options: []*discordgo.ApplicationCommandOption{
 					{Type: discordgo.ApplicationCommandOptionString, Name: "name", Description: "Sticker name", Required: true},
 					{Type: discordgo.ApplicationCommandOptionString, Name: "url", Description: "Sticker image URL", Required: true},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "steal",
+				Description: "Copy a sticker from a message link or ID",
+				Options: []*discordgo.ApplicationCommandOption{
+					{Type: discordgo.ApplicationCommandOptionString, Name: "sticker", Description: "Sticker ID, message link, or CDN URL", Required: true},
 				},
 			},
 			{
@@ -961,7 +1104,7 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Manage server birthdays",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Save a birthday", Options: []*discordgo.ApplicationCommandOption{
-				{Type: discordgo.ApplicationCommandOptionString, Name: "date", Description: "Date e.g. 07-14 or 1998-07-14", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "date", Description: "Date e.g. 14-07 or 1998-14-07", Required: true},
 				userOption(false),
 			}},
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "list", Description: "List upcoming birthdays"},
