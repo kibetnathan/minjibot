@@ -69,6 +69,13 @@ func HelpSections() []HelpSection {
 			{"iq [@user]", "Measure a member's IQ"},
 			{"bitches [@user]", "See how many bitches a member has"},
 			{"choose <a, b, c>", "Pick an option from a comma-separated list"},
+			{"compress <url>", "Compress an image until it's barely legible"},
+			{"poll <question> <a|b|c>", "Create a reaction poll (2-10 options)"},
+			{"quickpoll <question>", "Create a Yes/No poll"},
+			{"birthday add|list|celebrate|channel|role", "Manage server birthdays"},
+			{"diary add|view|delete", "Private per-user diary"},
+		}},
+		{Name: "Social", Items: [][2]string{
 			{"ship <@user> <@user>", "Calculate romance compatibility"},
 			{"colors avatar [@user]", "Extract dominant colours from an avatar"},
 			{"lurk", "Toggle yourself in/out of lurking mode"},
@@ -76,12 +83,7 @@ func HelpSections() []HelpSection {
 			{"spark", "Spark the blunt before you can smoke"},
 			{"smoke", "Take a hit off the blunt (spark it first)"},
 			{"hits", "Show everyone's blunt hit count"},
-			{"compress <url>", "Compress an image until it's barely legible"},
 			{"vape hit|flavor|hits|steal", "Hit, configure, or check the server vape"},
-			{"poll <question> <a|b|c>", "Create a reaction poll (2-10 options)"},
-			{"quickpoll <question>", "Create a Yes/No poll"},
-			{"birthday add|list|celebrate|channel|role", "Manage server birthdays"},
-			{"diary add|view|delete", "Private per-user diary"},
 		}},
 	}
 }
