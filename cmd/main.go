@@ -12,53 +12,59 @@ import (
 )
 
 func main() {
-	// Initialize both applications
-	botApp, err := bot.NewApp()
-	if err != nil {
-		log.Fatalf("Failed to initialize bot: %v", err)
-	}
-
+	// Initialize the API first so its /healthz endpoint can come up
+	// independently of the Discord bot (which may fail to initialize if
+	// DISCORD_TOKEN/DB are not yet reachable).
 	apiApp, err := api.NewApp()
 	if err != nil {
 		log.Fatalf("Failed to initialize API: %v", err)
 	}
 
-	// Channel for graceful shutdown
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	// Start bot in goroutine
-	go func() {
-		if err := botApp.Start(); err != nil {
-			botApp.Logger.Error("Bot error", "error", err.Error())
-		}
-	}()
-
-	// Start API in goroutine
+	// Start the API in a goroutine so the healthcheck responds as soon as
+	// possible, regardless of bot state.
 	go func() {
 		if err := apiApp.Start(); err != nil {
 			apiApp.Echo.Logger.Error("API error", "error", err)
 		}
 	}()
 
-	botApp.Logger.Info("Both bot and API are running. Press CTRL-C to exit.")
+	// Initialize the bot. Failures here (e.g. missing/invalid DISCORD_TOKEN or
+	// a database that isn't ready yet) are logged rather than fatal, so the API
+	// stays up for healthchecks and can report the service as degraded.
+	botApp, err := bot.NewApp()
+	if err != nil {
+		apiApp.Echo.Logger.Error("Failed to initialize bot (API still running)", "error", err.Error())
+	} else {
+		go func() {
+			if err := botApp.Start(); err != nil {
+				botApp.Logger.Error("Bot error", "error", err.Error())
+			}
+		}()
+	}
+
+	// Channel for graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	apiApp.Echo.Logger.Info("API is running (bot may be degraded). Press CTRL-C to exit.")
 
 	// Block until interrupt signal
 	<-stop
-	botApp.Logger.Info("Shutting down gracefully...")
+	apiApp.Echo.Logger.Info("Shutting down gracefully...")
 
 	// Shutdown API
 	if err := apiApp.Shutdown(context.Background()); err != nil {
 		apiApp.Echo.Logger.Error("Error shutting down API", "error", err)
 	}
 
-	// Shutdown bot
-	if err := botApp.Session.Close(); err != nil {
-		botApp.Logger.Error("Error closing Discord session", "error", err.Error())
+	// Shutdown bot (if it initialized)
+	if botApp != nil {
+		if err := botApp.Session.Close(); err != nil {
+			botApp.Logger.Error("Error closing Discord session", "error", err.Error())
+		}
+		botApp.Pool.Close()
 	}
 
-	botApp.Pool.Close()
 	apiApp.Pool.Close()
-
-	botApp.Logger.Info("Shutdown complete")
+	apiApp.Echo.Logger.Info("Shutdown complete")
 }
