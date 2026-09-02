@@ -181,6 +181,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.nick(s, m, args)
 	case "jail":
 		return h.jail(s, m, args)
+	case "unjail":
+		return h.unjail(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -334,6 +336,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.nickSlash(s, i)
 	case "jail":
 		return h.jailSlash(s, i)
+	case "unjail":
+		return h.unjailSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -878,6 +882,12 @@ func (h *CommandHandler) jail(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) jailSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return jailSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) unjail(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return unjailMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) unjailSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return unjailSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1547,6 +1557,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Jail a user, removing their roles and restricting them",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to jail", Required: true},
+		},
+	},
+	{
+		Name:        "unjail",
+		Description: "Unjail a user, restoring their previous roles",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to unjail", Required: true},
 		},
 	},
 }
