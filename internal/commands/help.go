@@ -90,6 +90,7 @@ func HelpSections() []HelpSection {
 			{"nuke", "Delete all messages by cloning the current channel"},
 			{"timeout <user> <duration> [reason]", "Timeout a user (e.g. 30m, 2h, 1d)"},
 			{"warn <user> <reason>", "Warn a user"},
+			{"history <user>", "Show a user's moderation history"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},

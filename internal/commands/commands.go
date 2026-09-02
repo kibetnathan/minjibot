@@ -169,6 +169,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.timeout(s, m, args)
 	case "warn":
 		return h.warn(s, m, args)
+	case "history":
+		return h.history(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -310,6 +312,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.timeoutSlash(s, i)
 	case "warn":
 		return h.warnSlash(s, i)
+	case "history":
+		return h.historySlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -818,6 +822,12 @@ func (h *CommandHandler) warn(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) warnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return warnSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) history(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return historyMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) historySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return historySlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1420,6 +1430,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to warn", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Warning reason", Required: true},
+		},
+	},
+	{
+		Name:        "history",
+		Description: "Show a user's moderation history",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to look up", Required: true},
 		},
 	},
 }
