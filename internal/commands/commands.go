@@ -179,6 +179,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.fn(s, m, args)
 	case "nick":
 		return h.nick(s, m, args)
+	case "jail":
+		return h.jail(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -330,6 +332,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.fnSlash(s, i)
 	case "nick":
 		return h.nickSlash(s, i)
+	case "jail":
+		return h.jailSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -868,6 +872,12 @@ func (h *CommandHandler) nick(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) nickSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return nickSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) jail(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return jailMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) jailSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return jailSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1530,6 +1540,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "unlock", Description: "Unlock a user's nickname", Options: []*discordgo.ApplicationCommandOption{
 				{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to unlock", Required: true},
 			}},
+		},
+	},
+	{
+		Name:        "jail",
+		Description: "Jail a user, removing their roles and restricting them",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to jail", Required: true},
 		},
 	},
 }
