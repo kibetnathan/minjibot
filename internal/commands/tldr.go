@@ -100,6 +100,7 @@ var tldrEntries = map[string]TldrEntry{
 	"topic":           {"topic", "`topic <text>`", "Set the topic of the current channel. Requires a moderation permission."},
 	"denyperm":        {"denyperm", "`denyperm <user|role> <perm> [channel]`", "Deny a permission to a user or role in a channel. Requires a moderation permission."},
 	"imute":           {"imute", "`imute <user>`", "Prevent a user from sending images in this channel. Requires a moderation permission."},
+	"gifmute":         {"gifmute", "`gifmute <user>`", "Prevent a user from sending images, GIFs, and embeds in this channel. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
