@@ -89,6 +89,7 @@ var tldrEntries = map[string]TldrEntry{
 	"fn":              {"fn", "`fn <user> <nickname>`", "Force set a user's nickname. Requires a moderation permission."},
 	"nick":            {"nick", "`nick lock|unlock <user>`", "Lock or unlock a user's nickname. Requires a moderation permission."},
 	"jail":            {"jail", "`jail <user>`", "Jail a user, removing their roles and restricting them. Requires a moderation permission."},
+	"unjail":          {"unjail", "`unjail <user>`", "Unjail a user, restoring their previous roles. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
