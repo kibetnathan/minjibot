@@ -185,6 +185,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.unjail(s, m, args)
 	case "staffstrip":
 		return h.staffstrip(s, m, args)
+	case "hide":
+		return h.hide(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -342,6 +344,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.unjailSlash(s, i)
 	case "staffstrip":
 		return h.staffstripSlash(s, i)
+	case "hide":
+		return h.hideSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -898,6 +902,12 @@ func (h *CommandHandler) staffstrip(s *discordgo.Session, m *discordgo.MessageCr
 }
 func (h *CommandHandler) staffstripSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return staffstripSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) hide(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return hideMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) hideSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return hideSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1582,6 +1592,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to strip roles from", Required: true},
 		},
+	},
+	{
+		Name:        "hide",
+		Description: "Hide the current channel from @everyone",
 	},
 }
 

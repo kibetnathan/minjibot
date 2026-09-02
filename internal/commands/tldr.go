@@ -91,6 +91,7 @@ var tldrEntries = map[string]TldrEntry{
 	"jail":            {"jail", "`jail <user>`", "Jail a user, removing their roles and restricting them. Requires a moderation permission."},
 	"unjail":          {"unjail", "`unjail <user>`", "Unjail a user, restoring their previous roles. Requires a moderation permission."},
 	"staffstrip":      {"staffstrip", "`staffstrip <user>`", "Remove all staff roles from a user. Requires a moderation permission."},
+	"hide":            {"hide", "`hide`", "Hide the current channel from @everyone. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
