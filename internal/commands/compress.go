@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"image/png"
 	_ "image/gif"
 	_ "image/jpeg"
+	"image/png"
 	_ "image/png"
 
 	"github.com/bwmarrin/discordgo"
@@ -132,4 +132,3 @@ func compressSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionC
 		},
 	})
 }
-
