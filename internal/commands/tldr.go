@@ -86,6 +86,7 @@ var tldrEntries = map[string]TldrEntry{
 	"history":         {"history", "`history <user>`", "Show a user's moderation history. Requires a moderation permission."},
 	"audit":           {"audit", "`audit [limit] [actor]`", "Show recent moderation actions. Requires a moderation permission."},
 	"role":            {"role", "`role add|create|edit|hoist|member ...`", "Manage roles. Requires a moderation permission."},
+	"fn":              {"fn", "`fn <user> <nickname>`", "Force set a user's nickname. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).

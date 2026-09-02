@@ -93,6 +93,7 @@ func HelpSections() []HelpSection {
 			{"history <user>", "Show a user's moderation history"},
 			{"audit [limit] [actor]", "Show recent moderation actions"},
 			{"role add|create|edit|hoist|member", "Manage roles"},
+			{"fn <user> <nickname>", "Force set a user's nickname"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},

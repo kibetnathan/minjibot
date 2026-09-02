@@ -175,6 +175,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.audit(s, m, args)
 	case "role":
 		return h.role(s, m, args)
+	case "fn":
+		return h.fn(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -322,6 +324,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.auditSlash(s, i)
 	case "role":
 		return h.roleSlash(s, i)
+	case "fn":
+		return h.fnSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -848,6 +852,12 @@ func (h *CommandHandler) role(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) roleSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return roleSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) fn(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return fnMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) fnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return fnSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1490,6 +1500,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "member", Description: "List members with a role", Options: []*discordgo.ApplicationCommandOption{
 				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
 			}},
+		},
+	},
+	{
+		Name:        "fn",
+		Description: "Force set a user's nickname",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to rename", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "nickname", Description: "New nickname", Required: true},
 		},
 	},
 }
