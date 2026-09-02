@@ -157,6 +157,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.ban(s, m, args)
 	case "hardban":
 		return h.hardban(s, m, args)
+	case "softban":
+		return h.softban(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -286,6 +288,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.banSlash(s, i)
 	case "hardban":
 		return h.hardbanSlash(s, i)
+	case "softban":
+		return h.softbanSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -758,6 +762,12 @@ func (h *CommandHandler) hardban(s *discordgo.Session, m *discordgo.MessageCreat
 }
 func (h *CommandHandler) hardbanSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return hardbanSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) softban(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return softbanMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) softbanSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return softbanSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1314,6 +1324,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Ban a user and delete their recent messages",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to hard ban", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
+		},
+	},
+	{
+		Name:        "softban",
+		Description: "Ban then immediately unban a user, deleting their recent messages",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to soft ban", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
 		},
 	},
