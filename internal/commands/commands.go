@@ -163,6 +163,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.kick(s, m, args)
 	case "purge":
 		return h.purge(s, m, args)
+	case "nuke":
+		return h.nuke(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -298,6 +300,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.kickSlash(s, i)
 	case "purge":
 		return h.purgeSlash(s, i)
+	case "nuke":
+		return h.nukeSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -788,6 +792,12 @@ func (h *CommandHandler) purge(s *discordgo.Session, m *discordgo.MessageCreate,
 }
 func (h *CommandHandler) purgeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return purgeSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nuke(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nukeMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nukeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nukeSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1370,6 +1380,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionInteger, Name: "count", Description: "Number of messages to delete (1-100)", Required: true},
 			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "Only delete messages from this user", Required: false},
 		},
+	},
+	{
+		Name:        "nuke",
+		Description: "Delete all messages by cloning the current channel",
 	},
 }
 
