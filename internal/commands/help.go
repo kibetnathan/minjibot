@@ -86,6 +86,7 @@ func HelpSections() []HelpSection {
 			{"hardban <user> [reason]", "Ban a user and delete their recent messages"},
 			{"softban <user> [reason]", "Ban then immediately unban a user, deleting recent messages"},
 			{"kick <user> [reason]", "Kick a user from the server"},
+			{"purge <count> [user]", "Delete recent messages, optionally only from a user"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
