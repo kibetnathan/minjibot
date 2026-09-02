@@ -201,6 +201,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.topic(s, m, args)
 	case "denyperm":
 		return h.denyperm(s, m, args)
+	case "imute":
+		return h.imute(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -374,6 +376,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.topicSlash(s, i)
 	case "denyperm":
 		return h.denypermSlash(s, i)
+	case "imute":
+		return h.imuteSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -978,6 +982,12 @@ func (h *CommandHandler) denyperm(s *discordgo.Session, m *discordgo.MessageCrea
 }
 func (h *CommandHandler) denypermSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return denypermSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) imute(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return imuteMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) imuteSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return imuteSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1705,6 +1715,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role to deny permission to", Required: false},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "permission", Description: "Permission to deny (view, send, attach, embed, reaction, voice)", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "channel", Description: "Channel to apply in (default current)", Required: false},
+		},
+	},
+	{
+		Name:        "imute",
+		Description: "Prevent a user from sending images in this channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to image mute", Required: true},
 		},
 	},
 }

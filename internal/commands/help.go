@@ -112,6 +112,7 @@ func HelpSections() []HelpSection {
 		}},
 		{Name: "Moderation — Permissions", Items: [][2]string{
 			{"denyperm <user|role> <perm> [channel]", "Deny a permission to a user or role"},
+			{"imute <user>", "Prevent a user from sending images in this channel"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
