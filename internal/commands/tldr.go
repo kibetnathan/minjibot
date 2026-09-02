@@ -94,6 +94,7 @@ var tldrEntries = map[string]TldrEntry{
 	"hide":            {"hide", "`hide`", "Hide the current channel from @everyone. Requires a moderation permission."},
 	"reveal":          {"reveal", "`reveal`", "Make the current channel visible to @everyone again. Requires a moderation permission."},
 	"lockdown":        {"lockdown", "`lockdown`", "Lock the current channel for @everyone. Requires a moderation permission."},
+	"nsfw":            {"nsfw", "`nsfw`", "Mark the current channel as NSFW. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
