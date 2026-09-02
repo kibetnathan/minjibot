@@ -99,6 +99,7 @@ func HelpSections() []HelpSection {
 			{"unjail <user>", "Unjail a user, restoring their roles"},
 			{"staffstrip <user>", "Remove all staff roles from a user"},
 			{"hide", "Hide the current channel from @everyone"},
+			{"reveal", "Make the current channel visible to @everyone again"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
