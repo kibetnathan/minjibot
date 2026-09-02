@@ -189,6 +189,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.hide(s, m, args)
 	case "reveal":
 		return h.reveal(s, m, args)
+	case "lockdown":
+		return h.lockdown(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -350,6 +352,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.hideSlash(s, i)
 	case "reveal":
 		return h.revealSlash(s, i)
+	case "lockdown":
+		return h.lockdownSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -918,6 +922,12 @@ func (h *CommandHandler) reveal(s *discordgo.Session, m *discordgo.MessageCreate
 }
 func (h *CommandHandler) revealSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return revealSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) lockdown(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return lockdownMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) lockdownSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return lockdownSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1610,6 +1620,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "reveal",
 		Description: "Make the current channel visible to @everyone again",
+	},
+	{
+		Name:        "lockdown",
+		Description: "Lock the current channel for @everyone",
 	},
 }
 

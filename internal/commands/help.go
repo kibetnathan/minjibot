@@ -104,6 +104,7 @@ func HelpSections() []HelpSection {
 			{"nuke", "Delete all messages by cloning the current channel"},
 			{"hide", "Hide the current channel from @everyone"},
 			{"reveal", "Make the current channel visible to @everyone again"},
+			{"lockdown", "Lock the current channel for @everyone"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
