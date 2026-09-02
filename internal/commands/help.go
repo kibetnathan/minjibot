@@ -107,6 +107,7 @@ func HelpSections() []HelpSection {
 			{"lockdown", "Lock the current channel for @everyone"},
 			{"nsfw", "Mark the current channel as NSFW"},
 			{"sfw", "Unmark the current channel as NSFW"},
+			{"slowmode <seconds>", "Set a slowmode on the current channel"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
