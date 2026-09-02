@@ -177,6 +177,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.role(s, m, args)
 	case "fn":
 		return h.fn(s, m, args)
+	case "nick":
+		return h.nick(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -326,6 +328,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.roleSlash(s, i)
 	case "fn":
 		return h.fnSlash(s, i)
+	case "nick":
+		return h.nickSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -858,6 +862,12 @@ func (h *CommandHandler) fn(s *discordgo.Session, m *discordgo.MessageCreate, ar
 }
 func (h *CommandHandler) fnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return fnSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nick(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nickMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nickSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nickSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1508,6 +1518,18 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to rename", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "nickname", Description: "New nickname", Required: true},
+		},
+	},
+	{
+		Name:        "nick",
+		Description: "Lock or unlock a user's nickname",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "lock", Description: "Lock a user's nickname", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to lock", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "unlock", Description: "Unlock a user's nickname", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to unlock", Required: true},
+			}},
 		},
 	},
 }
