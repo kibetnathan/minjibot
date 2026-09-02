@@ -173,6 +173,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.history(s, m, args)
 	case "audit":
 		return h.audit(s, m, args)
+	case "role":
+		return h.role(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -318,6 +320,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.historySlash(s, i)
 	case "audit":
 		return h.auditSlash(s, i)
+	case "role":
+		return h.roleSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -838,6 +842,12 @@ func (h *CommandHandler) audit(s *discordgo.Session, m *discordgo.MessageCreate,
 }
 func (h *CommandHandler) auditSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return auditSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) role(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return roleMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) roleSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return roleSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1455,6 +1465,31 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionInteger, Name: "limit", Description: "Number of entries (1-50)", Required: false},
 			{Type: discordgo.ApplicationCommandOptionUser, Name: "actor", Description: "Only show actions by this user", Required: false},
+		},
+	},
+	{
+		Name:        "role",
+		Description: "Manage roles",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Add a role to a user", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to give the role", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "create", Description: "Create a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "name", Description: "Role name", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "edit", Description: "Edit a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "name", Description: "New name", Required: false},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "color", Description: "New hex color", Required: false},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "hoist", Description: "Toggle role hoisting", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+				{Type: discordgo.ApplicationCommandOptionBoolean, Name: "hoist", Description: "Hoist on/off", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "member", Description: "List members with a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+			}},
 		},
 	},
 }
