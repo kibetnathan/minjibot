@@ -81,6 +81,7 @@ var tldrEntries = map[string]TldrEntry{
 	"kick":            {"kick", "`kick <user> [reason]`", "Kick a user from the server. Requires a moderation permission."},
 	"purge":           {"purge", "`purge <count> [user]`", "Delete a number of recent messages, optionally from a specific user. Requires a moderation permission."},
 	"nuke":            {"nuke", "`nuke`", "Delete all messages by cloning the current channel. Requires a moderation permission."},
+	"timeout":         {"timeout", "`timeout <user> <duration> [reason]`", "Timeout a user for a duration. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).

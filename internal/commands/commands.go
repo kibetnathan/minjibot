@@ -165,6 +165,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.purge(s, m, args)
 	case "nuke":
 		return h.nuke(s, m, args)
+	case "timeout":
+		return h.timeout(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -302,6 +304,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.purgeSlash(s, i)
 	case "nuke":
 		return h.nukeSlash(s, i)
+	case "timeout":
+		return h.timeoutSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -798,6 +802,12 @@ func (h *CommandHandler) nuke(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) nukeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return nukeSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) timeout(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return timeoutMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) timeoutSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return timeoutSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1384,6 +1394,15 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "nuke",
 		Description: "Delete all messages by cloning the current channel",
+	},
+	{
+		Name:        "timeout",
+		Description: "Timeout a user for a duration",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to timeout", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "duration", Description: "Duration, e.g. 30m, 2h, 1d", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Timeout reason", Required: false},
+		},
 	},
 }
 
