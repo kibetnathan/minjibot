@@ -74,6 +74,7 @@ var tldrEntries = map[string]TldrEntry{
 	"quickpoll":       {"quickpoll", "`quickpoll <question>`", "Create a quick Yes/No reaction poll."},
 	"birthday":        {"birthday", "`birthday add|list|celebrate|channel|role`", "Manage server birthdays: save, list, celebrate, set the channel, or set the celebration role."},
 	"diary":           {"diary", "`diary add|view|delete`", "Private per-user diary: save, view (DMed), or delete entries."},
+	"bio":             {"bio", "`bio github|roblox|reddit|kick <name>`", "Look up a user's public profile on GitHub, Roblox, Reddit, or Kick."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).

@@ -82,6 +82,7 @@ func HelpSections() []HelpSection {
 			{"ttys", "Bot talks to itself until someone speaks or up to an hour"},
 		}},
 		{Name: "Social", Items: [][2]string{
+			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
 			{"ship <@user> <@user>", "Calculate romance compatibility"},
 			{"colors avatar [@user]", "Extract dominant colours from an avatar"},
 			{"lurk", "Toggle yourself in/out of lurking mode"},

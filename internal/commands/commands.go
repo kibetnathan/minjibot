@@ -149,6 +149,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.diary(s, m, args)
 	case "ttys":
 		return h.ttys(s, m, args)
+	case "bio":
+		return h.bio(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -272,6 +274,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.diarySlash(s, i)
 	case "ttys":
 		return h.ttysSlash(s, i)
+	case "bio":
+		return h.bioSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -724,6 +728,13 @@ func (h *CommandHandler) diary(s *discordgo.Session, m *discordgo.MessageCreate,
 }
 func (h *CommandHandler) diarySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return diarySlashCommandHandler(h, s, i)
+}
+
+func (h *CommandHandler) bio(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bioMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bioSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bioSlashCommandHandler(s, i, h.Cfg)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1248,6 +1259,24 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ttys",
 		Description: "Bot talks to itself until someone speaks or an hour passes",
+	},
+	{
+		Name:        "bio",
+		Description: "Look up a user's public profile on a supported platform",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "github", Description: "Look up a GitHub profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "GitHub username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "roblox", Description: "Look up a Roblox profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Roblox username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "reddit", Description: "Look up a Reddit profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Reddit username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "kick", Description: "Look up a Kick channel", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Kick channel slug", Required: true},
+			}},
+		},
 	},
 }
 
