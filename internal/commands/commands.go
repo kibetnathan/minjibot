@@ -171,6 +171,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.warn(s, m, args)
 	case "history":
 		return h.history(s, m, args)
+	case "audit":
+		return h.audit(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -314,6 +316,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.warnSlash(s, i)
 	case "history":
 		return h.historySlash(s, i)
+	case "audit":
+		return h.auditSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -828,6 +832,12 @@ func (h *CommandHandler) history(s *discordgo.Session, m *discordgo.MessageCreat
 }
 func (h *CommandHandler) historySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return historySlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) audit(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return auditMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) auditSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return auditSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1437,6 +1447,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Show a user's moderation history",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to look up", Required: true},
+		},
+	},
+	{
+		Name:        "audit",
+		Description: "Show recent moderation actions",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionInteger, Name: "limit", Description: "Number of entries (1-50)", Required: false},
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "actor", Description: "Only show actions by this user", Required: false},
 		},
 	},
 }
