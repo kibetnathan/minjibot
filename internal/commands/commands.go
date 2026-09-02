@@ -159,6 +159,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.hardban(s, m, args)
 	case "softban":
 		return h.softban(s, m, args)
+	case "kick":
+		return h.kick(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -290,6 +292,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.hardbanSlash(s, i)
 	case "softban":
 		return h.softbanSlash(s, i)
+	case "kick":
+		return h.kickSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -768,6 +772,12 @@ func (h *CommandHandler) softban(s *discordgo.Session, m *discordgo.MessageCreat
 }
 func (h *CommandHandler) softbanSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return softbanSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) kick(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return kickMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) kickSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return kickSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1333,6 +1343,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to soft ban", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
+		},
+	},
+	{
+		Name:        "kick",
+		Description: "Kick a user from the server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to kick", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Kick reason", Required: false},
 		},
 	},
 }
