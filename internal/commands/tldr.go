@@ -77,6 +77,7 @@ var tldrEntries = map[string]TldrEntry{
 	"bio":             {"bio", "`bio github|roblox|reddit|kick <name>`", "Look up a user's public profile on GitHub, Roblox, Reddit, or Kick."},
 	"ban":             {"ban", "`ban <user> [reason]`", "Ban a user from the server. Requires a moderation permission."},
 	"hardban":         {"hardban", "`hardban <user> [reason]`", "Ban a user and delete their recent messages. Requires a moderation permission."},
+	"softban":         {"softban", "`softban <user> [reason]`", "Ban then immediately unban a user, deleting their recent messages. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
