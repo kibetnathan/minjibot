@@ -110,6 +110,9 @@ func HelpSections() []HelpSection {
 			{"slowmode <seconds>", "Set a slowmode on the current channel"},
 			{"topic <text>", "Set the topic of the current channel"},
 		}},
+		{Name: "Moderation — Permissions", Items: [][2]string{
+			{"denyperm <user|role> <perm> [channel]", "Deny a permission to a user or role"},
+		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
 			{"ship <@user> <@user>", "Calculate romance compatibility"},
