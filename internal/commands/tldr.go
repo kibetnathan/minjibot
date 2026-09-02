@@ -97,6 +97,7 @@ var tldrEntries = map[string]TldrEntry{
 	"nsfw":            {"nsfw", "`nsfw`", "Mark the current channel as NSFW. Requires a moderation permission."},
 	"sfw":             {"sfw", "`sfw`", "Unmark the current channel as NSFW. Requires a moderation permission."},
 	"slowmode":        {"slowmode", "`slowmode <seconds>`", "Set a slowmode on the current channel. Requires a moderation permission."},
+	"topic":           {"topic", "`topic <text>`", "Set the topic of the current channel. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
