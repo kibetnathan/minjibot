@@ -195,6 +195,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.nsfw(s, m, args)
 	case "sfw":
 		return h.sfw(s, m, args)
+	case "slowmode":
+		return h.slowmode(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -362,6 +364,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.nsfwSlash(s, i)
 	case "sfw":
 		return h.sfwSlash(s, i)
+	case "slowmode":
+		return h.slowmodeSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -948,6 +952,12 @@ func (h *CommandHandler) sfw(s *discordgo.Session, m *discordgo.MessageCreate, a
 }
 func (h *CommandHandler) sfwSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return sfwSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) slowmode(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return slowmodeMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) slowmodeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return slowmodeSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1652,6 +1662,13 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "sfw",
 		Description: "Unmark the current channel as NSFW",
+	},
+	{
+		Name:        "slowmode",
+		Description: "Set a slowmode on the current channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionInteger, Name: "seconds", Description: "Slowmode in seconds (0 to disable)", Required: true},
+		},
 	},
 }
 

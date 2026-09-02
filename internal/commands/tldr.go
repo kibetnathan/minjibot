@@ -96,6 +96,7 @@ var tldrEntries = map[string]TldrEntry{
 	"lockdown":        {"lockdown", "`lockdown`", "Lock the current channel for @everyone. Requires a moderation permission."},
 	"nsfw":            {"nsfw", "`nsfw`", "Mark the current channel as NSFW. Requires a moderation permission."},
 	"sfw":             {"sfw", "`sfw`", "Unmark the current channel as NSFW. Requires a moderation permission."},
+	"slowmode":        {"slowmode", "`slowmode <seconds>`", "Set a slowmode on the current channel. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
