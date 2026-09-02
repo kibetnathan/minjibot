@@ -79,6 +79,7 @@ var tldrEntries = map[string]TldrEntry{
 	"hardban":         {"hardban", "`hardban <user> [reason]`", "Ban a user and delete their recent messages. Requires a moderation permission."},
 	"softban":         {"softban", "`softban <user> [reason]`", "Ban then immediately unban a user, deleting their recent messages. Requires a moderation permission."},
 	"kick":            {"kick", "`kick <user> [reason]`", "Kick a user from the server. Requires a moderation permission."},
+	"purge":           {"purge", "`purge <count> [user]`", "Delete a number of recent messages, optionally from a specific user. Requires a moderation permission."},
 }
 
 // Tldr returns the brief usage entry for a command name (case-insensitive).
