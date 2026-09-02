@@ -191,6 +191,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.reveal(s, m, args)
 	case "lockdown":
 		return h.lockdown(s, m, args)
+	case "nsfw":
+		return h.nsfw(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -354,6 +356,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.revealSlash(s, i)
 	case "lockdown":
 		return h.lockdownSlash(s, i)
+	case "nsfw":
+		return h.nsfwSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -928,6 +932,12 @@ func (h *CommandHandler) lockdown(s *discordgo.Session, m *discordgo.MessageCrea
 }
 func (h *CommandHandler) lockdownSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return lockdownSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nsfw(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nsfwMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nsfwSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nsfwSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1624,6 +1634,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "lockdown",
 		Description: "Lock the current channel for @everyone",
+	},
+	{
+		Name:        "nsfw",
+		Description: "Mark the current channel as NSFW",
 	},
 }
 
