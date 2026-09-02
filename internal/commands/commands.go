@@ -14,17 +14,19 @@ type CommandHandler struct {
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
 	PermRepo     repository.UserPermissionRepository
+	AuditRepo    repository.AuditLogRepository
 	BirthdayRepo repository.BirthdayRepository
 	BirthdaySett repository.GuildBirthdaySettingsRepository
 	DiaryRepo    repository.DiaryRepository
 }
 
-func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository, birthdayRepo repository.BirthdayRepository, birthdaySett repository.GuildBirthdaySettingsRepository, diaryRepo repository.DiaryRepository) *CommandHandler {
+func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository, auditRepo repository.AuditLogRepository, birthdayRepo repository.BirthdayRepository, birthdaySett repository.GuildBirthdaySettingsRepository, diaryRepo repository.DiaryRepository) *CommandHandler {
 	return &CommandHandler{
 		Cfg:          cfg,
 		GuildRepo:    guildRepo,
 		SettingsRepo: settingsRepo,
 		PermRepo:     permRepo,
+		AuditRepo:    auditRepo,
 		BirthdayRepo: birthdayRepo,
 		BirthdaySett: birthdaySett,
 		DiaryRepo:    diaryRepo,
@@ -151,6 +153,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.ttys(s, m, args)
 	case "bio":
 		return h.bio(s, m, args)
+	case "ban":
+		return h.ban(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -276,6 +280,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.ttysSlash(s, i)
 	case "bio":
 		return h.bioSlash(s, i)
+	case "ban":
+		return h.banSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -735,6 +741,13 @@ func (h *CommandHandler) bio(s *discordgo.Session, m *discordgo.MessageCreate, a
 }
 func (h *CommandHandler) bioSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return bioSlashCommandHandler(s, i, h.Cfg)
+}
+
+func (h *CommandHandler) ban(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return banMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) banSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return banSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1276,6 +1289,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "kick", Description: "Look up a Kick channel", Options: []*discordgo.ApplicationCommandOption{
 				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Kick channel slug", Required: true},
 			}},
+		},
+	},
+	{
+		Name:        "ban",
+		Description: "Ban a user from the server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to ban", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
 		},
 	},
 }

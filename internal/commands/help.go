@@ -81,6 +81,9 @@ func HelpSections() []HelpSection {
 			{"diary add|view|delete", "Private per-user diary"},
 			{"ttys", "Bot talks to itself until someone speaks or up to an hour"},
 		}},
+		{Name: "Moderation", Items: [][2]string{
+			{"ban <user> [reason]", "Ban a user from the server"},
+		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
 			{"ship <@user> <@user>", "Calculate romance compatibility"},
