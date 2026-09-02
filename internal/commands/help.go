@@ -83,6 +83,7 @@ func HelpSections() []HelpSection {
 		}},
 		{Name: "Moderation", Items: [][2]string{
 			{"ban <user> [reason]", "Ban a user from the server"},
+			{"hardban <user> [reason]", "Ban a user and delete their recent messages"},
 		}},
 		{Name: "Social", Items: [][2]string{
 			{"bio github|roblox|reddit|kick <name>", "Look up a user's public profile"},
