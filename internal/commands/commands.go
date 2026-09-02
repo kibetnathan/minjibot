@@ -167,6 +167,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.nuke(s, m, args)
 	case "timeout":
 		return h.timeout(s, m, args)
+	case "warn":
+		return h.warn(s, m, args)
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -306,6 +308,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.nukeSlash(s, i)
 	case "timeout":
 		return h.timeoutSlash(s, i)
+	case "warn":
+		return h.warnSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -808,6 +812,12 @@ func (h *CommandHandler) timeout(s *discordgo.Session, m *discordgo.MessageCreat
 }
 func (h *CommandHandler) timeoutSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return timeoutSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) warn(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return warnMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) warnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return warnSlashCommandHandler(h, s, i)
 }
 
 var SlashCommands = []*discordgo.ApplicationCommand{
@@ -1402,6 +1412,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to timeout", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "duration", Description: "Duration, e.g. 30m, 2h, 1d", Required: true},
 			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Timeout reason", Required: false},
+		},
+	},
+	{
+		Name:        "warn",
+		Description: "Warn a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to warn", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Warning reason", Required: true},
 		},
 	},
 }
