@@ -19,6 +19,8 @@ func HelpSections() []HelpSection {
 	return []HelpSection{
 		{Name: "General", Items: [][2]string{
 			{"ping", "Check bot latency"},
+			{"test", "Ping-pong check that the bot is responsive"},
+			{"bug", "Open a form to report a bot bug to developers"},
 			{"help", "Show this menu"},
 			{"tldr <command>", "Get a brief how-to for a command"},
 			{"userinfo [@user]", "Get info about a user"},

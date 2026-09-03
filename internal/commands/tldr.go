@@ -19,6 +19,8 @@ var tldrEntries = map[string]TldrEntry{
 	"help":            {"help", "`help` or `help <category>`", "Show the command menu, optionally filtered to a category (e.g. `fun`)."},
 	"tldr":            {"tldr", "`tldr <command>`", "Show a brief how-to for a command (e.g. `-tldr echo`)."},
 	"ping":            {"ping", "`ping`", "Check the bot's round-trip and WebSocket latency."},
+	"test":            {"test", "`test [text]`", "Ping-pong check to confirm the bot is responsive (optionally echoes text)."},
+	"bug":             {"bug", "`bug <description>` or `/bug`", "Report a bot bug via a form/modal or a direct message."},
 	"echo":            {"echo", "`echo <text>`", "Repeat the given text back into the channel."},
 	"userinfo":        {"userinfo", "`userinfo [@user]`", "Show account/server details for a user."},
 	"ddg":             {"ddg", "`ddg <query>`", "Fetch quick search results from DuckDuckGo."},

@@ -73,6 +73,10 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.urbandictionary(s, m, args)
 	case "weather":
 		return h.weather(s, m, args)
+	case "test":
+		return h.test(s, m, args)
+	case "bug":
+		return h.bug(s, m, args)
 	case "ddg":
 		return h.ddg(s, m.ChannelID, args)
 	case "search":
@@ -316,6 +320,10 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.urbandictionarySlash(s, i)
 	case "weather":
 		return h.weatherSlash(s, i)
+	case "test":
+		return h.testSlash(s, i)
+	case "bug":
+		return h.bugSlash(s, i)
 	case "ddg":
 		return h.ddgSlash(s, i)
 	case "search":
@@ -676,6 +684,20 @@ func (h *CommandHandler) weather(s *discordgo.Session, m *discordgo.MessageCreat
 }
 func (h *CommandHandler) weatherSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return weatherSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) test(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return testMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) testSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return testSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) bug(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bugMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bugSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bugSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) ttys(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -1284,6 +1306,22 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Required:    true,
 			},
 		},
+	},
+	{
+		Name:        "test",
+		Description: "Ping-pong functionality check to confirm the bot is responsive",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "text",
+				Description: "Optional text to echo back",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "bug",
+		Description: "Open a form to report a bot bug to the developers",
 	},
 	{
 		Name:        "ddg",
