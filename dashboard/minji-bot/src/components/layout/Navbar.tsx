@@ -8,14 +8,23 @@ import { cn } from "@/lib/utils"
 const INVITE_URL =
   "https://discord.com/oauth2/authorize?client_id=1542965379075281076"
 
-const NAV_LINKS = [
-  { to: "/commands", label: "Commands" },
-  { href: "#features", label: "Features" },
-  { href: "#tech", label: "Tech Stack" },
+type NavLink = { kind: "route"; to: string; label: string }
+
+type NavAnchor = { kind: "anchor"; href: string; label: string }
+
+const NAV_ROUTES: NavLink[] = [{ kind: "route", to: "/commands", label: "Commands" }]
+
+const NAV_ANCHORS: NavAnchor[] = [
+  { kind: "anchor", href: "#features", label: "Features" },
+  { kind: "anchor", href: "#tech", label: "Tech Stack" },
 ]
 
 export function Navbar() {
+  const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
+
+  const isActive = (to: string) =>
+    pathname === to || pathname.startsWith(`${to}/`)
 
   return (
     <header className="border-b border-border">
@@ -29,25 +38,33 @@ export function Navbar() {
           </div>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            {NAV_LINKS.map((link) =>
-              "to" in link ? (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {link.label}
-                </a>
-              )
-            )}
+            {NAV_ROUTES.map((link) => (
+              <Link
+                key={link.label}
+                to={link.to}
+                className={cn(
+                  "transition-colors hover:text-foreground",
+                  isActive(link.to) && "text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {NAV_ANCHORS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </a>
+            ))}
+            <Link
+              to="/signup"
+              className={cn(buttonVariants({ variant: "outline" }))}
+            >
+              Sign up
+            </Link>
             <a
               href={INVITE_URL}
               target="_blank"
@@ -73,27 +90,36 @@ export function Navbar() {
 
         {open && (
           <nav className="mt-4 flex flex-col gap-4 border-t border-border pt-4 text-sm text-muted-foreground md:hidden">
-            {NAV_LINKS.map((link) =>
-              "to" in link ? (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  onClick={() => setOpen(false)}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {link.label}
-                </a>
-              )
-            )}
+            {NAV_ROUTES.map((link) => (
+              <Link
+                key={link.label}
+                to={link.to}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "transition-colors hover:text-foreground",
+                  isActive(link.to) && "text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {NAV_ANCHORS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </a>
+            ))}
+            <Link
+              to="/signup"
+              onClick={() => setOpen(false)}
+              className={cn(buttonVariants({ variant: "outline" }))}
+            >
+              Sign up
+            </Link>
             <a
               href={INVITE_URL}
               target="_blank"

@@ -20,6 +20,12 @@ export function CommandsHero({ total }: CommandsHeroProps) {
           <code className="font-mono">-cmd</code>) and a slash command (
           <code className="font-mono">/cmd</code>).
         </p>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Chain prefix commands together with{" "}
+          <code className="font-mono">&amp;&amp;</code> to run them back to
+          back, e.g.{" "}
+          <code className="font-mono">-spark &amp;&amp; -smoke</code>.
+        </p>
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{total}</span>{" "}
           commands across{" "}
