@@ -96,7 +96,31 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 		return
 	}
 
-	args := strings.Fields(strings.TrimPrefix(m.Content, prefix))
+	// Commands can be chained together with "&&", e.g. "-spark && -smoke".
+	// Each segment is trimmed and dispatched in order; a failing segment does
+	// not stop the remaining ones.
+	chain := strings.Split(m.Content, "&&")
+	for _, segment := range chain {
+		dispatchCommand(ctx, s, m, prefix, segment, cmdHandler)
+	}
+}
+
+// dispatchCommand runs a single command segment (already extracted from any
+// "&&" chain) if it is a valid command invocation.
+func dispatchCommand(
+	ctx context.Context,
+	s *discordgo.Session,
+	m *discordgo.MessageCreate,
+	prefix string,
+	segment string,
+	cmdHandler *commands.CommandHandler,
+) {
+	segment = strings.TrimSpace(segment)
+	if !strings.HasPrefix(segment, prefix) {
+		return
+	}
+
+	args := strings.Fields(strings.TrimPrefix(segment, prefix))
 	if len(args) == 0 {
 		return
 	}
