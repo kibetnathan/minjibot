@@ -22,39 +22,6 @@ const buttonSizes = {
 }
 
 export function Hero() {
-  const features = [
-    {
-      icon: Bot,
-      title: "Discord Bot",
-      desc: "Slash & prefix commands for moderation, utility, fun, roleplay, social lookups.",
-    },
-    {
-      icon: Zap,
-      title: "REST API",
-      desc: "Echo-powered API with pgx/v5 and generated sqlc queries.",
-    },
-    {
-      icon: Shield,
-      title: "Moderation",
-      desc: "Ban, timeout, purge, lockdown, roles, warnings, audit logs.",
-    },
-    {
-      icon: Globe,
-      title: "Social Lookups",
-      desc: "GitHub, Twitter, YouTube, Twitch, TikTok, Reddit profiles.",
-    },
-    {
-      icon: Terminal,
-      title: "Type-Safe DB",
-      desc: "PostgreSQL with goose migrations, sqlc codegen, pgtype mappings.",
-    },
-    {
-      icon: Sparkles,
-      title: "Dashboard",
-      desc: "React + Vite + shadcn/ui with dark mode and type-safe hooks.",
-    },
-  ]
-
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-3xl text-center">
@@ -81,25 +48,6 @@ export function Hero() {
           >
             Explore Features
           </a>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="group rounded-xl border border-border bg-card p-4 text-left transition-all hover:border-primary/50 hover:shadow-lg"
-            >
-              <div className="mb-3 w-fit rounded-lg bg-primary/10 p-2">
-                <feature.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="font-heading text-sm font-semibold text-foreground">
-                {feature.title}
-              </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {feature.desc}
-              </p>
-            </div>
-          ))}
         </div>
       </div>
     </section>
