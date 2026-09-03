@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kibetnathan/minjibot/infrastructure/postgres"
@@ -40,6 +41,17 @@ func NewApp() (*App, error) {
 		e.Logger.Error("Error parsing env file", "Error:", err.Error())
 		return nil, err
 	}
+
+	// CORS for cross-origin browser calls to the API (e.g. the dashboard
+	// reading /api/auth/me from a separate frontend origin). Credentials are
+	// allowed so the session cookie is sent, but only for explicit origins —
+	// never the wildcard (echo v5 rejects "*" with AllowCredentials anyway).
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     corsOrigins(cfg),
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:     []string{"Authorization", "Content-Type", "X-Requested-With"},
+		AllowCredentials: true,
+	}))
 
 	// DB Pool (concurrency-safe connection pool)
 	pool, err := pgxpool.New(context.Background(), cfg.DBURL)
@@ -83,6 +95,9 @@ func (a *App) registerRoutes() {
 		),
 		sess:  authsvc.NewSessionManager(a.Cfg.SessionSecret),
 		users: userRepo,
+		// Redirect the user back to the frontend after login/logout. Defaults
+		// to the API origin when FRONTEND_URL is unset (same-origin dev setup).
+		frontend: a.Cfg.FrontendURL,
 	}
 
 	group := a.Echo.Group("/api")
@@ -102,4 +117,28 @@ func (a *App) Shutdown(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// corsOrigins returns the origins allowed by the CORS middleware: the frontend
+// origin (FRONTEND_URL), the API origin (APP_URL), plus localhost dev origins so
+// a local Vite dashboard can call the API directly.
+func corsOrigins(cfg *config.Config) []string {
+	seen := map[string]struct{}{}
+	var origins []string
+	for _, o := range []string{
+		strings.TrimRight(cfg.FrontendURL, "/"),
+		strings.TrimRight(cfg.AppURL, "/"),
+		"http://localhost:5173",
+		"http://localhost:8080",
+	} {
+		if o == "" {
+			continue
+		}
+		if _, ok := seen[o]; ok {
+			continue
+		}
+		seen[o] = struct{}{}
+		origins = append(origins, o)
+	}
+	return origins
 }
