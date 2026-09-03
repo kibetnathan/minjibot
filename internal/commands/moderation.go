@@ -66,11 +66,10 @@ func hasAnyPerm(perms int64, wanted ...int64) bool {
 	return false
 }
 
-// requireModerator checks that the user holds moderation permissions. For
-// slash commands it prefers the per-member permissions Discord attaches to the
-// interaction; otherwise it recomputes from guild roles. Returns (true, "") if
-// allowed, otherwise (false, errorMessage).
-func requireModerator(s *discordgo.Session, guildID, userID string, m *discordgo.Member) (bool, string) {
+// requireModerator checks that a slash-command invoker holds moderation
+// permissions, using the per-member permissions Discord attaches to the
+// interaction. Returns (true, "") if allowed, otherwise (false, errorMessage).
+func requireModerator(m *discordgo.Member) (bool, string) {
 	perms := modPermsFromMember(m)
 	ok := hasAnyPerm(perms, defaultModPerm)
 	return ok, "You need a moderation permission (Manage Messages, Kick/Ban Members, Manage Roles/Channels, or Administrator) to use this command."
@@ -240,4 +239,27 @@ func requireModForUser(s *discordgo.Session, guildID, userID, channelID, title s
 		return false, sendModError(s, channelID, title, "You need a moderation permission (Manage Messages, Kick/Ban Members, Manage Roles/Channels, or Administrator) to use this command.")
 	}
 	return true, nil
+}
+
+// requireAdminForUser requires the Discord Administrator permission (server-wide)
+// for prefix commands. Used by destructive commands that must not be gated by
+// the broader moderation permission set.
+func requireAdminForUser(s *discordgo.Session, guildID, userID, channelID, title string) (bool, error) {
+	perms, err := effectiveModPerms(s, guildID, userID)
+	if err != nil {
+		return false, sendModError(s, channelID, title, fmt.Sprintf("Could not check permissions: %s", err))
+	}
+	if perms&discordgo.PermissionAdministrator == 0 {
+		return false, sendModError(s, channelID, title, "You need the Administrator permission to use this command.")
+	}
+	return true, nil
+}
+
+// requireAdmin checks that a slash-command invoker holds the Administrator
+// permission, using the per-member permissions attached to the interaction.
+func requireAdmin(m *discordgo.Member) (bool, string) {
+	if m == nil || m.Permissions&discordgo.PermissionAdministrator == 0 {
+		return false, "You need the Administrator permission to use this command."
+	}
+	return true, ""
 }
