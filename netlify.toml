@@ -1,0 +1,4 @@
+[build]
+  base = "dashboard/minji-bot"
+  command = "npm ci && npm run build"
+  publish = "dist"

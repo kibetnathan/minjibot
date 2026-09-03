@@ -1,12 +1,4 @@
-import {
-  ArrowRight,
-  Bot,
-  Zap,
-  Shield,
-  Globe,
-  Terminal,
-  Sparkles,
-} from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 const buttonBase =
   "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
@@ -29,7 +21,7 @@ export function Hero() {
           A Discord Bot with a Companion API and Dashboard
         </h1>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-          Six feature categories. Dual slash (/) and prefix (!) support. Built
+          Six feature categories. Dual slash (/) and prefix (-) support. Built
           with Go and React.
         </p>
         <div className="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
