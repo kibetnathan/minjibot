@@ -1,27 +1,39 @@
-# Railway deployment config (config-as-code) for the MinjiBot bot + API service.
+# Railway deployment config (config-as-code) for MinjiBot.
 #
-# This file configures a single service deployment (see
-# https://docs.railway.com/reference/config-as-code). Railway uses the Dockerfile
-# at the repo root: it compiles the binary at build time, then the container
-# command (scripts/migrate.sh) runs goose migrations and starts the prebuilt
-# bot + API on :8080.
+# This configures a single service that runs BOTH the Discord bot and the Echo
+# HTTP API through the unified entrypoint (cmd/main.go). The Dockerfile at the
+# repo root builds that unified binary at build time; the container start
+# command (scripts/migrate.sh) runs goose migrations, then starts the binary.
 #
-# The Postgres database is provided by a Railway "Postgres" plugin service
-# (created in the dashboard); reference its connection string via the
-# MINJIBOT_DB_URL variable below.
+# Railway provides a Postgres "plugin" service (created in the dashboard).
+# Reference its connection URI via DATABASE_URL (or DB_URL); scripts/migrate.sh
+# prefers GOOSE_DBSTRING, then DB_URL, then DATABASE_URL.
 
 [build]
 builder = "DOCKERFILE"
 
 [deploy]
+# Run the unified bot + API entrypoint. migrate.sh applies goose migrations,
+# then `exec`s the prebuilt binary from /app/minjibot.
 startCommand = "sh /app/scripts/migrate.sh"
+
+# The unified entrypoint starts the API immediately and the bot in a goroutine,
+# so /healthz responds as soon as the HTTP server binds. Railway injects the
+# PORT env var; the API binds to it (see internal/config, default :8080).
 healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-# In the Railway dashboard, reference the Postgres plugin's connection URI with
-# the variable name DATABASE_URL (default) or add a variable DB_URL pointing at
-# it. The migrate script falls back to DB_URL, then DATABASE_URL, so a single
-# plugin reference is enough. Set DISCORD_TOKEN / DISCORD_CLIENT_ID /
-# DISCORD_CLIENT_SECRET (and optionally the Google/Gemini keys) as variables.
+# Required variables (set in the Railway dashboard, scoped to this service):
+#  - DATABASE_URL / DB_URL    Postgres plugin connection URI (used by app + goose)
+#  - DISCORD_TOKEN            bot token used by the Discord gateway
+#  - DISCORD_CLIENT_ID        application id used for slash command registration
+#  - DISCORD_CLIENT_SECRET    used by the dashboard OAuth (Sign in with Discord)
+#  - APP_URL                  base URL + port the API is served on (must match the
+#                             OAuth callback registered in the Discord Developer
+#                             Portal, e.g. https://api.domain.com)
+#  - SESSION_SECRET           secret used to sign dashboard session cookies
+# Optional:
+#  - GOOGLE_FACTCHECK_API_KEY, GEMINI_API_KEY, GEMINI_MODEL, REDDIT_CLIENT_ID,
+#    REDDIT_CLIENT_SECRET, GOOSE_VERBOSE

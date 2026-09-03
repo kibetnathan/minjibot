@@ -11,4 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    // Dev proxy: forward /api requests (and the OAuth redirect/callback) to
+    // the Echo API on :8080 so the dashboard and API share the :5173 origin.
+    // With the proxy, the Discord OAuth flow (login -> callback -> dashboard)
+    // stays on the same origin and the session cookie is set correctly.
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
+  },
 })
