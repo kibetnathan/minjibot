@@ -11,6 +11,7 @@ type Config struct {
 	DiscordClientID     string `env:"DISCORD_CLIENT_ID"`
 	DiscordClientSecret string `env:"DISCORD_CLIENT_SECRET"`
 	AppURL              string `env:"APP_URL"`
+	FrontendURL         string `env:"FRONTEND_URL"`
 	SessionSecret       string `env:"SESSION_SECRET"`
 	GoogleFactCheckKey  string `env:"GOOGLE_FACTCHECK_API_KEY"`
 	GeminiAPIKey        string `env:"GEMINI_API_KEY"`

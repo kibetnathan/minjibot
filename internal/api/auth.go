@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -17,9 +18,10 @@ const userContextKey = "auth.user"
 
 // authHandlers bundles the dependencies shared by the auth routes.
 type authHandlers struct {
-	oauth *authsvc.DiscordOAuth
-	sess  *authsvc.SessionManager
-	users repository.UserRepository
+	oauth    *authsvc.DiscordOAuth
+	sess     *authsvc.SessionManager
+	users    repository.UserRepository
+	frontend string
 }
 
 // registerAuthRoutes wires the Discord OAuth flow onto the given Echo group.
@@ -37,34 +39,36 @@ func (h *authHandlers) login(c *echo.Context) error {
 
 // callback handles the redirect from Discord after the user approves access.
 func (h *authHandlers) callback(c *echo.Context) error {
+	frontend := strings.TrimRight(h.frontend, "/")
+
 	code := c.QueryParam("code")
 	if code == "" {
-		return c.Redirect(http.StatusFound, "/login?error=missing_code")
+		return c.Redirect(http.StatusFound, frontend+"/login?error=missing_code")
 	}
 
 	discordUser, err := h.oauth.Exchange(c.Request().Context(), code)
 	if err != nil {
-		return c.Redirect(http.StatusFound, "/login?error=oauth_failed")
+		return c.Redirect(http.StatusFound, frontend+"/login?error=oauth_failed")
 	}
 
 	u, err := h.upsertUser(c, discordUser)
 	if err != nil {
-		return c.Redirect(http.StatusFound, "/login?error=account_error")
+		return c.Redirect(http.StatusFound, frontend+"/login?error=account_error")
 	}
 
 	cookie, err := h.sess.Create(u.UserID)
 	if err != nil {
-		return c.Redirect(http.StatusFound, "/login?error=session_error")
+		return c.Redirect(http.StatusFound, frontend+"/login?error=session_error")
 	}
 	c.SetCookie(cookie)
 
-	return c.Redirect(http.StatusFound, "/dashboard")
+	return c.Redirect(http.StatusFound, frontend+"/dashboard")
 }
 
 // logout clears the session cookie and returns the user to the home page.
 func (h *authHandlers) logout(c *echo.Context) error {
 	c.SetCookie(h.sess.Clear())
-	return c.Redirect(http.StatusFound, "/")
+	return c.Redirect(http.StatusFound, strings.TrimRight(h.frontend, "/")+"/")
 }
 
 // me returns the currently authenticated user, or 401 if there is none.
