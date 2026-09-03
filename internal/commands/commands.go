@@ -205,6 +205,70 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.imute(s, m, args)
 	case "gifmute":
 		return h.gifmute(s, m, args)
+	case "angry":
+		return rpEmotionMessage(s, m, "angry")
+	case "depressed":
+		return rpEmotionMessage(s, m, "depressed")
+	case "excited":
+		return rpEmotionMessage(s, m, "excited")
+	case "happy":
+		return rpEmotionMessage(s, m, "happy")
+	case "horny":
+		return rpEmotionMessage(s, m, "horny")
+	case "inlove":
+		return rpEmotionMessage(s, m, "inlove")
+	case "sad":
+		return rpEmotionMessage(s, m, "sad")
+	case "shy":
+		return rpEmotionMessage(s, m, "shy")
+	case "baka":
+		return rpActionMessage(s, m, args, "baka")
+	case "bite":
+		return rpActionMessage(s, m, args, "bite")
+	case "cry":
+		return rpActionMessage(s, m, args, "cry")
+	case "dap":
+		return rpActionMessage(s, m, args, "dap")
+	case "eat":
+		return rpActionMessage(s, m, args, "eat")
+	case "facepalm":
+		return rpActionMessage(s, m, args, "facepalm")
+	case "feed":
+		return rpActionMessage(s, m, args, "feed")
+	case "handhold":
+		return rpActionMessage(s, m, args, "handhold")
+	case "kiss":
+		return rpActionMessage(s, m, args, "kiss")
+	case "laugh":
+		return rpActionMessage(s, m, args, "laugh")
+	case "nod":
+		return rpActionMessage(s, m, args, "nod")
+	case "nutkick":
+		return rpActionMessage(s, m, args, "nutkick")
+	case "pat":
+		return rpActionMessage(s, m, args, "pat")
+	case "peck":
+		return rpActionMessage(s, m, args, "peck")
+	case "poke":
+		return rpActionMessage(s, m, args, "poke")
+	case "punch":
+		return rpActionMessage(s, m, args, "punch")
+	case "run":
+		return rpActionMessage(s, m, args, "run")
+	case "shoot":
+		return rpActionMessage(s, m, args, "shoot")
+	case "shrug":
+		return rpActionMessage(s, m, args, "shrug")
+	case "slap":
+		return rpActionMessage(s, m, args, "slap")
+	case "spank":
+		return rpActionMessage(s, m, args, "spank")
+	case "stab":
+		return rpActionMessage(s, m, args, "stab")
+	case "think":
+		return rpActionMessage(s, m, args, "think")
+	case "tickle":
+		return rpActionMessage(s, m, args, "tickle")
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -382,6 +446,70 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.imuteSlash(s, i)
 	case "gifmute":
 		return h.gifmuteSlash(s, i)
+	case "angry":
+		return rpEmotionSlash(s, i)
+	case "depressed":
+		return rpEmotionSlash(s, i)
+	case "excited":
+		return rpEmotionSlash(s, i)
+	case "happy":
+		return rpEmotionSlash(s, i)
+	case "horny":
+		return rpEmotionSlash(s, i)
+	case "inlove":
+		return rpEmotionSlash(s, i)
+	case "sad":
+		return rpEmotionSlash(s, i)
+	case "shy":
+		return rpEmotionSlash(s, i)
+	case "baka":
+		return rpActionSlash(s, i)
+	case "bite":
+		return rpActionSlash(s, i)
+	case "cry":
+		return rpActionSlash(s, i)
+	case "dap":
+		return rpActionSlash(s, i)
+	case "eat":
+		return rpActionSlash(s, i)
+	case "facepalm":
+		return rpActionSlash(s, i)
+	case "feed":
+		return rpActionSlash(s, i)
+	case "handhold":
+		return rpActionSlash(s, i)
+	case "kiss":
+		return rpActionSlash(s, i)
+	case "laugh":
+		return rpActionSlash(s, i)
+	case "nod":
+		return rpActionSlash(s, i)
+	case "nutkick":
+		return rpActionSlash(s, i)
+	case "pat":
+		return rpActionSlash(s, i)
+	case "peck":
+		return rpActionSlash(s, i)
+	case "poke":
+		return rpActionSlash(s, i)
+	case "punch":
+		return rpActionSlash(s, i)
+	case "run":
+		return rpActionSlash(s, i)
+	case "shoot":
+		return rpActionSlash(s, i)
+	case "shrug":
+		return rpActionSlash(s, i)
+	case "slap":
+		return rpActionSlash(s, i)
+	case "spank":
+		return rpActionSlash(s, i)
+	case "stab":
+		return rpActionSlash(s, i)
+	case "think":
+		return rpActionSlash(s, i)
+	case "tickle":
+		return rpActionSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -1741,6 +1869,11 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to GIF mute", Required: true},
 		},
 	},
+}
+
+func init() {
+	SlashCommands = append(SlashCommands, emotionSlashCommands...)
+	SlashCommands = append(SlashCommands, actionSlashCommands...)
 }
 
 func userOption(required bool) *discordgo.ApplicationCommandOption {
