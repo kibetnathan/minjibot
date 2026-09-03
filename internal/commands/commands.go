@@ -536,30 +536,33 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	// -help <category> shows a single page; plain -help paginates.
+	// -help <category> opens on that category; plain -help opens on General.
+	// Navigation is always via buttons, matching the slash command.
+	page := 0
 	if len(args) > 0 {
 		if idx := FindHelpSection(args[0]); idx >= 0 {
-			_, err := s.ChannelMessageSendEmbed(m.ChannelID, BuildHelpPageEmbed(idx))
-			return err
+			page = idx
 		}
 	}
-	return paginateReactions(s, m.ChannelID, m.Author.ID, NumHelpPages(), BuildHelpPageEmbed)
+	msg, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Embeds:     []*discordgo.MessageEmbed{BuildHelpPageEmbed(page)},
+		Components: helpButtonsRow(),
+	})
+	if err != nil {
+		return err
+	}
+	helpPageMu.Lock()
+	helpPageByMsg[msg.ID] = page
+	helpPageMu.Unlock()
+	return nil
 }
 
 func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{Label: "◀", Style: discordgo.SecondaryButton, CustomID: helpPrevCustomID},
-				discordgo.Button{Label: "▶", Style: discordgo.SecondaryButton, CustomID: helpNextCustomID},
-			},
-		},
-	}
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds:     []*discordgo.MessageEmbed{BuildHelpPageEmbed(0)},
-			Components: components,
+			Components: helpButtonsRow(),
 		},
 	})
 }

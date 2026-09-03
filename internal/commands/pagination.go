@@ -103,6 +103,19 @@ func (p *reactionPaginator) onReaction(s *discordgo.Session, r *discordgo.Messag
 const helpPrevCustomID = "help:page:prev"
 const helpNextCustomID = "help:page:next"
 
+// helpButtonsRow returns the prev/next navigation buttons for help. It is shared
+// by both the slash and prefix help commands so they navigate identically.
+func helpButtonsRow() []discordgo.MessageComponent {
+	return []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{Label: "◀", Style: discordgo.SecondaryButton, CustomID: helpPrevCustomID},
+				discordgo.Button{Label: "▶", Style: discordgo.SecondaryButton, CustomID: helpNextCustomID},
+			},
+		},
+	}
+}
+
 // helpPageState tracks the current page of a slash-help message so button
 // clicks can advance it. Keyed by message ID.
 var (
