@@ -48,8 +48,13 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	port := cfg.Port
+	if port == "" {
+		port = "8080"
+	}
+
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: e,
 	}
 

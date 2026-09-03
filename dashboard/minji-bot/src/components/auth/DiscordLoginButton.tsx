@@ -1,5 +1,6 @@
 import { SiDiscord } from "react-icons/si"
 import { Button } from "@/components/ui/button"
+import { apiUrl } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 type DiscordLoginButtonProps = {
@@ -16,7 +17,7 @@ export function DiscordLoginButton({
       type="button"
       className={cn("gap-2", className)}
       onClick={() => {
-        window.location.href = "/api/auth/discord"
+        window.location.href = apiUrl("/api/auth/discord")
       }}
     >
       <SiDiscord className="size-4" />
