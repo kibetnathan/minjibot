@@ -12,26 +12,27 @@ import (
 )
 
 // parseBirthday parses a birthday string into a time.Time. Supported formats:
-// MM-DD, MM/DD, MM/DD/YYYY, YYYY-MM-DD, and any layout Go's time can parse.
-// The entered year is preserved when present, otherwise a representative leap
-// year (2000) is used so month/day matching stays correct.
+// DD-MM, DD/MM, DD/MM/YYYY, YYYY-MM-DD, and any layout Go's time can parse
+// (day comes before month). The entered year is preserved when present,
+// otherwise a representative leap year (2000) is used so month/day matching
+// stays correct.
 func parseBirthday(raw string) (time.Time, error) {
 	raw = strings.TrimSpace(raw)
 	layouts := []string{
 		"2006-01-02",
-		"01-02-2006",
-		"01-02",
-		"01/02/2006",
-		"01/02",
-		"January 2, 2006",
+		"02-01-2006",
+		"02-01",
+		"02/01/2006",
+		"02/01",
+		"2 January 2006",
 	}
 	for _, l := range layouts {
 		if t, err := time.Parse(l, raw); err == nil {
 			return t, nil
 		}
 	}
-	// Bare "MM" or "Jan" not supported; give a helpful error.
-	return time.Time{}, fmt.Errorf("couldn't parse %q as a date. Try formats like MM-DD, MM/DD, YYYY-MM-DD, or MM/DD/YYYY", raw)
+	// Bare "DD" or "Jan" not supported; give a helpful error.
+	return time.Time{}, fmt.Errorf("couldn't parse %q as a date. Try formats like DD-MM, DD/MM, YYYY-MM-DD, or DD/MM/YYYY", raw)
 }
 
 // birthdayMonthDay returns the month and day of a birthday for display/matching.
@@ -51,7 +52,7 @@ func birthdayMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *d
 	switch sub {
 	case "add":
 		if len(args) < 2 {
-			if _, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-birthday add <date>` e.g. `-birthday add 07-14`"); err != nil {
+			if _, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-birthday add <date>` e.g. `-birthday add 14-07`"); err != nil {
 				return err
 			}
 			return nil

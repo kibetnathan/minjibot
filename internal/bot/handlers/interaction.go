@@ -34,6 +34,13 @@ func onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate, d
 		return
 	}
 
+	if i.Type == discordgo.InteractionModalSubmit {
+		if err := commands.HandleBugModalSubmit(s, i); err != nil {
+			deps.Logger.Error("Failed to handle modal submit", "custom_id", i.ModalSubmitData().CustomID, "error", err)
+		}
+		return
+	}
+
 	if i.Type != discordgo.InteractionApplicationCommand {
 		return
 	}

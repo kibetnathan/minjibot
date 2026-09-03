@@ -80,7 +80,7 @@ func NewApp() (*App, error) {
 	}
 
 	// Initialize command handler
-	app.cmdHandler = commands.NewCommandHandler(app.Cfg, app.GuildRepo, app.SettingsRepo, app.PermRepo, app.BirthdayRepo, app.BirthdaySett, app.DiaryRepo)
+	app.cmdHandler = commands.NewCommandHandler(app.Cfg, app.GuildRepo, app.SettingsRepo, app.PermRepo, app.AuditRepo, app.BirthdayRepo, app.BirthdaySett, app.DiaryRepo)
 
 	// Register event handlers
 	app.RegisterHandlers()

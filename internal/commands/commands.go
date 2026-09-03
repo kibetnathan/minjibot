@@ -14,17 +14,19 @@ type CommandHandler struct {
 	GuildRepo    repository.GuildRepository
 	SettingsRepo repository.GuildSettingsRepository
 	PermRepo     repository.UserPermissionRepository
+	AuditRepo    repository.AuditLogRepository
 	BirthdayRepo repository.BirthdayRepository
 	BirthdaySett repository.GuildBirthdaySettingsRepository
 	DiaryRepo    repository.DiaryRepository
 }
 
-func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository, birthdayRepo repository.BirthdayRepository, birthdaySett repository.GuildBirthdaySettingsRepository, diaryRepo repository.DiaryRepository) *CommandHandler {
+func NewCommandHandler(cfg *config.Config, guildRepo repository.GuildRepository, settingsRepo repository.GuildSettingsRepository, permRepo repository.UserPermissionRepository, auditRepo repository.AuditLogRepository, birthdayRepo repository.BirthdayRepository, birthdaySett repository.GuildBirthdaySettingsRepository, diaryRepo repository.DiaryRepository) *CommandHandler {
 	return &CommandHandler{
 		Cfg:          cfg,
 		GuildRepo:    guildRepo,
 		SettingsRepo: settingsRepo,
 		PermRepo:     permRepo,
+		AuditRepo:    auditRepo,
 		BirthdayRepo: birthdayRepo,
 		BirthdaySett: birthdaySett,
 		DiaryRepo:    diaryRepo,
@@ -43,6 +45,38 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.echo(s, m, args)
 	case "userinfo":
 		return h.userInfo(s, m, args)
+	case "avatar":
+		return h.avatar(s, m, args)
+	case "banner":
+		return h.banner(s, m, args)
+	case "botinfo":
+		return h.botinfo(s, m, args)
+	case "channelinfo":
+		return h.channelinfo(s, m, args)
+	case "roles":
+		return h.roles(s, m, args)
+	case "guild":
+		return h.guild(s, m, args)
+	case "emojis":
+		return h.emojis(s, m, args)
+	case "stickers":
+		return h.stickers(s, m, args)
+	case "bans":
+		return h.bans(s, m, args)
+	case "boomer":
+		return h.boomer(s, m, args)
+	case "perms":
+		return h.perms(s, m, args)
+	case "tz":
+		return h.tz(s, m, args)
+	case "urbandictionary":
+		return h.urbandictionary(s, m, args)
+	case "weather":
+		return h.weather(s, m, args)
+	case "test":
+		return h.test(s, m, args)
+	case "bug":
+		return h.bug(s, m, args)
 	case "ddg":
 		return h.ddg(s, m.ChannelID, args)
 	case "search":
@@ -66,7 +100,7 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 	case "reminder":
 		return h.reminder(s, m, args)
 	case "isearch":
-		return h.isearch(s, m.ChannelID, args)
+		return h.isearch(s, m, args)
 	case "caption":
 		return h.caption(s, m, args)
 	case "img2gif":
@@ -121,6 +155,126 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.birthday(s, m, args)
 	case "diary":
 		return h.diary(s, m, args)
+	case "ttys":
+		return h.ttys(s, m, args)
+	case "bio":
+		return h.bio(s, m, args)
+	case "ban":
+		return h.ban(s, m, args)
+	case "hardban":
+		return h.hardban(s, m, args)
+	case "softban":
+		return h.softban(s, m, args)
+	case "kick":
+		return h.kick(s, m, args)
+	case "purge":
+		return h.purge(s, m, args)
+	case "nuke":
+		return h.nuke(s, m, args)
+	case "timeout":
+		return h.timeout(s, m, args)
+	case "warn":
+		return h.warn(s, m, args)
+	case "history":
+		return h.history(s, m, args)
+	case "audit":
+		return h.audit(s, m, args)
+	case "role":
+		return h.role(s, m, args)
+	case "fn":
+		return h.fn(s, m, args)
+	case "nick":
+		return h.nick(s, m, args)
+	case "jail":
+		return h.jail(s, m, args)
+	case "unjail":
+		return h.unjail(s, m, args)
+	case "staffstrip":
+		return h.staffstrip(s, m, args)
+	case "hide":
+		return h.hide(s, m, args)
+	case "reveal":
+		return h.reveal(s, m, args)
+	case "lockdown":
+		return h.lockdown(s, m, args)
+	case "nsfw":
+		return h.nsfw(s, m, args)
+	case "sfw":
+		return h.sfw(s, m, args)
+	case "slowmode":
+		return h.slowmode(s, m, args)
+	case "topic":
+		return h.topic(s, m, args)
+	case "denyperm":
+		return h.denyperm(s, m, args)
+	case "imute":
+		return h.imute(s, m, args)
+	case "gifmute":
+		return h.gifmute(s, m, args)
+	case "angry":
+		return rpEmotionMessage(s, m, "angry")
+	case "depressed":
+		return rpEmotionMessage(s, m, "depressed")
+	case "excited":
+		return rpEmotionMessage(s, m, "excited")
+	case "happy":
+		return rpEmotionMessage(s, m, "happy")
+	case "horny":
+		return rpEmotionMessage(s, m, "horny")
+	case "inlove":
+		return rpEmotionMessage(s, m, "inlove")
+	case "sad":
+		return rpEmotionMessage(s, m, "sad")
+	case "shy":
+		return rpEmotionMessage(s, m, "shy")
+	case "baka":
+		return rpActionMessage(s, m, args, "baka")
+	case "bite":
+		return rpActionMessage(s, m, args, "bite")
+	case "cry":
+		return rpActionMessage(s, m, args, "cry")
+	case "dap":
+		return rpActionMessage(s, m, args, "dap")
+	case "eat":
+		return rpActionMessage(s, m, args, "eat")
+	case "facepalm":
+		return rpActionMessage(s, m, args, "facepalm")
+	case "feed":
+		return rpActionMessage(s, m, args, "feed")
+	case "handhold":
+		return rpActionMessage(s, m, args, "handhold")
+	case "kiss":
+		return rpActionMessage(s, m, args, "kiss")
+	case "laugh":
+		return rpActionMessage(s, m, args, "laugh")
+	case "nod":
+		return rpActionMessage(s, m, args, "nod")
+	case "nutkick":
+		return rpActionMessage(s, m, args, "nutkick")
+	case "pat":
+		return rpActionMessage(s, m, args, "pat")
+	case "peck":
+		return rpActionMessage(s, m, args, "peck")
+	case "poke":
+		return rpActionMessage(s, m, args, "poke")
+	case "punch":
+		return rpActionMessage(s, m, args, "punch")
+	case "run":
+		return rpActionMessage(s, m, args, "run")
+	case "shoot":
+		return rpActionMessage(s, m, args, "shoot")
+	case "shrug":
+		return rpActionMessage(s, m, args, "shrug")
+	case "slap":
+		return rpActionMessage(s, m, args, "slap")
+	case "spank":
+		return rpActionMessage(s, m, args, "spank")
+	case "stab":
+		return rpActionMessage(s, m, args, "stab")
+	case "think":
+		return rpActionMessage(s, m, args, "think")
+	case "tickle":
+		return rpActionMessage(s, m, args, "tickle")
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -138,6 +292,38 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.echoSlash(s, i)
 	case "userinfo":
 		return h.userInfoSlash(s, i)
+	case "avatar":
+		return h.avatarSlash(s, i)
+	case "banner":
+		return h.bannerSlash(s, i)
+	case "botinfo":
+		return h.botinfoSlash(s, i)
+	case "channelinfo":
+		return h.channelinfoSlash(s, i)
+	case "roles":
+		return h.rolesSlash(s, i)
+	case "guild":
+		return h.guildSlash(s, i)
+	case "emojis":
+		return h.emojisSlash(s, i)
+	case "stickers":
+		return h.stickersSlash(s, i)
+	case "bans":
+		return h.bansSlash(s, i)
+	case "boomer":
+		return h.boomerSlash(s, i)
+	case "perms":
+		return h.permsSlash(s, i)
+	case "tz":
+		return h.tzSlash(s, i)
+	case "urbandictionary":
+		return h.urbandictionarySlash(s, i)
+	case "weather":
+		return h.weatherSlash(s, i)
+	case "test":
+		return h.testSlash(s, i)
+	case "bug":
+		return h.bugSlash(s, i)
 	case "ddg":
 		return h.ddgSlash(s, i)
 	case "search":
@@ -216,6 +402,126 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.birthdaySlash(s, i)
 	case "diary":
 		return h.diarySlash(s, i)
+	case "ttys":
+		return h.ttysSlash(s, i)
+	case "bio":
+		return h.bioSlash(s, i)
+	case "ban":
+		return h.banSlash(s, i)
+	case "hardban":
+		return h.hardbanSlash(s, i)
+	case "softban":
+		return h.softbanSlash(s, i)
+	case "kick":
+		return h.kickSlash(s, i)
+	case "purge":
+		return h.purgeSlash(s, i)
+	case "nuke":
+		return h.nukeSlash(s, i)
+	case "timeout":
+		return h.timeoutSlash(s, i)
+	case "warn":
+		return h.warnSlash(s, i)
+	case "history":
+		return h.historySlash(s, i)
+	case "audit":
+		return h.auditSlash(s, i)
+	case "role":
+		return h.roleSlash(s, i)
+	case "fn":
+		return h.fnSlash(s, i)
+	case "nick":
+		return h.nickSlash(s, i)
+	case "jail":
+		return h.jailSlash(s, i)
+	case "unjail":
+		return h.unjailSlash(s, i)
+	case "staffstrip":
+		return h.staffstripSlash(s, i)
+	case "hide":
+		return h.hideSlash(s, i)
+	case "reveal":
+		return h.revealSlash(s, i)
+	case "lockdown":
+		return h.lockdownSlash(s, i)
+	case "nsfw":
+		return h.nsfwSlash(s, i)
+	case "sfw":
+		return h.sfwSlash(s, i)
+	case "slowmode":
+		return h.slowmodeSlash(s, i)
+	case "topic":
+		return h.topicSlash(s, i)
+	case "denyperm":
+		return h.denypermSlash(s, i)
+	case "imute":
+		return h.imuteSlash(s, i)
+	case "gifmute":
+		return h.gifmuteSlash(s, i)
+	case "angry":
+		return rpEmotionSlash(s, i)
+	case "depressed":
+		return rpEmotionSlash(s, i)
+	case "excited":
+		return rpEmotionSlash(s, i)
+	case "happy":
+		return rpEmotionSlash(s, i)
+	case "horny":
+		return rpEmotionSlash(s, i)
+	case "inlove":
+		return rpEmotionSlash(s, i)
+	case "sad":
+		return rpEmotionSlash(s, i)
+	case "shy":
+		return rpEmotionSlash(s, i)
+	case "baka":
+		return rpActionSlash(s, i)
+	case "bite":
+		return rpActionSlash(s, i)
+	case "cry":
+		return rpActionSlash(s, i)
+	case "dap":
+		return rpActionSlash(s, i)
+	case "eat":
+		return rpActionSlash(s, i)
+	case "facepalm":
+		return rpActionSlash(s, i)
+	case "feed":
+		return rpActionSlash(s, i)
+	case "handhold":
+		return rpActionSlash(s, i)
+	case "kiss":
+		return rpActionSlash(s, i)
+	case "laugh":
+		return rpActionSlash(s, i)
+	case "nod":
+		return rpActionSlash(s, i)
+	case "nutkick":
+		return rpActionSlash(s, i)
+	case "pat":
+		return rpActionSlash(s, i)
+	case "peck":
+		return rpActionSlash(s, i)
+	case "poke":
+		return rpActionSlash(s, i)
+	case "punch":
+		return rpActionSlash(s, i)
+	case "run":
+		return rpActionSlash(s, i)
+	case "shoot":
+		return rpActionSlash(s, i)
+	case "shrug":
+		return rpActionSlash(s, i)
+	case "slap":
+		return rpActionSlash(s, i)
+	case "spank":
+		return rpActionSlash(s, i)
+	case "stab":
+		return rpActionSlash(s, i)
+	case "think":
+		return rpActionSlash(s, i)
+	case "tickle":
+		return rpActionSlash(s, i)
 	default:
 		return fmt.Errorf("unknown command: %s", i.ApplicationCommandData().Name)
 	}
@@ -230,30 +536,33 @@ func (h *CommandHandler) pingSlash(s *discordgo.Session, i *discordgo.Interactio
 }
 
 func (h *CommandHandler) help(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	// -help <category> shows a single page; plain -help paginates.
+	// -help <category> opens on that category; plain -help opens on General.
+	// Navigation is always via buttons, matching the slash command.
+	page := 0
 	if len(args) > 0 {
 		if idx := FindHelpSection(args[0]); idx >= 0 {
-			_, err := s.ChannelMessageSendEmbed(m.ChannelID, BuildHelpPageEmbed(idx))
-			return err
+			page = idx
 		}
 	}
-	return paginateReactions(s, m.ChannelID, m.Author.ID, NumHelpPages(), BuildHelpPageEmbed)
+	msg, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		Embeds:     []*discordgo.MessageEmbed{BuildHelpPageEmbed(page)},
+		Components: helpButtonsRow(),
+	})
+	if err != nil {
+		return err
+	}
+	helpPageMu.Lock()
+	helpPageByMsg[msg.ID] = page
+	helpPageMu.Unlock()
+	return nil
 }
 
 func (h *CommandHandler) helpSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{Label: "◀", Style: discordgo.SecondaryButton, CustomID: helpPrevCustomID},
-				discordgo.Button{Label: "▶", Style: discordgo.SecondaryButton, CustomID: helpNextCustomID},
-			},
-		},
-	}
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds:     []*discordgo.MessageEmbed{BuildHelpPageEmbed(0)},
-			Components: components,
+			Components: helpButtonsRow(),
 		},
 	})
 }
@@ -280,6 +589,125 @@ func (h *CommandHandler) userInfo(s *discordgo.Session, m *discordgo.MessageCrea
 
 func (h *CommandHandler) userInfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return userInfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) avatar(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return avatarMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) avatarSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return avatarSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) banner(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bannerMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bannerSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bannerSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) botinfo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return botinfoMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) botinfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return botinfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) channelinfo(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return channelinfoMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) channelinfoSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return channelinfoSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) roles(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return rolesMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) rolesSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return rolesSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) guild(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return guildMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) guildSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return guildSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) emojis(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return emojisMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) emojisSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return emojisSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) stickers(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return stickersMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) stickersSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return stickersSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) bans(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bansMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bansSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bansSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) boomer(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return boomerMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) boomerSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return boomerSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) perms(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return permsMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) permsSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return permsSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) tz(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return tzMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) tzSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return tzSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) urbandictionary(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return urbandictionaryMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) urbandictionarySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return urbandictionarySlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) weather(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return weatherMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) weatherSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return weatherSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) test(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return testMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) testSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return testSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) bug(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bugMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bugSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bugSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) ttys(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return ttysMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) ttysSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return ttysSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) ddg(s *discordgo.Session, channelID string, args []string) error {
@@ -370,8 +798,8 @@ func (h *CommandHandler) reminderSlash(s *discordgo.Session, i *discordgo.Intera
 	return reminderSlashCommandHandler(s, i)
 }
 
-func (h *CommandHandler) isearch(s *discordgo.Session, channelID string, args []string) error {
-	return isearchMessageCommandHandler(s, channelID, args)
+func (h *CommandHandler) isearch(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return isearchMessageCommandHandler(s, m, args)
 }
 
 func (h *CommandHandler) isearchSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -572,6 +1000,170 @@ func (h *CommandHandler) diarySlash(s *discordgo.Session, i *discordgo.Interacti
 	return diarySlashCommandHandler(h, s, i)
 }
 
+func (h *CommandHandler) bio(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return bioMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) bioSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return bioSlashCommandHandler(s, i, h.Cfg)
+}
+
+func (h *CommandHandler) ban(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return banMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) banSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return banSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) hardban(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return hardbanMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) hardbanSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return hardbanSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) softban(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return softbanMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) softbanSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return softbanSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) kick(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return kickMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) kickSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return kickSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) purge(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return purgeMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) purgeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return purgeSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nuke(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nukeMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nukeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nukeSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) timeout(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return timeoutMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) timeoutSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return timeoutSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) warn(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return warnMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) warnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return warnSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) history(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return historyMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) historySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return historySlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) audit(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return auditMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) auditSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return auditSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) role(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return roleMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) roleSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return roleSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) fn(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return fnMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) fnSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return fnSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nick(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nickMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nickSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nickSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) jail(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return jailMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) jailSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return jailSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) unjail(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return unjailMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) unjailSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return unjailSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) staffstrip(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return staffstripMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) staffstripSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return staffstripSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) hide(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return hideMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) hideSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return hideSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) reveal(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return revealMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) revealSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return revealSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) lockdown(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return lockdownMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) lockdownSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return lockdownSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) nsfw(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return nsfwMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) nsfwSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return nsfwSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) sfw(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return sfwMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) sfwSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return sfwSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) slowmode(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return slowmodeMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) slowmodeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return slowmodeSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) topic(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return topicMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) topicSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return topicSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) denyperm(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return denypermMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) denypermSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return denypermSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) imute(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return imuteMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) imuteSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return imuteSlashCommandHandler(h, s, i)
+}
+func (h *CommandHandler) gifmute(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return gifmuteMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) gifmuteSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return gifmuteSlashCommandHandler(h, s, i)
+}
+
 var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ping",
@@ -611,6 +1203,128 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Required:    false,
 			},
 		},
+	},
+	{
+		Name:        "avatar",
+		Description: "Show a user's full-resolution profile picture",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "banner",
+		Description: "Show a user's profile banner",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "botinfo",
+		Description: "Show bot info (version, uptime, latency)",
+	},
+	{
+		Name:        "channelinfo",
+		Description: "Get info about a channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "channel",
+				Description: "The channel to inspect (defaults to this one)",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "roles",
+		Description: "List all server roles with member counts",
+	},
+	{
+		Name:        "guild",
+		Description: "Server info (stats, icon, banner, splash)",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "stats", Description: "Server stats (members, boosts, owner)"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "icon", Description: "Server icon image"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "banner", Description: "Server banner image"},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "splash", Description: "Server invite splash image"},
+		},
+	},
+	{
+		Name:        "emojis",
+		Description: "List all custom emojis in the server",
+	},
+	{
+		Name:        "stickers",
+		Description: "List all custom stickers in the server",
+	},
+	{
+		Name:        "bans",
+		Description: "List all active bans in the server",
+	},
+	{
+		Name:        "boomer",
+		Description: "Detect potential time-traveler users (spammer detection)",
+		Options:     []*discordgo.ApplicationCommandOption{userOption(false)},
+	},
+	{
+		Name:        "perms",
+		Description: "Show a user's effective permissions in a channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			userOption(false),
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "channel",
+				Description: "The channel to check (defaults to this one)",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "tz",
+		Description: "Show the current local time for a place",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "place",
+				Description: "A city or town, e.g. Tokyo or New York",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "urbandictionary",
+		Description: "Search Urban Dictionary for a term",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "term",
+				Description: "The term to look up",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "weather",
+		Description: "Current weather, forecast, and humidity for a location",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "location",
+				Description: "City, town, or place to check the weather",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "test",
+		Description: "Ping-pong functionality check to confirm the bot is responsive",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "text",
+				Description: "Optional text to echo back",
+				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "bug",
+		Description: "Open a form to report a bot bug to the developers",
 	},
 	{
 		Name:        "ddg",
@@ -743,6 +1457,14 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "steal",
+				Description: "Copy a sticker from a message link or ID",
+				Options: []*discordgo.ApplicationCommandOption{
+					{Type: discordgo.ApplicationCommandOptionString, Name: "sticker", Description: "Sticker ID, message link, or CDN URL", Required: true},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        "remove",
 				Description: "Remove a server sticker",
 				Options: []*discordgo.ApplicationCommandOption{
@@ -793,9 +1515,9 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "isearch",
-		Description: "Search the web for images",
+		Description: "Reverse image search: find where an image appears online",
 		Options: []*discordgo.ApplicationCommandOption{
-			{Type: discordgo.ApplicationCommandOptionString, Name: "query", Description: "Image search query", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "image_url", Description: "Image URL to search (jpg/png/webp)", Required: true},
 		},
 	},
 	{
@@ -961,7 +1683,7 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 		Description: "Manage server birthdays",
 		Options: []*discordgo.ApplicationCommandOption{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Save a birthday", Options: []*discordgo.ApplicationCommandOption{
-				{Type: discordgo.ApplicationCommandOptionString, Name: "date", Description: "Date e.g. 07-14 or 1998-07-14", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "date", Description: "Date e.g. 14-07 or 1998-14-07", Required: true},
 				userOption(false),
 			}},
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "list", Description: "List upcoming birthdays"},
@@ -989,6 +1711,233 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			}},
 		},
 	},
+	{
+		Name:        "ttys",
+		Description: "Bot talks to itself until someone speaks or an hour passes",
+	},
+	{
+		Name:        "bio",
+		Description: "Look up a user's public profile on a supported platform",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "github", Description: "Look up a GitHub profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "GitHub username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "roblox", Description: "Look up a Roblox profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Roblox username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "reddit", Description: "Look up a Reddit profile", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Reddit username", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "kick", Description: "Look up a Kick channel", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "username", Description: "Kick channel slug", Required: true},
+			}},
+		},
+	},
+	{
+		Name:        "ban",
+		Description: "Ban a user from the server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to ban", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
+		},
+	},
+	{
+		Name:        "hardban",
+		Description: "Ban a user and delete their recent messages",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to hard ban", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
+		},
+	},
+	{
+		Name:        "softban",
+		Description: "Ban then immediately unban a user, deleting their recent messages",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to soft ban", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Ban reason", Required: false},
+		},
+	},
+	{
+		Name:        "kick",
+		Description: "Kick a user from the server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to kick", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Kick reason", Required: false},
+		},
+	},
+	{
+		Name:        "purge",
+		Description: "Delete a number of recent messages, optionally from a specific user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionInteger, Name: "count", Description: "Number of messages to delete (1-100)", Required: true},
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "Only delete messages from this user", Required: false},
+		},
+	},
+	{
+		Name:        "nuke",
+		Description: "Delete all messages by cloning the current channel",
+	},
+	{
+		Name:        "timeout",
+		Description: "Timeout a user for a duration",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to timeout", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "duration", Description: "Duration, e.g. 30m, 2h, 1d", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Timeout reason", Required: false},
+		},
+	},
+	{
+		Name:        "warn",
+		Description: "Warn a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to warn", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "reason", Description: "Warning reason", Required: true},
+		},
+	},
+	{
+		Name:        "history",
+		Description: "Show a user's moderation history",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to look up", Required: true},
+		},
+	},
+	{
+		Name:        "audit",
+		Description: "Show recent moderation actions",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionInteger, Name: "limit", Description: "Number of entries (1-50)", Required: false},
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "actor", Description: "Only show actions by this user", Required: false},
+		},
+	},
+	{
+		Name:        "role",
+		Description: "Manage roles",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "add", Description: "Add a role to a user", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to give the role", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "create", Description: "Create a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "name", Description: "Role name", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "edit", Description: "Edit a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "name", Description: "New name", Required: false},
+				{Type: discordgo.ApplicationCommandOptionString, Name: "color", Description: "New hex color", Required: false},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "hoist", Description: "Toggle role hoisting", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+				{Type: discordgo.ApplicationCommandOptionBoolean, Name: "hoist", Description: "Hoist on/off", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "member", Description: "List members with a role", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role name or ID", Required: true},
+			}},
+		},
+	},
+	{
+		Name:        "fn",
+		Description: "Force set a user's nickname",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to rename", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "nickname", Description: "New nickname", Required: true},
+		},
+	},
+	{
+		Name:        "nick",
+		Description: "Lock or unlock a user's nickname",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "lock", Description: "Lock a user's nickname", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to lock", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "unlock", Description: "Unlock a user's nickname", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to unlock", Required: true},
+			}},
+		},
+	},
+	{
+		Name:        "jail",
+		Description: "Jail a user, removing their roles and restricting them",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to jail", Required: true},
+		},
+	},
+	{
+		Name:        "unjail",
+		Description: "Unjail a user, restoring their previous roles",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to unjail", Required: true},
+		},
+	},
+	{
+		Name:        "staffstrip",
+		Description: "Remove all staff roles from a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to strip roles from", Required: true},
+		},
+	},
+	{
+		Name:        "hide",
+		Description: "Hide the current channel from @everyone",
+	},
+	{
+		Name:        "reveal",
+		Description: "Make the current channel visible to @everyone again",
+	},
+	{
+		Name:        "lockdown",
+		Description: "Lock the current channel for @everyone",
+	},
+	{
+		Name:        "nsfw",
+		Description: "Mark the current channel as NSFW",
+	},
+	{
+		Name:        "sfw",
+		Description: "Unmark the current channel as NSFW",
+	},
+	{
+		Name:        "slowmode",
+		Description: "Set a slowmode on the current channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionInteger, Name: "seconds", Description: "Slowmode in seconds (0 to disable)", Required: true},
+		},
+	},
+	{
+		Name:        "topic",
+		Description: "Set the topic of the current channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "topic", Description: "New channel topic", Required: true},
+		},
+	},
+	{
+		Name:        "denyperm",
+		Description: "Deny a permission to a user or role in a channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionUser, Name: "user", Description: "User to deny permission to", Required: false},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "role", Description: "Role to deny permission to", Required: false},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "permission", Description: "Permission to deny (view, send, attach, embed, reaction, voice)", Required: true},
+			{Type: discordgo.ApplicationCommandOptionString, Name: "channel", Description: "Channel to apply in (default current)", Required: false},
+		},
+	},
+	{
+		Name:        "imute",
+		Description: "Prevent a user from sending images in this channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to image mute", Required: true},
+		},
+	},
+	{
+		Name:        "gifmute",
+		Description: "Prevent a user from sending images, GIFs, and embeds in this channel",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionString, Name: "user", Description: "User to GIF mute", Required: true},
+		},
+	},
+}
+
+func init() {
+	SlashCommands = append(SlashCommands, emotionSlashCommands...)
+	SlashCommands = append(SlashCommands, actionSlashCommands...)
 }
 
 func userOption(required bool) *discordgo.ApplicationCommandOption {

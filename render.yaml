@@ -1,0 +1,55 @@
+# Render blueprint for deploying the MinjiBot bot + database.
+#
+# Services
+#   - minjibot-db  : managed Postgres
+#   - minjibot-bot : web service running the Discord bot (gateway) + API.
+#
+# The bot connects outbound to Discord over the gateway. On the free tier only
+# `web` services are available, so this is a web service whose health check
+# hits the API's `/healthz` endpoint (see internal/api/app.go). The container
+# command is scripts/migrate.sh, which runs migrations, then starts the
+# prebuilt bot + API on :8080. The binary is compiled at image build time
+# (multi-stage Dockerfile) so startup is fast enough to pass Render's port scan.
+
+databases:
+  - name: minjibot-db
+    databaseName: minjibot
+    user: minjibot
+    plan: free
+    ipAllowList: [] # only allow internal connections
+
+services:
+  - type: web
+    name: minjibot-bot
+    runtime: docker
+    repo: https://github.com/kibetnathan/minjibot
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerCommand: ./scripts/migrate.sh
+    healthCheckPath: /healthz
+    plan: free
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: minjibot-db
+          property: connectionString
+      - key: GOOSE_DBSTRING
+        fromDatabase:
+          name: minjibot-db
+          property: connectionString
+      - key: GOOSE_DRIVER
+        value: postgres
+      # --- Discord ---
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      # --- Optional integrations (leave blank if unused) ---
+      - key: GOOGLE_FACTCHECK_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false

@@ -8,7 +8,7 @@ import (
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 )
 
-// DiaryRepository -- 
+// DiaryRepository --
 type DiaryRepository interface {
 	Create(ctx context.Context, arg dto.CreateDiaryEntryParams) (diary.Entry, error)
 	ListByUser(ctx context.Context, userID string) ([]diary.Entry, error)

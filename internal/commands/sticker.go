@@ -12,19 +12,93 @@ import (
 
 func stickerMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
 	if len(args) == 0 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker add <name> [url]`, `-sticker remove <sticker-id|message-link>`")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker add <name> [url]`, `-sticker steal <sticker-id|message-link|sticker>`, `-sticker remove <sticker-id|message-link>`")
 		return err
 	}
 
 	switch args[0] {
 	case "add":
 		return stickerAddMessage(s, m, args[1:])
+	case "steal":
+		return stickerStealMessage(s, m, args[1:])
 	case "remove", "delete":
 		return stickerRemoveMessage(s, m, args[1:])
 	default:
-		_, err := s.ChannelMessageSend(m.ChannelID, "Unknown sticker subcommand. Use `add` or `remove`.")
+		_, err := s.ChannelMessageSend(m.ChannelID, "Unknown sticker subcommand. Use `add`, `steal`, or `remove`.")
 		return err
 	}
+}
+
+// resolveStickerSource returns a sticker ID and CDN URL from a raw argument:
+// a message link containing a sticker, a bare sticker ID, or a sticker CDN URL.
+func resolveStickerSource(s *discordgo.Session, raw string) (string, string, error) {
+	raw = strings.TrimSpace(raw)
+
+	// Message link → look up the message and grab its sticker.
+	if strings.Contains(raw, "discord.com/channels/") {
+		_, channelID, messageID, ok := ParseMessageLink(raw)
+		if !ok {
+			return "", "", fmt.Errorf("couldn't parse message link")
+		}
+		msg, err := s.ChannelMessage(channelID, messageID)
+		if err != nil {
+			return "", "", err
+		}
+		if len(msg.StickerItems) == 0 {
+			return "", "", fmt.Errorf("that message doesn't contain a sticker")
+		}
+		item := msg.StickerItems[0]
+		return item.ID, StickerImageURL(item.ID, item.FormatType), nil
+	}
+
+	// Bare sticker ID.
+	if DigitsOnly(raw) {
+		return raw, StickerImageURL(raw, discordgo.StickerFormatTypePNG), nil
+	}
+
+	// Sticker CDN URL.
+	if strings.Contains(raw, "cdn.discordapp.com/stickers/") {
+		return "", raw, nil
+	}
+
+	return "", "", fmt.Errorf("provide a message link, sticker ID, or sticker URL to steal")
+}
+
+func stickerStealMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	if len(args) == 0 {
+		_, err := s.ChannelMessageSend(m.ChannelID, "Usage: `-sticker steal <sticker-id|message-link|sticker>`")
+		return err
+	}
+	if err := stealStickerToGuild(s, m.GuildID, args[0]); err != nil {
+		return err
+	}
+	_, err := s.ChannelMessageSend(m.ChannelID, "Sticker stolen and added to this server!")
+	return err
+}
+
+// stealStickerToGuild resolves a sticker source and uploads it to the guild.
+func stealStickerToGuild(s *discordgo.Session, guildID, raw string) error {
+	stickerID, url, err := resolveStickerSource(s, raw)
+	if err != nil {
+		return err
+	}
+
+	label := "sticker"
+	if stickerID != "" {
+		label = stickerID
+	}
+
+	md, err := fetchURL(url)
+	if err != nil {
+		return err
+	}
+
+	sticker, err := guildStickerCreate(s, guildID, label, "Stolen via steal command", label, md.Data)
+	if err != nil {
+		return err
+	}
+	_ = sticker
+	return nil
 }
 
 func stickerAddMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -141,6 +215,16 @@ func stickerSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 		}
 		content = "Removed sticker."
 
+	case "steal":
+		raw := strings.TrimSpace(OptString(opts, "sticker"))
+		if raw == "" {
+			return fmt.Errorf("provide a sticker ID, message link, or sticker URL to steal")
+		}
+		if err := stealStickerToGuild(s, guildID, raw); err != nil {
+			return err
+		}
+		content = "Sticker stolen and added to this server!"
+
 	default:
 		return fmt.Errorf("unknown sticker subcommand: %s", sub.Name)
 	}
@@ -201,4 +285,15 @@ func guildStickerDelete(s *discordgo.Session, guildID, stickerID string) error {
 	url := discordgo.EndpointAPI + "guilds/" + guildID + "/stickers/" + stickerID
 	_, err := s.RequestWithBucketID("DELETE", url, nil, guildID+":stickers")
 	return err
+}
+
+// StickerImageURL returns the CDN image URL for a sticker. Lottie stickers have
+// no uploadable raster image and are rejected upstream.
+func StickerImageURL(id string, format discordgo.StickerFormat) string {
+	switch format {
+	case discordgo.StickerFormatTypeGIF:
+		return fmt.Sprintf("https://cdn.discordapp.com/stickers/%s.gif", id)
+	default:
+		return fmt.Sprintf("https://cdn.discordapp.com/stickers/%s.png", id)
+	}
 }
