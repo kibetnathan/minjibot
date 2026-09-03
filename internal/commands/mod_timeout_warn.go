@@ -39,7 +39,7 @@ func timeoutMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 }
 
 func timeoutSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -104,7 +104,7 @@ func warnMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 }
 
 func warnSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -149,7 +149,7 @@ func historyMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 }
 
 func historySlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

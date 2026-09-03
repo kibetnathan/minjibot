@@ -10,7 +10,7 @@ import (
 
 // purgeMessage: -purge <1-100> [user]
 func purgeMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	if ok, err := requireModForMessage(s, m, "Purge"); !ok {
+	if ok, err := requireAdminForUser(s, m.GuildID, m.Author.ID, m.ChannelID, "Purge"); !ok {
 		return err
 	}
 	if len(args) == 0 {
@@ -40,7 +40,7 @@ func purgeMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disc
 
 // purgeSlash: /purge count:<n> [user]
 func purgeSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireAdmin(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -165,14 +165,14 @@ func purgeByAuthor(s *discordgo.Session, channelID string, n int, userID, before
 
 // nukeMessage: -nuke  (clone the channel and delete the original)
 func nukeMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
-	if ok, err := requireModForMessage(s, m, "Nuke"); !ok {
+	if ok, err := requireAdminForUser(s, m.GuildID, m.Author.ID, m.ChannelID, "Nuke"); !ok {
 		return err
 	}
 	return nukeChannel(s, m.ChannelID, m.GuildID, m.Author.ID, h)
 }
 
 func nukeSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireAdmin(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
