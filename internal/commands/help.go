@@ -37,6 +37,7 @@ func HelpSections() []HelpSection {
 			{"perms [@user] [channel]", "Show a user's effective permissions"},
 			{"tz <place>", "Show the current local time in a place (e.g. Tokyo)"},
 			{"urbandictionary <term>", "Search Urban Dictionary for a term"},
+			{"weather <place>", "Current weather, forecast, and humidity for a place"},
 		}},
 		{Name: "Search", Items: [][2]string{
 			{"ddg <query>", "Fetch quick search results from DuckDuckGo"},

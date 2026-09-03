@@ -68,6 +68,7 @@ var tldrEntries = map[string]TldrEntry{
 	"perms":           {"perms", "`perms [@user] [channel]`", "Show a user's effective server and channel permissions."},
 	"tz":              {"tz", "`tz <place>`", "Show the current local time for a place (e.g. `-tz Tokyo` or `-tz New York`)."},
 	"urbandictionary": {"urbandictionary", "`urbandictionary <term>`", "Search Urban Dictionary and show the top definition for a term."},
+	"weather":         {"weather", "`weather <place>`", "Show current weather, forecast, humidity, and wind for a place (keyless, via Open-Meteo)."},
 	"ttys":            {"ttys", "`ttys`", "The bot talks to itself in the channel until someone speaks or an hour passes."},
 	"vape":            {"vape", "`vape hit|flavor|hits|steal`", "Hit the server vape, set/clear its flavour, show hit counts, or steal it."},
 	"poll":            {"poll", "`poll <question> <opt1|opt2|...>`", "Create a reaction-based poll with 2-10 options."},
