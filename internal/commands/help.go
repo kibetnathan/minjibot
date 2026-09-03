@@ -21,6 +21,7 @@ func HelpSections() []HelpSection {
 			{"ping", "Check bot latency"},
 			{"test", "Ping-pong check that the bot is responsive"},
 			{"bug", "Open a form to report a bot bug to developers"},
+			{"donate", "Buy the developer a coffee to support MinjiBot"},
 			{"help", "Show this menu"},
 			{"tldr <command>", "Get a brief how-to for a command"},
 			{"userinfo [@user]", "Get info about a user"},

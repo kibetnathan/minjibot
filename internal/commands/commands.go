@@ -75,6 +75,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.weather(s, m, args)
 	case "test":
 		return h.test(s, m, args)
+	case "donate":
+		return h.donate(s, m, args)
 	case "bug":
 		return h.bug(s, m, args)
 	case "ddg":
@@ -322,6 +324,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.weatherSlash(s, i)
 	case "test":
 		return h.testSlash(s, i)
+	case "donate":
+		return h.donateSlash(s, i)
 	case "bug":
 		return h.bugSlash(s, i)
 	case "ddg":
@@ -694,6 +698,13 @@ func (h *CommandHandler) test(s *discordgo.Session, m *discordgo.MessageCreate, 
 }
 func (h *CommandHandler) testSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return testSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) donate(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return donateMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) donateSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return donateSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) bug(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -1325,6 +1336,10 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "bug",
 		Description: "Open a form to report a bot bug to the developers",
+	},
+	{
+		Name:        "donate",
+		Description: "Buy the developer a coffee to support MinjiBot",
 	},
 	{
 		Name:        "ddg",

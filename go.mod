@@ -7,6 +7,7 @@ require github.com/jackc/pgx/v5 v5.9.2
 require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/labstack/echo/v5 v5.3.1
+	golang.org/x/oauth2 v0.36.0
 )
 
 require (
