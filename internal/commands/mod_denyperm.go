@@ -40,7 +40,7 @@ func denypermMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *d
 }
 
 func denypermSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -119,7 +119,7 @@ func mediaMute(h *CommandHandler, s *discordgo.Session, guildID, channelID, acto
 }
 
 func mediaMuteSlash(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate, title string) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

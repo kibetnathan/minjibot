@@ -33,7 +33,7 @@ func fnMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discord
 }
 
 func fnSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -97,7 +97,7 @@ func nickMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 }
 
 func nickSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

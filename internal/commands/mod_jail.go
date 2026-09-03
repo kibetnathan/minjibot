@@ -33,7 +33,7 @@ func jailMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 }
 
 func jailSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -123,7 +123,7 @@ func unjailMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *dis
 }
 
 func unjailSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -228,7 +228,7 @@ func staffstripMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m 
 }
 
 func staffstripSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

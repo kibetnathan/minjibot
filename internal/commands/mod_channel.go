@@ -24,7 +24,7 @@ func hideMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 }
 
 func hideSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -59,7 +59,7 @@ func revealMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *dis
 }
 
 func revealSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -110,7 +110,7 @@ func lockdownMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *d
 }
 
 func lockdownSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -158,7 +158,7 @@ func nsfwMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 }
 
 func nsfwSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -193,7 +193,7 @@ func sfwMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discor
 }
 
 func sfwSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -238,7 +238,7 @@ func slowmodeMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *d
 }
 
 func slowmodeSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -282,7 +282,7 @@ func topicMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disc
 }
 
 func topicSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	ok, msg := requireModerator(s, i.GuildID, i.Member.User.ID, i.Member)
+	ok, msg := requireModerator(i.Member)
 	if !ok {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
