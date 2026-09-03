@@ -71,6 +71,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.tz(s, m, args)
 	case "urbandictionary":
 		return h.urbandictionary(s, m, args)
+	case "weather":
+		return h.weather(s, m, args)
 	case "ddg":
 		return h.ddg(s, m.ChannelID, args)
 	case "search":
@@ -312,6 +314,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.tzSlash(s, i)
 	case "urbandictionary":
 		return h.urbandictionarySlash(s, i)
+	case "weather":
+		return h.weatherSlash(s, i)
 	case "ddg":
 		return h.ddgSlash(s, i)
 	case "search":
@@ -665,6 +669,13 @@ func (h *CommandHandler) urbandictionary(s *discordgo.Session, m *discordgo.Mess
 }
 func (h *CommandHandler) urbandictionarySlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return urbandictionarySlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) weather(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return weatherMessageCommandHandler(s, m, args)
+}
+func (h *CommandHandler) weatherSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return weatherSlashCommandHandler(s, i)
 }
 
 func (h *CommandHandler) ttys(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -1258,6 +1269,18 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "term",
 				Description: "The term to look up",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "weather",
+		Description: "Current weather, forecast, and humidity for a location",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "location",
+				Description: "City, town, or place to check the weather",
 				Required:    true,
 			},
 		},
