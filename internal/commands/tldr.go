@@ -21,6 +21,7 @@ var tldrEntries = map[string]TldrEntry{
 	"ping":            {"ping", "`ping`", "Check the bot's round-trip and WebSocket latency."},
 	"test":            {"test", "`test [text]`", "Ping-pong check to confirm the bot is responsive (optionally echoes text)."},
 	"bug":             {"bug", "`bug <description>` or `/bug`", "Report a bot bug via a form/modal or a direct message."},
+	"donate":          {"donate", "`donate` or `/donate`", "Get a link to support MinjiBot via Buy Me a Coffee."},
 	"echo":            {"echo", "`echo <text>`", "Repeat the given text back into the channel."},
 	"userinfo":        {"userinfo", "`userinfo [@user]`", "Show account/server details for a user."},
 	"ddg":             {"ddg", "`ddg <query>`", "Fetch quick search results from DuckDuckGo."},

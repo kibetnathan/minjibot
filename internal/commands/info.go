@@ -180,6 +180,7 @@ func buildBotInfoEmbed(s *discordgo.Session) *discordgo.MessageEmbed {
 			{Name: "Uptime", Value: uptime.String(), Inline: true},
 			{Name: "WebSocket Latency", Value: fmt.Sprintf("%dms", wsLatency), Inline: true},
 			{Name: "Servers", Value: fmt.Sprintf("%d", len(s.State.Guilds)), Inline: true},
+			{Name: "Website", Value: "[minji-bot.netlify.app](" + WebsiteURL + ")", Inline: false},
 		},
 	}
 	return embed

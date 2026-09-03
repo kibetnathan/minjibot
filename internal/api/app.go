@@ -6,8 +6,11 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kibetnathan/minjibot/infrastructure/postgres"
 	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/logger"
+	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	authsvc "github.com/kibetnathan/minjibot/internal/services/auth"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
@@ -50,12 +53,35 @@ func NewApp() (*App, error) {
 		Handler: e,
 	}
 
-	return &App{
+	app := &App{
 		Echo:   e,
 		Cfg:    cfg,
 		Pool:   pool,
 		server: srv,
-	}, nil
+	}
+
+	app.registerRoutes()
+
+	return app, nil
+}
+
+// registerRoutes wires the HTTP API routes, including the Discord OAuth flow.
+func (a *App) registerRoutes() {
+	store := repository.NewSQLStore(postgres.New(a.Pool))
+	userRepo := repository.NewUserRepository(store)
+
+	authHandlers := &authHandlers{
+		oauth: authsvc.NewDiscordOAuth(
+			a.Cfg.DiscordClientID,
+			a.Cfg.DiscordClientSecret,
+			a.Cfg.AppURL,
+		),
+		sess:  authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		users: userRepo,
+	}
+
+	group := a.Echo.Group("/api")
+	a.registerAuthRoutes(group, authHandlers)
 }
 
 func (a *App) Start() error {
