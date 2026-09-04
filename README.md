@@ -2,253 +2,242 @@
 
 A Discord bot with a companion REST API and web dashboard, built in Go.
 
-> **Status:** early development. Both the API (`cmd/api`) and bot (`cmd/bot`) entrypoints are functional. The bot supports prefix commands (`-`) and slash commands.
+> **Status:** early development. The bot supports prefix commands (`-`) and slash commands. The API serves authentication (Discord OAuth) and dashboard data endpoints. The dashboard is a React + Vite + shadcn app.
 
 ## Tech stack
 
-- **Go 1.26** — module `github.com/kibetnathan/minjibot`
-- **discordgo** — Discord gateway bot
-- **Echo v5** — HTTP API (listens on `:8080`)
-- **PostgreSQL 15** via **pgx/v5**, queries generated with **sqlc**
-- **goose** — SQL migrations
-- **slog** — structured JSON logging
-- **React + Vite + shadcn/ui** — dashboard (`dashboard/minji-bot`)
-- **react-router-dom** — client-side routing
-- **lucide-react + react-icons** — icons
+| Layer | Technology |
+| --- | --- |
+| Language | **Go 1.26** — module `github.com/kibetnathan/minjibot` |
+| Discord | **discordgo** — gateway bot (WebSocket), prefix + slash commands |
+| HTTP API | **Echo v5** — REST API on `:8080` |
+| Database | **PostgreSQL 15** via **pgx/v5**, queries generated with **sqlc** |
+| Migrations | **goose** — SQL schema migrations |
+| Logging | **slog** — structured JSON logging |
+| Dashboard | **React 19 + Vite + shadcn/ui** — `dashboard/minji-bot` |
+| Auth | **Discord OAuth2** — session-cookie-based |
 
 ## Prerequisites
 
-| Tool    | Used for                    |
-| ------- | --------------------------- |
-| Go 1.26+ | build / test               |
-| Docker  | local Postgres              |
-| goose   | migrations                  |
-| sqlc    | query codegen               |
-| Node.js | dashboard                   |
-| ngrok   | exposing the API / future HTTP interactions endpoint (optional) |
+| Tool | Purpose |
+| --- | --- |
+| Go 1.26+ | Build and test |
+| Docker | Local Postgres |
+| Node.js | Dashboard dev server |
+| goose | SQL migrations |
+| sqlc | Query codegen |
 
 ## Getting started
 
-1. Create a `.env` in the repo root (gitignored):
+### 1. Create `.env`
 
-   ```dotenv
-   # App / API / Bot
-   DB_URL=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
-   DISCORD_TOKEN=
-   DISCORD_CLIENT_ID=            # used for slash command registration (falls back to bot user ID)
-   DISCORD_CLIENT_SECRET=
-   GOOGLE_FACTCHECK_API_KEY=     # optional, for the factcheck command
-   GEMINI_API_KEY=               # optional
-   GEMINI_MODEL=                 # optional, default model
+```dotenv
+# Database
+DB_URL=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
 
-   # Postgres container (used by docker compose)
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=<password>
-   POSTGRES_DB=minjibot
-   TESTING_DB=minjitest
+# Discord
+DISCORD_TOKEN=
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
 
-   # Goose (used by migration targets)
-   GOOSE_DRIVER=postgres
-   GOOSE_DBSTRING=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
-   GOOSE_MIGRATION_DIR=db/migrations
-   ```
+# API / Auth
+APP_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:5173
+SESSION_SECRET=<random-secret>
 
-2. Start the database:
+# Optional integrations
+GOOGLE_FACTCHECK_API_KEY=
+GEMINI_API_KEY=
+GEMINI_MODEL=
 
-   ```sh
-   make docker/up          # docker compose up -d
-   ```
+# Postgres container (docker compose)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=<password>
+POSTGRES_DB=minjibot
+TESTING_DB=minjitest
 
-   Postgres is published on host port **5434**. On first start, `init-testdb.sh` also creates the `TESTING_DB` database.
-
-3. Apply migrations:
-
-   ```sh
-   make goose-migrate-up   # dev DB (POSTGRES_DB)
-   ```
-
-4. Generate database queries:
-
-   ```sh
-   sqlc generate
-   ```
-
-5. Run the API:
-
-   ```sh
-   make run-api            # go run ./cmd/api -> http://localhost:8080
-   ```
-
-6. Run the Bot (in another terminal):
-
-   ```sh
-   make run-bot            # go run ./cmd/bot
-   ```
-
-## Make targets
-
-| Target                | Action                                              |
-| --------------------- | --------------------------------------------------- |
-| `make all`            | test + run                                          |
-| `make test`           | `go test ./...`                                     |
-| `make integration-test` | runs `integration_tests/db_test.go` against `TESTING_DB` |
-| `make run`            | run unified entrypoint `cmd/main.go` (bot + API)    |
-| `make run-api`        | start API server on :8080                           |
-| `make run-bot`        | start Discord bot (gateway)                         |
-| `make ngrok`          | start ngrok tunnel to API (port 8080)               |
-| `make ngrok-url`      | print ngrok public URL (requires ngrok running)     |
-| `make goose-migrate-up/down`     | migrate the dev database                 |
-| `make test-migrate-up/down`      | migrate `TESTING_DB` on the same instance |
-| `make docker/up`      | start Postgres in background                        |
-| `make docker/down`    | stop containers (keeps volumes)                     |
-| `make docker/down/v`  | stop containers **and wipe data**                   |
-| `make docker/logs`    | tail database logs                                  |
-
-The Makefile loads and exports `.env`, so no Infisical or extra tooling is required.
-
-## Database & codegen workflow
-
-- Schema lives in `db/migrations/` as goose SQL files (`-- +goose Up` / `-- +goose Down`, UTC-timestamp filenames).
-- Queries live in `db/queries/*.sql` (one file per table).
-- `sqlc generate` compiles migrations + queries into `infrastructure/postgres/` (package `postgres`, pgx/v5, `Querier` interface, JSON tags). That directory is generated-only — never hand-edit it.
-- Repositories in `internal/ports/repository` wrap the generated `Querier` behind per-entity interfaces and map rows to domain structs:
-
-  ```sh
-  sqlc generate           # after editing db/queries or db/migrations
-  ```
-
-## Project layout
-
-```
-cmd/api            API entrypoint (:8080)
-cmd/bot            Discord bot entrypoint (gateway + prefix/slash commands)
-cmd/main.go        Unified entrypoint (starts both bot + API)
-internal/api       Echo app wiring (no HTTP routes yet)
-internal/bot       Discord bot app + handlers (message / interaction / delete)
-internal/commands  bot commands (message + slash handlers, help pagination, tldr)
-internal/config    env config (caarlos0/env/v11)
-internal/domain    domain entities (guild, guildsettings, userpermission, auditlog, user, birthday)
-internal/ports     dto + repository interfaces/implementations
-infrastructure/postgres   generated sqlc output (do not edit)
-db/migrations      goose SQL migrations
-db/queries         named sqlc queries
-integration_tests  DB integration tests (db_test.go)
-dashboard/minji-bot       React + Vite + shadcn dashboard (with landing page)
-tests              external unit tests for the commands package
+# Goose (migration targets)
+GOOSE_DRIVER=postgres
+GOOSE_DBSTRING=postgres://postgres:<password>@localhost:5434/minjibot?sslmode=disable
+GOOSE_MIGRATION_DIR=db/migrations
 ```
 
-## Dashboard
+### 2. Start the database
+
+```sh
+make docker/up
+```
+
+Postgres is published on host port **5434**. On first start, `init-testdb.sh` also creates the `TESTING_DB` database.
+
+### 3. Apply migrations
+
+```sh
+make goose-migrate-up
+```
+
+### 4. Generate database queries
+
+```sh
+sqlc generate
+```
+
+### 5. Run the bot + API
+
+```sh
+make run              # unified entrypoint (cmd/main.go)
+# or separately:
+make run-bot          # Discord bot only
+make run-api          # HTTP API only
+```
+
+### 6. Run the dashboard
 
 ```sh
 cd dashboard/minji-bot
 npm install
-npm run dev        # Vite dev server
+npm run dev           # Vite dev server on :5173
 ```
 
-Other scripts: `build`, `preview`, `lint`, `format`, `typecheck`.
+The Vite dev server proxies `/api` requests to `:8080`.
 
-Routes: `/` (landing), `/dashboard`, `/commands`, `/docs`, `/auth`.
+## Make targets
 
-## Running the Bot locally
+| Target | Description |
+| --- | --- |
+| `make run` | Run bot + API together (`cmd/main.go`) |
+| `make run-bot` | Start Discord bot (gateway) |
+| `make run-api` | Start HTTP API on `:8080` |
+| `make test` | `go test ./...` |
+| `make integration-test` | Run `integration_tests/db_test.go` against `TESTING_DB` |
+| `make goose-migrate-up` | Apply migrations to dev database |
+| `make goose-migrate-down` | Rollback last migration |
+| `make docker/up` | Start Postgres in background |
+| `make docker/down` | Stop containers (keeps volumes) |
+| `make docker/down/v` | Stop containers and wipe data |
+| `make docker/logs` | Tail database logs |
 
-```sh
-make run-bot
-# or
-go run ./cmd/bot
+The Makefile loads and exports `.env` automatically.
+
+## Architecture
+
+```
+cmd/
+  main.go            Unified entrypoint — starts both bot + API
+  bot/main.go        Bot-only entrypoint
+  api/main.go        API-only entrypoint
+
+internal/
+  bot/               Discord bot app (gateway connection, handler registration)
+    handlers/        Gateway event handlers (message, delete, interaction)
+  commands/          Bot commands (prefix + slash), help pagination, tldr
+  api/               Echo HTTP server (auth, dashboard log endpoints)
+  config/            Environment variable parsing (caarlos0/env)
+  domain/            Domain entities (guild, guildsettings, auditlog, etc.)
+    auditlog/
+    birthday/
+    deletedmessage/
+    diary/
+    guild/
+    guildsettings/
+    user/
+    userpermission/
+  ports/
+    dto/             Data transfer objects for repository calls
+    repository/      Repository interfaces + SQL implementations
+  services/auth/     Discord OAuth2 flow + session management
+  logger/            Structured slog logger setup
+
+infrastructure/
+  postgres/          Generated sqlc output (do not edit)
+
+db/
+  migrations/        Goose SQL schema files (UTC-timestamp filenames)
+  queries/           Named sqlc query definitions
+
+dashboard/
+  minji-bot/         React + Vite + shadcn dashboard
+
+tests/               External unit tests for the commands package
+integration_tests/   Database integration tests
 ```
 
-The bot connects to Discord gateway and listens for both prefix commands (default `-`) and slash commands.
+### Data flow
 
-> **Note on slash command delivery:** this bot handles slash (and other) commands over the Discord **gateway (WebSocket)**, not via an HTTP interactions endpoint. Global slash commands are registered automatically on `Ready`. You do **not** need ngrok or a public endpoint just to run slash commands locally — `make run-bot` is enough.
-
-The bot's `help` command is paginated by category: prefix `-help` flips pages with ◀️/▶️ reactions, while `/help` uses ◀/▶ buttons. `-tldr <command>` / `/tldr command:<name>` shows a brief usage and description for any command.
-
-## Local development with ngrok (for webhooks / API — aspirational)
-
-> ⚠️ The HTTP **Interactions Endpoint** (`/interactions`) is **not implemented yet** — `internal/api/app.go` wires Echo with no routes. Discord's HTTP interactions will only work once a `POST /interactions` handler that verifies `X-Signature-Ed25519` / `X-Signature-Timestamp` is added. The steps below document the intended flow and are useful **today** only for exposing the API generally.
-
-ngrok tunnels your local API (port `:8080`) to a public HTTPS URL:
-
-1. Install ngrok: `brew install ngrok/ngrok/ngrok` (macOS) or download from https://ngrok.com/download
-2. Authenticate: `ngrok config add-authtoken <your-token>`
-3. Start the API locally: `make run-api` (runs on `:8080`)
-4. In another terminal, start the tunnel:
-
-   ```sh
-   make ngrok
-   # or manually: ngrok http 8080
-   ```
-
-5. Copy the HTTPS forwarding URL (e.g., `https://abc123.ngrok-free.app`)
-6. Once the `/interactions` endpoint is implemented, set it as your Discord application's **Interactions Endpoint URL**:
-   - Go to Applications → Your Bot → General Information
-   - Set "Interactions Endpoint URL" to `https://abc123.ngrok-free.app/interactions`
-   - Save changes (Discord will send a verification request)
-
-### Get ngrok URL programmatically
-
-```sh
-make ngrok-url
-# or manually: curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+```
+Discord Gateway → bot/handlers → commands → ports/repository → infrastructure/postgres → PostgreSQL
+                                                                                          ↑
+Echo HTTP API → api/auth, api/logs → ports/repository ─────────────────────────────────────┘
+                                                                                          ↑
+Dashboard (React) → /api/* ────────────────────────────────────────────────────────────────┘
 ```
 
-## Deploying to Render
+### Database workflow
 
-Render provides free tier Web Services (spin down after 15 min inactivity) and managed PostgreSQL.
+1. Edit `db/queries/*.sql` (named sqlc queries) or `db/migrations/` (schema)
+2. Run `sqlc generate` to regenerate `infrastructure/postgres/`
+3. Run `make goose-migrate-up` to apply schema changes
 
-### 1. Database (PostgreSQL)
+**Never edit** `infrastructure/postgres/` directly — it is generated-only.
 
-- Create a new **PostgreSQL** database on Render
-- Note the **External Database URL** (looks like `postgres://user:pass@host:port/db`)
-- Run migrations against it:
+## API endpoints
 
-  ```sh
-  GOOSE_DBSTRING="<external-db-url>" goose -dir db/migrations up
-  ```
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/healthz` | No | Health check |
+| GET | `/api/auth/discord` | No | Start Discord OAuth flow |
+| GET | `/api/auth/callback/discord` | No | OAuth callback |
+| POST | `/api/auth/logout` | Session | Clear session |
+| GET | `/api/auth/me` | Session | Current user info |
+| GET | `/api/guilds` | Session | List guilds with counts |
+| GET | `/api/logs/deleted?guild_id=` | Session | Deleted messages (paginated) |
+| GET | `/api/logs/actions?guild_id=` | Session | Mod actions (paginated) |
 
-### 2. Web Service (API + Bot)
+## Dashboard routes
 
-- Create a new **Web Service** on Render
-- Connect your GitHub repo
-- Build command: `go build ./cmd/bot` (or `go build ./cmd/api` for API only)
-- Start command: `./bot` (or `./api`)
-- Environment variables:
+| Route | Description |
+| --- | --- |
+| `/` | Landing page |
+| `/commands` | Command reference |
+| `/dashboard` | Guild picker with logging stats |
+| `/dashboard/guild/:id` | Deleted messages + mod actions for a guild |
+| `/login` | Login page |
+| `/signup` | Sign up page |
 
-  | Key            | Value                                    |
-  | -------------- | ---------------------------------------- |
-  | `DB_URL`       | Render's External Database URL           |
-  | `DISCORD_TOKEN`| Your bot token from Discord Developer Portal |
+## Bot commands
 
-- **Health Check Path**: `/health` (add a simple health endpoint to your API if needed)
-- **Auto-Deploy**: Yes
+The bot supports ~100+ commands across these categories:
 
-> **Note:** The bot uses Discord gateway (WebSocket), not HTTP. Render Web Services support long-running WebSocket connections. If you need a separate worker for the bot, use a **Background Worker** service type instead (no public port required).
+- **General** — ping, echo, userinfo, test, bug
+- **Moderation** — ban, kick, timeout, warn, purge, nuke, jail, role management, etc.
+- **Utility** — translate, search, emoji management, reminders, polls
+- **Fun** — birthday, diary, ship, polls, roleplay emotions/actions
+- **Information** — avatar, banner, botinfo, guild stats, help, weather
 
-### 3. Interactions Endpoint
+See `features.md` for the full command reference.
 
-After deploy, your service gets a URL like `https://minjibot.onrender.com`.
+## Deployment
 
-Set Discord **Interactions Endpoint URL** to:
-```
-https://minjibot.onrender.com/interactions
-```
+### Railway (current production)
 
-## Uptime Monitoring
+The bot + API run as a single service on Railway. The dashboard is deployed separately on Netlify.
 
-Free options to monitor your deployed bot/API:
+**Environment variables:**
 
-| Service          | Free Tier                     | Setup                                    |
-| ---------------- | ----------------------------- | ---------------------------------------- |
-| **UptimeRobot**  | 50 monitors, 5 min interval   | Add HTTP(s) monitor → `https://your-app.onrender.com/health` |
-| **Better Uptime**| 10 monitors, 3 min interval   | Similar to UptimeRobot                   |
-| **Cronitor**     | 5 monitors, 1 min interval    | Add heartbeat monitor, ping from app     |
-| **Healthchecks.io**| 20 checks, 1 min interval  | Add check, curl from cron or app         |
+| Variable | Description |
+| --- | --- |
+| `DB_URL` | PostgreSQL connection string |
+| `DISCORD_TOKEN` | Bot token |
+| `DISCORD_CLIENT_ID` | Application ID (for slash command registration) |
+| `DISCORD_CLIENT_SECRET` | OAuth2 client secret |
+| `APP_URL` | API origin (e.g., `https://minjibot-bot-production.up.railway.app`) |
+| `FRONTEND_URL` | Dashboard origin (e.g., `https://minji-bot.netlify.app`) |
+| `SESSION_SECRET` | Random string for session cookie signing |
 
-**Recommended:** UptimeRobot
-1. Create account at https://uptimerobot.com
-2. Add Monitor → HTTP(s)
-3. URL: `https://your-app.onrender.com/health` (or `/` if no health endpoint)
-4. Interval: 5 minutes
-5. Alert contacts: Email, Discord webhook, Slack, etc.
+### Render (alternative)
 
-For Render free tier (spins down after 15 min), uptime monitors will show "down" during cold starts. This is expected — the service spins up on first request (adds ~30-60s latency).
+Render provides free tier Web Services and managed PostgreSQL. See the Makefile and deployment configs for reference.
+
+## License
+
+Private — not for redistribution.

@@ -1,21 +1,105 @@
-# MinjiBot
+# MinjiBot — AI Agent Context
 
-Go Discord bot + REST API (module `github.com/kibetnathan/minjibot`, Go 1.26, pgx/v5 + Echo (v5) + discordgo). The app has grown past the initial empty scaffold: `cmd/` has real entrypoints (`cmd/bot` gateway bot, `cmd/api` HTTP server on :8080, and a unified `cmd/main.go` that runs both), `internal/*` packages hold working app code, and `tests/` contains external unit tests for the `commands` package. A few deps in `go.mod` are still `// indirect` — don't move those to direct until something imports them explicitly.
+Go Discord bot + REST API + web dashboard.
+Module: `github.com/kibetnathan/minjibot`, Go 1.26, pgx/v5 + Echo v5 + discordgo.
 
-## Commands
+## Build & test
 
-- Build/check: `go build ./...`, `go vet ./...`. `make test` runs unit tests (`go test ./...`); `make integration-test` runs `integration_tests/db_test.go` against the `TESTING_DB`. Everything is formatted with gofmt (no CI/lint is wired up yet).
-- Database: `docker compose up -d database` → Postgres published on host port **5434** (not 5432). All config comes from `.env` (gitignored): `DB_URL`, `TESTING_DB`, `POSTGRES_*`, plus `GOOSE_DRIVER` / `GOOSE_DBSTRING` / `GOOSE_MIGRATION_DIR`.
-- Migrations: goose format (`-- +goose Up`/`Down`) in `db/migrations/`, UTC-timestamp filenames. Because `.env` exports the `GOOSE_*` vars, plain `goose up` / `goose down` works from the repo root.
-- Makefile loads + exports `.env`; targets work without Infisical: `goose-migrate-up/down` (plain goose against `.env` config), `test-migrate-up/down` (same instance, database swapped to `TESTING_DB`), `docker/up|down|down/v|logs`. `make run` runs `go run .` (unified `cmd/main.go`, starts bot + API together); `make run-bot` / `make run-api` run each entrypoint individually.
-- Codegen: `sqlc generate` uses `db/queries/*.sql` + `db/migrations/` as schema and writes into `infrastructure/postgres/` (package `postgres`, pgx/v5, emit_interface, JSON tags). It is generated-only — never hand-edit it.
+```sh
+go build ./...        # compile all packages
+go vet ./...          # static analysis
+gofmt -w .            # format (no CI linter yet)
+make test             # go test ./...
+make integration-test # integration_tests/db_test.go against TESTING_DB
+```
 
-## Known breakage / gotchas (verify before trusting)
+## Database
 
-- The bot talks to Discord over the **gateway (WebSocket)**; slash commands are registered globally on `Ready` and handled via `internal/bot/handlers`. There is currently **no HTTP `/interactions` endpoint** — `internal/api/app.go` only wires Echo with no routes yet. README's ngrok instructions assume an HTTP interaction endpoint that isn't implemented; treat that section as aspirational.
-- Bot gateway intents include `IntentsGuildMessageReactions` (needed for the prefix `-help` reaction pagination).
-- The prefix `-help` reaction pagination and slash `/help` button pagination live in `internal/commands/pagination.go`.
+- **Postgres 15** on host port **5434** (not 5432): `docker compose up -d database`
+- All config from `.env` (gitignored): `DB_URL`, `TESTING_DB`, `POSTGRES_*`
+- Migrations: goose format in `db/migrations/` (UTC-timestamp filenames, `-- +goose Up/Down`)
+- `make goose-migrate-up` / `make goose-migrate-down` (uses exported `.env` vars)
 
-## Layout
+## Codegen
 
-- `cmd/{bot,api}` + `cmd/main.go` = entrypoints; `internal/{bot,api,commands,config,domain,logger,ports}` = app code (commands and its tests moved out of `domain`); `infrastructure/postgres` = generated-only sqlc output (don't hand-edit); `db/migrations` + `db/queries` = goose SQL + named sqlc queries; `integration_tests/` = DB integration tests; `dashboard/minji-bot` = React + Vite + shadcn dashboard placeholder; `tests/` = external unit tests for the `commands` package.
+`sqlc generate` — reads `db/queries/*.sql` + `db/migrations/` schema, writes `infrastructure/postgres/` (package `postgres`, pgx/v5, `Querier` interface, JSON tags).
+**Never hand-edit** `infrastructure/postgres/`.
+
+## Architecture
+
+```
+cmd/
+  main.go            Unified entrypoint (bot + API)
+  bot/main.go        Bot-only
+  api/main.go        API-only
+
+internal/
+  bot/               Discord gateway connection, handler registration
+    handlers/        Gateway event handlers (message, message-delete, interaction)
+  commands/          ~100+ bot commands (prefix + slash), help pagination, tldr
+    commands.go      CommandHandler struct, Handle/HandleSlash dispatch, thin wrappers
+    moderation.go    Shared mod helpers (perm checks, audit logging, embed builders)
+    mod_*.go         Per-feature command implementations (ban, jail, purge, etc.)
+    slash_commands.go Slash command definitions (SlashCommands variable)
+    helpers.go       Interaction option helpers (OptInt, OptBool, OptUser)
+    help.go          Help sections, BuildHelpPageEmbed
+    pagination.go    Reaction-based (prefix) + button-based (slash) pagination
+    rp.go            Roleplay emotion/action message helpers
+  api/               Echo HTTP server
+    app.go           App struct, NewApp, registerRoutes, CORS
+    auth.go          Discord OAuth flow (/api/auth/discord, callback, logout, me)
+    logs.go          Dashboard log endpoints (/api/guilds, /api/logs/*)
+    session.go       resolveSession helper
+  config/            env config (caarlos0/env/v11)
+  domain/            Domain entities (pure structs, no deps)
+  ports/
+    dto/             Data transfer objects for repository calls
+    repository/      Repository interfaces + SQL implementations
+  services/auth/     Discord OAuth2 client + session manager
+  logger/            slog JSON logger setup
+
+infrastructure/postgres/  Generated sqlc output (do not edit)
+db/migrations/            Goose SQL schema
+db/queries/               Named sqlc queries
+tests/                    External unit tests for commands package
+integration_tests/        DB integration tests
+dashboard/minji-bot/      React + Vite + shadcn dashboard
+```
+
+## Key files to know
+
+| File | What it does |
+|---|---|
+| `internal/commands/commands.go` | `CommandHandler` struct, `Handle()` + `HandleSlash()` dispatch, thin wrappers that delegate to `mod_*.go` functions |
+| `internal/commands/moderation.go` | Shared mod utilities: `effectiveModPerms`, `requireModerator`, `resolveTargetUser`, `auditAction`, `logModAction`, embed builders, option helpers |
+| `internal/commands/slash_commands.go` | `SlashCommands` variable — all ApplicationCommand definitions |
+| `internal/commands/helpers.go` | `OptInt`, `OptBool`, `OptUser` — interaction option extractors |
+| `internal/bot/app.go` | Bot `App` struct, `NewApp`, `RegisterHandlers`, gateway intents |
+| `internal/api/app.go` | API `App` struct, Echo setup, CORS, route wiring |
+| `internal/api/logs.go` | Dashboard endpoints: guild list, deleted messages, mod actions |
+| `internal/ports/repository/store.go` | `SQLStore` wrapping generated `Querier` |
+
+## Conventions
+
+- Prefix commands use `-` (e.g. `-ban`, `-help`)
+- Slash commands registered globally on `Ready` via `s.ApplicationCommandCreate`
+- Each command has both a prefix handler (`foo(s, m, args)`) and slash handler (`fooSlash(s, i)`)
+- Slash dispatch goes through `HandleSlash()` in `commands.go`
+- Mod actions log to both `audit_logs` table and configured log channel (via `logModAction`)
+- Dashboard uses session cookie auth (Discord OAuth2 flow in `services/auth/`)
+
+## Gotchas
+
+- Bot gateway intents include `IntentsGuildMessageReactions` (needed for `-help` reaction pagination)
+- `State.MaxMessageCount = 2000` — rolling cache for deleted message content
+- `DISCORD_CLIENT_ID` falls back to bot user ID for slash command registration if unset
+- `APP_URL` must be the API origin, `FRONTEND_URL` the dashboard origin
+- Vite dev proxy: `/api` → `:8080`
+- Postgres on port 5434 (not 5432)
+- `init-testdb.sh` creates `TESTING_DB` on first docker start
+- `go.mod` has some `// indirect` deps — don't move to direct until something imports them
+
+## Dependencies to not touch
+
+- `infrastructure/postgres/` — generated only
+- `go.mod` indirect deps — leave as indirect until explicit import
