@@ -19,5 +19,10 @@ LIMIT $3 OFFSET $4;
 SELECT COUNT(*) FROM deleted_messages
 WHERE guild_id = $1;
 
+-- name: CountDeletedMessagesForAllGuilds :many
+SELECT guild_id, COUNT(*) AS count
+FROM deleted_messages
+GROUP BY guild_id;
+
 -- name: DeleteDeletedMessagesBefore :exec
 DELETE FROM deleted_messages WHERE created_at < $1;

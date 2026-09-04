@@ -11,6 +11,37 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countAuditLogsForAllGuilds = `-- name: CountAuditLogsForAllGuilds :many
+SELECT guild_id, COUNT(*) AS count
+FROM audit_logs
+GROUP BY guild_id
+`
+
+type CountAuditLogsForAllGuildsRow struct {
+	GuildID string `json:"guild_id"`
+	Count   int64  `json:"count"`
+}
+
+func (q *Queries) CountAuditLogsForAllGuilds(ctx context.Context) ([]CountAuditLogsForAllGuildsRow, error) {
+	rows, err := q.db.Query(ctx, countAuditLogsForAllGuilds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountAuditLogsForAllGuildsRow
+	for rows.Next() {
+		var i CountAuditLogsForAllGuildsRow
+		if err := rows.Scan(&i.GuildID, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countAuditLogsForGuild = `-- name: CountAuditLogsForGuild :one
 SELECT COUNT(*) FROM audit_logs WHERE guild_id = $1
 `
@@ -23,17 +54,19 @@ func (q *Queries) CountAuditLogsForGuild(ctx context.Context, guildID string) (i
 }
 
 const createAuditLog = `-- name: CreateAuditLog :one
-INSERT INTO audit_logs (guild_id, action, actor_id, target_id, metadata)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, guild_id, action, actor_id, target_id, metadata, created_at
+INSERT INTO audit_logs (guild_id, action, actor_id, actor_name, target_id, target_name, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, guild_id, action, actor_id, target_id, metadata, created_at, actor_name, target_name
 `
 
 type CreateAuditLogParams struct {
-	GuildID  string      `json:"guild_id"`
-	Action   string      `json:"action"`
-	ActorID  string      `json:"actor_id"`
-	TargetID pgtype.Text `json:"target_id"`
-	Metadata []byte      `json:"metadata"`
+	GuildID    string      `json:"guild_id"`
+	Action     string      `json:"action"`
+	ActorID    string      `json:"actor_id"`
+	ActorName  string      `json:"actor_name"`
+	TargetID   pgtype.Text `json:"target_id"`
+	TargetName string      `json:"target_name"`
+	Metadata   []byte      `json:"metadata"`
 }
 
 func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (AuditLog, error) {
@@ -41,7 +74,9 @@ func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) 
 		arg.GuildID,
 		arg.Action,
 		arg.ActorID,
+		arg.ActorName,
 		arg.TargetID,
+		arg.TargetName,
 		arg.Metadata,
 	)
 	var i AuditLog
@@ -53,6 +88,8 @@ func (q *Queries) CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) 
 		&i.TargetID,
 		&i.Metadata,
 		&i.CreatedAt,
+		&i.ActorName,
+		&i.TargetName,
 	)
 	return i, err
 }
@@ -67,7 +104,7 @@ func (q *Queries) DeleteAuditLogsBefore(ctx context.Context, cutoff pgtype.Times
 }
 
 const listAuditLogsByActor = `-- name: ListAuditLogsByActor :many
-SELECT id, guild_id, action, actor_id, target_id, metadata, created_at FROM audit_logs
+SELECT id, guild_id, action, actor_id, target_id, metadata, created_at, actor_name, target_name FROM audit_logs
 WHERE guild_id = $1 AND actor_id = $2
 ORDER BY created_at DESC
 LIMIT $4 OFFSET $3
@@ -102,6 +139,8 @@ func (q *Queries) ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByA
 			&i.TargetID,
 			&i.Metadata,
 			&i.CreatedAt,
+			&i.ActorName,
+			&i.TargetName,
 		); err != nil {
 			return nil, err
 		}
@@ -114,7 +153,7 @@ func (q *Queries) ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByA
 }
 
 const listAuditLogsForGuild = `-- name: ListAuditLogsForGuild :many
-SELECT id, guild_id, action, actor_id, target_id, metadata, created_at FROM audit_logs
+SELECT id, guild_id, action, actor_id, target_id, metadata, created_at, actor_name, target_name FROM audit_logs
 WHERE guild_id = $1
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $2
@@ -143,6 +182,8 @@ func (q *Queries) ListAuditLogsForGuild(ctx context.Context, arg ListAuditLogsFo
 			&i.TargetID,
 			&i.Metadata,
 			&i.CreatedAt,
+			&i.ActorName,
+			&i.TargetName,
 		); err != nil {
 			return nil, err
 		}

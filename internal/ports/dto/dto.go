@@ -36,11 +36,13 @@ type UpsertUserPermissionParams struct {
 }
 
 type CreateAuditLogParams struct {
-	GuildID  string
-	Action   string
-	ActorID  string
-	TargetID string
-	Metadata []byte
+	GuildID    string
+	Action     string
+	ActorID    string
+	ActorName  string
+	TargetID   string
+	TargetName string
+	Metadata   []byte
 }
 
 type CreateUserParams struct {

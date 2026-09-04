@@ -11,6 +11,37 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countDeletedMessagesForAllGuilds = `-- name: CountDeletedMessagesForAllGuilds :many
+SELECT guild_id, COUNT(*) AS count
+FROM deleted_messages
+GROUP BY guild_id
+`
+
+type CountDeletedMessagesForAllGuildsRow struct {
+	GuildID string `json:"guild_id"`
+	Count   int64  `json:"count"`
+}
+
+func (q *Queries) CountDeletedMessagesForAllGuilds(ctx context.Context) ([]CountDeletedMessagesForAllGuildsRow, error) {
+	rows, err := q.db.Query(ctx, countDeletedMessagesForAllGuilds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountDeletedMessagesForAllGuildsRow
+	for rows.Next() {
+		var i CountDeletedMessagesForAllGuildsRow
+		if err := rows.Scan(&i.GuildID, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countDeletedMessagesForGuild = `-- name: CountDeletedMessagesForGuild :one
 SELECT COUNT(*) FROM deleted_messages
 WHERE guild_id = $1

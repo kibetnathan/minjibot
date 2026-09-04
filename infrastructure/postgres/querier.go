@@ -11,7 +11,9 @@ import (
 )
 
 type Querier interface {
+	CountAuditLogsForAllGuilds(ctx context.Context) ([]CountAuditLogsForAllGuildsRow, error)
 	CountAuditLogsForGuild(ctx context.Context, guildID string) (int64, error)
+	CountDeletedMessagesForAllGuilds(ctx context.Context) ([]CountDeletedMessagesForAllGuildsRow, error)
 	CountDeletedMessagesForGuild(ctx context.Context, guildID string) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) (AuditLog, error)

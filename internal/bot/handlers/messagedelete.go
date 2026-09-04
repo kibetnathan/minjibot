@@ -86,11 +86,13 @@ func onMessageDelete(s *discordgo.Session, m *discordgo.MessageDelete, deps Mess
 	})
 
 	if _, err := deps.AuditRepo.Create(ctx, dto.CreateAuditLogParams{
-		GuildID:  m.GuildID,
-		Action:   "MESSAGE_DELETE",
-		ActorID:  authorID,
-		TargetID: m.ChannelID,
-		Metadata: meta,
+		GuildID:    m.GuildID,
+		Action:     "MESSAGE_DELETE",
+		ActorID:    authorID,
+		ActorName:  authorName,
+		TargetID:   m.ChannelID,
+		TargetName: "",
+		Metadata:   meta,
 	}); err != nil {
 		deps.Logger.Error("Failed to log message delete", "error", err, "guild_id", m.GuildID, "message_id", m.ID)
 	}

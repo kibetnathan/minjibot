@@ -99,15 +99,7 @@ func (h *authHandlers) me(c *echo.Context) error {
 // currentSession reads and verifies the session cookie, returning the session
 // and whether it was valid.
 func (h *authHandlers) currentSession(c *echo.Context) (*authsvc.Session, bool) {
-	cookie, err := c.Cookie(authsvc.SessionCookieName)
-	if err != nil {
-		return nil, false
-	}
-	sess, err := h.sess.Verify(cookie.Value)
-	if err != nil {
-		return nil, false
-	}
-	return sess, true
+	return resolveSession(c, h.sess)
 }
 
 // upsertUser creates the user from their Discord profile if they do not exist

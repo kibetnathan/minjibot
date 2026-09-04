@@ -134,7 +134,8 @@ func resolveTargetRole(s *discordgo.Session, guildID, raw string) (*discordgo.Ro
 }
 
 // auditAction writes a moderation action into the audit log table when an
-// audit repository is available. Metadata is optional and JSON-encoded.
+// audit repository is available. Metadata is optional and JSON-encoded. Names
+// are left empty here; callers wanting display names should use logModAction.
 func auditAction(h *CommandHandler, ctx context.Context, guildID, action, actorID, targetID string, metadata map[string]any) {
 	if h == nil || h.AuditRepo == nil {
 		return
@@ -146,21 +147,42 @@ func auditAction(h *CommandHandler, ctx context.Context, guildID, action, actorI
 		}
 	}
 	if _, err := h.AuditRepo.Create(ctx, dto.CreateAuditLogParams{
-		GuildID:  guildID,
-		Action:   action,
-		ActorID:  actorID,
-		TargetID: targetID,
-		Metadata: meta,
+		GuildID:    guildID,
+		Action:     action,
+		ActorID:    actorID,
+		ActorName:  "",
+		TargetID:   targetID,
+		TargetName: "",
+		Metadata:   meta,
 	}); err != nil {
 		return
 	}
 }
 
-// logModAction records a moderation action in the audit table (via auditAction)
-// and, if a logging channel is configured for the guild, posts a human-readable
-// entry to that channel. actorName/targetName are display names for the embed.
+// logModAction records a moderation action in the audit table (with display
+// names) and, if a logging channel is configured for the guild, posts a
+// human-readable entry to that channel. actorName/targetName are display names.
 func logModAction(h *CommandHandler, s *discordgo.Session, guildID, action, actorID, actorName, targetID, targetName string, metadata map[string]any) {
-	auditAction(h, context.Background(), guildID, action, actorID, targetID, metadata)
+	if h == nil || h.AuditRepo == nil {
+		return
+	}
+	var meta []byte
+	if metadata != nil {
+		if b, err := json.Marshal(metadata); err == nil {
+			meta = b
+		}
+	}
+	if _, err := h.AuditRepo.Create(context.Background(), dto.CreateAuditLogParams{
+		GuildID:    guildID,
+		Action:     action,
+		ActorID:    actorID,
+		ActorName:  actorName,
+		TargetID:   targetID,
+		TargetName: targetName,
+		Metadata:   meta,
+	}); err != nil {
+		return
+	}
 	if h == nil || h.SettingsRepo == nil || s == nil {
 		return
 	}
