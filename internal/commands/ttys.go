@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 // ttys makes the bot talk to itself in a channel until someone else sends a
@@ -94,7 +95,7 @@ func ttysBegin(s *discordgo.Session, channelID string) bool {
 			s.AddHandler(ttyOnMessage)
 		})
 	}
-	go ttyLoop(s, channelID, ctx)
+	safe.Go(nil, "ttyLoop", func() { ttyLoop(s, channelID, ctx) })
 	return true
 }
 
@@ -137,6 +138,7 @@ func ttyNextLine() string {
 // ttyOnMessage stops any self-talk loop running in a channel the moment a
 // non-bot message is sent there.
 func ttyOnMessage(_ *discordgo.Session, mc *discordgo.MessageCreate) {
+	defer safe.Recover(nil, "ttyOnMessage")
 	if mc.Author != nil && mc.Author.Bot {
 		return
 	}

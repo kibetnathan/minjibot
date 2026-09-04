@@ -10,6 +10,7 @@ import (
 	"github.com/kibetnathan/minjibot/internal/commands"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	"github.com/kibetnathan/minjibot/internal/safe"
 	"log/slog"
 )
 
@@ -30,6 +31,9 @@ func RegisterMessageHandler(s *discordgo.Session, deps MessageHandlerDeps, cmdHa
 }
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps MessageHandlerDeps, cmdHandler *commands.CommandHandler) {
+	// A panic in any command handler must not take down the whole bot.
+	defer safe.Recover(deps.Logger, "onMessageCreate")
+
 	if m.Author.Bot {
 		return
 	}
@@ -55,10 +59,10 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate, deps Mess
 	if !isLurkCommand(m.Content, prefix) {
 		if commands.IsLurking(m.GuildID, m.Author.ID) {
 			chID, msgID := m.ChannelID, m.ID
-			go func() {
+			safe.Go(deps.Logger, "lurkAutoDelete", func() {
 				time.Sleep(500 * time.Millisecond)
 				_ = s.ChannelMessageDelete(chID, msgID)
-			}()
+			})
 		}
 	}
 
