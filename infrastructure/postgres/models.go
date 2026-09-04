@@ -27,6 +27,20 @@ type Birthday struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type DeletedMessage struct {
+	ID            int64              `json:"id"`
+	GuildID       string             `json:"guild_id"`
+	ChannelID     string             `json:"channel_id"`
+	MessageID     string             `json:"message_id"`
+	AuthorID      string             `json:"author_id"`
+	AuthorName    string             `json:"author_name"`
+	Content       string             `json:"content"`
+	Attachments   []byte             `json:"attachments"`
+	DeletedBy     string             `json:"deleted_by"`
+	DeletedByName string             `json:"deleted_by_name"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type DiaryEntry struct {
 	ID        int64              `json:"id"`
 	UserID    string             `json:"user_id"`
