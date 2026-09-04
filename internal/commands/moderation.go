@@ -156,6 +156,73 @@ func auditAction(h *CommandHandler, ctx context.Context, guildID, action, actorI
 	}
 }
 
+// logModAction records a moderation action in the audit table (via auditAction)
+// and, if a logging channel is configured for the guild, posts a human-readable
+// entry to that channel. actorName/targetName are display names for the embed.
+func logModAction(h *CommandHandler, s *discordgo.Session, guildID, action, actorID, actorName, targetID, targetName string, metadata map[string]any) {
+	auditAction(h, context.Background(), guildID, action, actorID, targetID, metadata)
+	if h == nil || h.SettingsRepo == nil || s == nil {
+		return
+	}
+	settings, err := h.SettingsRepo.Get(context.Background(), guildID)
+	if err != nil || settings.LoggingChannelID == "" {
+		return
+	}
+	description := fmt.Sprintf("**Action:** `%s`\n**Moderator:** %s\n**Target:** %s",
+		action, formatName(actorID, actorName), formatName(targetID, targetName))
+	if reason, ok := metadata["reason"].(string); ok && reason != "" {
+		description += fmt.Sprintf("\n**Reason:** %s", trimLogStr(reason))
+	}
+	_, _ = s.ChannelMessageSendEmbed(settings.LoggingChannelID, &discordgo.MessageEmbed{
+		Color:       modColor,
+		Title:       fmt.Sprintf("%s — %s", actionTitle(action), actionDesc(action)),
+		Description: description,
+	})
+}
+
+func formatName(id, name string) string {
+	if id != "" {
+		return fmt.Sprintf("<@%s>", id)
+	}
+	return "unknown"
+}
+
+func actionTitle(action string) string {
+	return strings.ToLower(action)
+}
+
+func actionDesc(action string) string {
+	switch action {
+	case "BAN":
+		return "User banned"
+	case "HARDBAN":
+		return "User hard-banned"
+	case "SOFTBAN":
+		return "User soft-banned"
+	case "KICK":
+		return "User kicked"
+	case "TIMEOUT":
+		return "User timed out"
+	case "WARN":
+		return "User warned"
+	case "PURGE":
+		return "Messages purged"
+	case "NUKE":
+		return "Channel nuked"
+	default:
+		return action
+	}
+}
+
+func trimLogStr(s string) string {
+	const max = 1024
+	s = strings.TrimSpace(s)
+	if len(s) <= max {
+		return s
+	}
+	return strings.TrimSpace(s[:max]) + "…"
+}
+
 func modErrorEmbed(title, msg string) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Color:       modErrorColor,

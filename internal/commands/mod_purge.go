@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -33,7 +32,7 @@ func purgeMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disc
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Purge", fmt.Sprintf("Failed to purge messages: %s", err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "PURGE", m.Author.ID, m.ChannelID, map[string]any{"count": deleted, "filter": filterID})
+	logModAction(h, s, m.GuildID, "PURGE", m.Author.ID, m.Author.Username, m.ChannelID, "", map[string]any{"count": deleted, "filter": filterID})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Purge", fmt.Sprintf("Deleted **%d** message%s.", deleted, plural(deleted))))
 	return err
 }
@@ -67,7 +66,7 @@ func purgeSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discor
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Purge", fmt.Sprintf("Failed to purge messages: %s", err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "PURGE", i.Member.User.ID, i.ChannelID, map[string]any{"count": deleted, "filter": filterID})
+	logModAction(h, s, i.GuildID, "PURGE", i.Member.User.ID, i.Member.User.Username, i.ChannelID, "", map[string]any{"count": deleted, "filter": filterID})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Purge", fmt.Sprintf("Deleted **%d** message%s.", deleted, plural(deleted)))}},
@@ -210,11 +209,11 @@ func nukeChannel(s *discordgo.Session, channelID, guildID, actorID string, h *Co
 	}
 	if _, err := s.ChannelDelete(channelID); err != nil {
 		// Channel cloned but original failed to delete; report partial success.
-		auditAction(h, context.Background(), guildID, "NUKE", actorID, channelID, map[string]any{"cloned_to": newCh.ID})
+		logModAction(h, s, guildID, "NUKE", actorID, "", channelID, "", map[string]any{"cloned_to": newCh.ID})
 		_, _ = s.ChannelMessageSendEmbed(newCh.ID, modSuccessEmbed("Nuke", "Channel cloned; original could not be deleted."))
 		return nil
 	}
-	auditAction(h, context.Background(), guildID, "NUKE", actorID, channelID, map[string]any{"cloned_to": newCh.ID})
+	logModAction(h, s, guildID, "NUKE", actorID, "", channelID, "", map[string]any{"cloned_to": newCh.ID})
 	msg := "Channel nuked. This is the fresh replacement."
 	_, _ = s.ChannelMessageSendEmbed(newCh.ID, modSuccessEmbed("Nuke", msg))
 	return nil

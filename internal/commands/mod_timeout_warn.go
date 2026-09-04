@@ -33,7 +33,7 @@ func timeoutMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	if err := s.GuildMemberTimeout(m.GuildID, targetID, &until); err != nil {
 		return sendModError(s, m.ChannelID, "Timeout", fmt.Sprintf("Failed to timeout %s: %s", name, err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "TIMEOUT", m.Author.ID, targetID, map[string]any{"duration": dur.String(), "reason": reason})
+	logModAction(h, s, m.GuildID, "TIMEOUT", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"duration": dur.String(), "reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Timeout", fmt.Sprintf("Timed out **%s** for %s.", name, dur.String())))
 	return err
 }
@@ -74,7 +74,7 @@ func timeoutSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Timeout", fmt.Sprintf("Failed to timeout %s: %s", name, err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "TIMEOUT", i.Member.User.ID, targetID, map[string]any{"duration": dur.String(), "reason": reason})
+	logModAction(h, s, i.GuildID, "TIMEOUT", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"duration": dur.String(), "reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Timeout", fmt.Sprintf("Timed out **%s** for %s.", name, dur.String()))}},
@@ -98,7 +98,7 @@ func warnMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 		return sendModError(s, m.ChannelID, "Warn", fmt.Sprintf("Could not find that user: %s", err))
 	}
 	reason := strings.Join(args[1:], " ")
-	auditAction(h, context.Background(), m.GuildID, "WARN", m.Author.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, m.GuildID, "WARN", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Warn", fmt.Sprintf("Warned **%s**.", name)))
 	return err
 }
@@ -121,7 +121,7 @@ func warnSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discord
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Warn", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "WARN", i.Member.User.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, i.GuildID, "WARN", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Warn", fmt.Sprintf("Warned **%s**.", name))}},
