@@ -18,6 +18,7 @@ import (
 	"github.com/kibetnathan/minjibot/internal/config"
 	"github.com/kibetnathan/minjibot/internal/logger"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 type App struct {
@@ -102,6 +103,7 @@ func (a *App) RegisterHandlers() {
 
 	// Ready handler - register slash commands
 	a.Session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		defer safe.Recover(a.Logger, "onReady")
 		a.Logger.Info(fmt.Sprintf("Logged in as: %s#%s", r.User.Username, r.User.Discriminator))
 
 		// Register global slash commands
