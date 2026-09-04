@@ -75,3 +75,22 @@ type CreateDiaryEntryParams struct {
 	UserID  string
 	Content string
 }
+
+type CreateDeletedMessageParams struct {
+	GuildID       string
+	ChannelID     string
+	MessageID     string
+	AuthorID      string
+	AuthorName    string
+	Content       string
+	Attachments   []byte
+	DeletedBy     string
+	DeletedByName string
+}
+
+type ListDeletedMessagesParams struct {
+	GuildID   string
+	ChannelID string
+	Limit     int32
+	Offset    int32
+}
