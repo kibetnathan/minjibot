@@ -20,6 +20,7 @@ const userContextKey = "auth.user"
 type authHandlers struct {
 	oauth    *authsvc.DiscordOAuth
 	sess     *authsvc.SessionManager
+	authz    *authorizer
 	users    repository.UserRepository
 	frontend string
 }
@@ -92,7 +93,7 @@ func (h *authHandlers) me(c *echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]any{
 		"id":       u.UserID,
 		"email":    u.Email,
-		"is_admin": true,
+		"is_admin": h.authz.isAdmin(u.UserID),
 	})
 }
 

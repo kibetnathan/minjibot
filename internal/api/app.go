@@ -89,6 +89,14 @@ func (a *App) registerRoutes() {
 	store := repository.NewSQLStore(postgres.New(a.Pool))
 	userRepo := repository.NewUserRepository(store)
 
+	// Shared authorizer gating dashboard data access. Warn loudly when the
+	// allowlist is empty: the app still runs, but every guild-data endpoint
+	// rejects all users until DASHBOARD_ADMIN_IDS is set.
+	authz := newAuthorizer(a.Cfg.DashboardAdminIDs)
+	if authz.empty() {
+		a.Echo.Logger.Warn("DASHBOARD_ADMIN_IDS is empty: dashboard data endpoints will reject all users")
+	}
+
 	authHandlers := &authHandlers{
 		oauth: authsvc.NewDiscordOAuth(
 			a.Cfg.DiscordClientID,
@@ -96,6 +104,7 @@ func (a *App) registerRoutes() {
 			a.Cfg.AppURL,
 		),
 		sess:  authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		authz: authz,
 		users: userRepo,
 		// Redirect the user back to the frontend after login/logout. Defaults
 		// to the API origin when FRONTEND_URL is unset (same-origin dev setup).
@@ -107,6 +116,7 @@ func (a *App) registerRoutes() {
 
 	logHandlers := &logHandlers{
 		sess:    authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		authz:   authz,
 		guilds:  repository.NewGuildRepository(store),
 		audits:  repository.NewAuditLogRepository(store),
 		deletes: repository.NewDeletedMessageRepository(store),
