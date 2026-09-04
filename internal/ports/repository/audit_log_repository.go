@@ -18,6 +18,9 @@ type AuditLogRepository interface {
 	CountForGuild(ctx context.Context, guildID string) (int64, error)
 	CountForAllGuilds(ctx context.Context) (map[string]int64, error)
 	DeleteBefore(ctx context.Context, cutoff time.Time) error
+	// DeleteMessageLogsBefore prunes only message-content logs (MESSAGE_* actions)
+	// older than cutoff, leaving moderation audit entries in place.
+	DeleteMessageLogsBefore(ctx context.Context, cutoff time.Time) error
 }
 
 type sqlAuditLogRepository struct {
@@ -93,6 +96,13 @@ func (r *sqlAuditLogRepository) CountForAllGuilds(ctx context.Context) (map[stri
 
 func (r *sqlAuditLogRepository) DeleteBefore(ctx context.Context, cutoff time.Time) error {
 	return r.store.queries.DeleteAuditLogsBefore(ctx, pgtype.Timestamptz{
+		Time:  cutoff,
+		Valid: true,
+	})
+}
+
+func (r *sqlAuditLogRepository) DeleteMessageLogsBefore(ctx context.Context, cutoff time.Time) error {
+	return r.store.queries.DeleteMessageLogsBefore(ctx, pgtype.Timestamptz{
 		Time:  cutoff,
 		Valid: true,
 	})

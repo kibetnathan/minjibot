@@ -202,6 +202,7 @@ func TestGuildSettingsRepoUpsertDelete(t *testing.T) {
 		Language:              "en",
 		AutoModerationEnabled: true,
 		LoggingChannelID:      "123",
+		MessageLoggingEnabled: true,
 	})
 	if err != nil {
 		t.Fatalf("upsert settings: %v", err)
@@ -209,23 +210,30 @@ func TestGuildSettingsRepoUpsertDelete(t *testing.T) {
 	if upserted.Prefix != "-" || upserted.Language != "en" || !upserted.AutoModerationEnabled || upserted.LoggingChannelID != "123" {
 		t.Errorf("unexpected upserted settings: %+v", upserted)
 	}
+	if !upserted.MessageLoggingEnabled {
+		t.Errorf("expected MessageLoggingEnabled to persist as true: %+v", upserted)
+	}
 
 	got, err := repo.Get(ctx, id)
 	if err != nil {
 		t.Fatalf("get settings: %v", err)
 	}
-	if got.Prefix != "-" || got.Language != "en" {
+	if got.Prefix != "-" || got.Language != "en" || !got.MessageLoggingEnabled {
 		t.Errorf("unexpected settings: %+v", got)
 	}
 
 	updated, err := repo.Update(ctx, id, dto.UpdateGuildSettingsParams{
 		Prefix: "!", Language: "de", AutoModerationEnabled: false, LoggingChannelID: "",
+		MessageLoggingEnabled: false,
 	})
 	if err != nil {
 		t.Fatalf("update settings: %v", err)
 	}
 	if updated.Prefix != "!" || updated.Language != "de" || updated.AutoModerationEnabled || updated.LoggingChannelID != "" {
 		t.Errorf("unexpected updated settings: %+v", updated)
+	}
+	if updated.MessageLoggingEnabled {
+		t.Errorf("expected MessageLoggingEnabled to update to false: %+v", updated)
 	}
 
 	if err := repo.Delete(ctx, id); err != nil {
@@ -365,5 +373,42 @@ func TestAuditLogRepoCRUD(t *testing.T) {
 	}
 	if count, _ := repo.CountForGuild(ctx, id); count != 0 {
 		t.Errorf("future cutoff should delete all, count = %d", count)
+	}
+}
+
+// TestAuditLogRepoDeleteMessageLogsBefore verifies the retention prune removes
+// only MESSAGE_* rows and leaves moderation entries in place.
+func TestAuditLogRepoDeleteMessageLogsBefore(t *testing.T) {
+	ctx := context.Background()
+	ts := newTxStore(t)
+	repo := ts.repos.audit
+	id := createGuild(t, ctx, ts, "Retention Guild", 0)
+
+	mustCreate := func(action string) {
+		if _, err := repo.Create(ctx, dto.CreateAuditLogParams{
+			GuildID: id, Action: action, ActorID: "user1", TargetID: "chan1",
+			Metadata: []byte(`{}`),
+		}); err != nil {
+			t.Fatalf("create %s: %v", action, err)
+		}
+	}
+	mustCreate("MESSAGE_CREATE")
+	mustCreate("MESSAGE_DELETE")
+	mustCreate("BAN") // moderation action — must survive the prune
+
+	// A future cutoff would match every row by time; only MESSAGE_* should go.
+	if err := repo.DeleteMessageLogsBefore(ctx, time.Now().Add(time.Hour)); err != nil {
+		t.Fatalf("delete message logs: %v", err)
+	}
+
+	remaining, err := repo.ListForGuild(ctx, id, 10, 0)
+	if err != nil {
+		t.Fatalf("list after prune: %v", err)
+	}
+	if len(remaining) != 1 {
+		t.Fatalf("expected 1 row after pruning message logs, got %d: %+v", len(remaining), remaining)
+	}
+	if remaining[0].Action != "BAN" {
+		t.Errorf("expected the BAN moderation entry to survive, got %q", remaining[0].Action)
 	}
 }

@@ -44,6 +44,7 @@ func (r *sqlGuildSettingsRepository) Upsert(ctx context.Context, arg dto.UpsertG
 			String: arg.LoggingChannelID,
 			Valid:  arg.LoggingChannelID != "",
 		},
+		MessageLoggingEnabled: arg.MessageLoggingEnabled,
 	})
 	if err != nil {
 		return guildsettings.GuildSettings{}, err
@@ -62,6 +63,7 @@ func (r *sqlGuildSettingsRepository) Update(ctx context.Context, guildID string,
 			String: arg.LoggingChannelID,
 			Valid:  arg.LoggingChannelID != "",
 		},
+		MessageLoggingEnabled: arg.MessageLoggingEnabled,
 	})
 	if err != nil {
 		return guildsettings.GuildSettings{}, err
@@ -81,6 +83,7 @@ func toentitiesGuildSettings(s postgres.GuildSetting) guildsettings.GuildSetting
 		Language:              s.Language,
 		AutoModerationEnabled: s.AutoModerationEnabled,
 		LoggingChannelID:      s.LoggingChannelID.String,
+		MessageLoggingEnabled: s.MessageLoggingEnabled,
 		UpdatedAt:             s.UpdatedAt.Time,
 	}
 }

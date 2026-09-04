@@ -19,6 +19,7 @@ type UpsertGuildSettingsParams struct {
 	Language              string
 	AutoModerationEnabled bool
 	LoggingChannelID      string
+	MessageLoggingEnabled bool
 }
 
 type UpdateGuildSettingsParams struct {
@@ -26,6 +27,7 @@ type UpdateGuildSettingsParams struct {
 	Language              string
 	AutoModerationEnabled bool
 	LoggingChannelID      string
+	MessageLoggingEnabled bool
 }
 
 type UpsertUserPermissionParams struct {

@@ -27,6 +27,9 @@ type Querier interface {
 	DeleteDiaryEntry(ctx context.Context, arg DeleteDiaryEntryParams) error
 	DeleteGuild(ctx context.Context, id string) error
 	DeleteGuildSettings(ctx context.Context, guildID string) error
+	// Retention prune for message-content logs only (MESSAGE_CREATE etc.); leaves
+	// moderation audit entries untouched.
+	DeleteMessageLogsBefore(ctx context.Context, cutoff pgtype.Timestamptz) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserPermission(ctx context.Context, arg DeleteUserPermissionParams) error
 	GetBirthday(ctx context.Context, arg GetBirthdayParams) (Birthday, error)

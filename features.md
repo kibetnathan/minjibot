@@ -197,6 +197,7 @@ All action commands trigger a GIF of the action performed towards another user (
 | Command | Description |
 | --- | --- |
 | `setup logchannel` | Set the channel where deleted messages and mod actions are logged (owner/admin only) |
+| `setup messagelogging` | Turn per-message content logging on or off — **off by default**; when on, messages are kept for 30 days then pruned (owner/admin only) |
 | `setup status` | Show the current logging configuration |
 
 ## 9. Dashboard

@@ -10,5 +10,6 @@ type GuildSettings struct {
 	Language              string
 	AutoModerationEnabled bool
 	LoggingChannelID      string
+	MessageLoggingEnabled bool
 	UpdatedAt             time.Time
 }
