@@ -56,7 +56,7 @@ func NewDiscordOAuth(clientID, clientSecret, appURL string) *DiscordOAuth {
 			RedirectURL:  redirectURI,
 			Scopes:       []string{"identify", "email"},
 		},
-		ClientID: clientID,
+		ClientID:    clientID,
 		ClientToken: &http.Client{},
 	}
 }

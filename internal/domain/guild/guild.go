@@ -1,3 +1,5 @@
+// Package guild defines the domain model for Discord guilds (servers)
+// tracked by MinjiBot.
 package guild
 
 import "time"

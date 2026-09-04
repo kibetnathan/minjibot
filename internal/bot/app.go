@@ -1,3 +1,5 @@
+// Package bot manages the Discord gateway connection, event handler
+// registration, and slash command setup for MinjiBot.
 package bot
 
 import (

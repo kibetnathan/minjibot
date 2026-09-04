@@ -1,3 +1,5 @@
+// Package api provides the Echo HTTP server for MinjiBot's REST API,
+// including Discord OAuth authentication and dashboard data endpoints.
 package api
 
 import (
