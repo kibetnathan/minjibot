@@ -32,9 +32,16 @@ func (a *App) registerAuthRoutes(group *echo.Group, h *authHandlers) {
 	group.GET("/auth/me", h.me)
 }
 
-// login redirects the user to Discord's authorization page.
+// login redirects the user to Discord's authorization page. It issues a random
+// state token, stores it in a short-lived cookie, and passes it to Discord so
+// the callback can verify the response was not forged (OAuth anti-CSRF).
 func (h *authHandlers) login(c *echo.Context) error {
-	return c.Redirect(http.StatusFound, h.oauth.AuthURL())
+	state, err := authsvc.NewState()
+	if err != nil {
+		return c.Redirect(http.StatusFound, strings.TrimRight(h.frontend, "/")+"/login?error=state_error")
+	}
+	c.SetCookie(authsvc.StateCookie(state))
+	return c.Redirect(http.StatusFound, h.oauth.AuthURL(state))
 }
 
 // callback handles the redirect from Discord after the user approves access.
@@ -45,6 +52,16 @@ func (h *authHandlers) callback(c *echo.Context) error {
 	if code == "" {
 		return c.Redirect(http.StatusFound, frontend+"/login?error=missing_code")
 	}
+
+	// Verify the anti-CSRF state before doing anything with the code: the state
+	// returned by Discord must match the one we stored in the login cookie.
+	stateCookie, err := c.Cookie(authsvc.StateCookieName)
+	if err != nil || !authsvc.StateMatches(c.QueryParam("state"), stateCookie.Value) {
+		c.SetCookie(authsvc.ClearStateCookie())
+		return c.Redirect(http.StatusFound, frontend+"/login?error=invalid_state")
+	}
+	// State is single-use; clear it now that it has been consumed.
+	c.SetCookie(authsvc.ClearStateCookie())
 
 	discordUser, err := h.oauth.Exchange(c.Request().Context(), code)
 	if err != nil {
