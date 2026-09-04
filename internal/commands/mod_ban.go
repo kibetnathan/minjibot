@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -25,7 +24,7 @@ func banMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discor
 	if err := s.GuildBanCreateWithReason(m.GuildID, targetID, reason, 0); err != nil {
 		return sendModError(s, m.ChannelID, "Ban", fmt.Sprintf("Failed to ban %s: %s", name, err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "BAN", m.Author.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, m.GuildID, "BAN", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Ban", fmt.Sprintf("Banned **%s**.", name)))
 	return err
 }
@@ -55,7 +54,7 @@ func banSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordg
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Ban", fmt.Sprintf("Failed to ban %s: %s", name, err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "BAN", i.Member.User.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, i.GuildID, "BAN", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Ban", fmt.Sprintf("Banned **%s**.", name))}},
@@ -78,7 +77,7 @@ func hardbanMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	if err := s.GuildBanCreateWithReason(m.GuildID, targetID, reason, 7); err != nil {
 		return sendModError(s, m.ChannelID, "Hard Ban", fmt.Sprintf("Failed to hard-ban %s: %s", name, err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "HARDBAN", m.Author.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, m.GuildID, "HARDBAN", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Hard Ban", fmt.Sprintf("Hard-banned **%s** and wiped their recent messages.", name)))
 	return err
 }
@@ -107,7 +106,7 @@ func hardbanSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Hard Ban", fmt.Sprintf("Failed to hard-ban %s: %s", name, err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "HARDBAN", i.Member.User.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, i.GuildID, "HARDBAN", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Hard Ban", fmt.Sprintf("Hard-banned **%s** and wiped their recent messages.", name))}},
@@ -133,7 +132,7 @@ func softbanMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	if err := s.GuildBanDelete(m.GuildID, targetID); err != nil {
 		return sendModError(s, m.ChannelID, "Soft Ban", fmt.Sprintf("Unbanned **%s** but could not remove the ban record: %s", name, err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "SOFTBAN", m.Author.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, m.GuildID, "SOFTBAN", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Soft Ban", fmt.Sprintf("Soft-banned **%s** (banned then unbanned, recent messages wiped).", name)))
 	return err
 }
@@ -168,7 +167,7 @@ func softbanSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Soft Ban", fmt.Sprintf("Unbanned **%s** but could not remove the ban record: %s", name, err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "SOFTBAN", i.Member.User.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, i.GuildID, "SOFTBAN", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Soft Ban", fmt.Sprintf("Soft-banned **%s** (banned then unbanned, recent messages wiped).", name))}},
@@ -191,7 +190,7 @@ func kickMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 	if err := s.GuildMemberDeleteWithReason(m.GuildID, targetID, reason); err != nil {
 		return sendModError(s, m.ChannelID, "Kick", fmt.Sprintf("Failed to kick %s: %s", name, err))
 	}
-	auditAction(h, context.Background(), m.GuildID, "KICK", m.Author.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, m.GuildID, "KICK", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Kick", fmt.Sprintf("Kicked **%s**.", name)))
 	return err
 }
@@ -220,7 +219,7 @@ func kickSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discord
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Kick", fmt.Sprintf("Failed to kick %s: %s", name, err))}},
 		})
 	}
-	auditAction(h, context.Background(), i.GuildID, "KICK", i.Member.User.ID, targetID, map[string]any{"reason": reason})
+	logModAction(h, s, i.GuildID, "KICK", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modSuccessEmbed("Kick", fmt.Sprintf("Kicked **%s**.", name))}},
