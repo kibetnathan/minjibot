@@ -232,7 +232,7 @@ The bot + API run as a single service on Railway. The dashboard is deployed sepa
 | `DISCORD_CLIENT_SECRET` | OAuth2 client secret |
 | `APP_URL` | API origin (e.g., `https://minjibot-bot-production.up.railway.app`) |
 | `FRONTEND_URL` | Dashboard origin (e.g., `https://minji-bot.netlify.app`) |
-| `SESSION_SECRET` | Random string for session cookie signing |
+| `SESSION_SECRET` | Random string for session cookie signing (**required** for the API, min 16 chars; the API refuses to start without it) |
 
 ### Render (alternative)
 
