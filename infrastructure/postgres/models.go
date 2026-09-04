@@ -9,13 +9,15 @@ import (
 )
 
 type AuditLog struct {
-	ID        int64              `json:"id"`
-	GuildID   string             `json:"guild_id"`
-	Action    string             `json:"action"`
-	ActorID   string             `json:"actor_id"`
-	TargetID  pgtype.Text        `json:"target_id"`
-	Metadata  []byte             `json:"metadata"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID         int64              `json:"id"`
+	GuildID    string             `json:"guild_id"`
+	Action     string             `json:"action"`
+	ActorID    string             `json:"actor_id"`
+	TargetID   pgtype.Text        `json:"target_id"`
+	Metadata   []byte             `json:"metadata"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ActorName  string             `json:"actor_name"`
+	TargetName string             `json:"target_name"`
 }
 
 type Birthday struct {

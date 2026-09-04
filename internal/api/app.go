@@ -102,6 +102,14 @@ func (a *App) registerRoutes() {
 
 	group := a.Echo.Group("/api")
 	a.registerAuthRoutes(group, authHandlers)
+
+	logHandlers := &logHandlers{
+		sess:    authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		guilds:  repository.NewGuildRepository(store),
+		audits:  repository.NewAuditLogRepository(store),
+		deletes: repository.NewDeletedMessageRepository(store),
+	}
+	a.registerLogRoutes(group, logHandlers)
 }
 
 func (a *App) Start() error {

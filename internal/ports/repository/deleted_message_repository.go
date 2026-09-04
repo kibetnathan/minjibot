@@ -14,6 +14,7 @@ type DeletedMessageRepository interface {
 	ListForGuild(ctx context.Context, guildID string, limit, offset int32) ([]deletedmessage.DeletedMessage, error)
 	ListForChannel(ctx context.Context, guildID, channelID string, limit, offset int32) ([]deletedmessage.DeletedMessage, error)
 	CountForGuild(ctx context.Context, guildID string) (int64, error)
+	CountForAllGuilds(ctx context.Context) (map[string]int64, error)
 }
 
 type sqlDeletedMessageRepository struct {
@@ -69,6 +70,18 @@ func (r *sqlDeletedMessageRepository) ListForChannel(ctx context.Context, guildI
 
 func (r *sqlDeletedMessageRepository) CountForGuild(ctx context.Context, guildID string) (int64, error) {
 	return r.store.queries.CountDeletedMessagesForGuild(ctx, guildID)
+}
+
+func (r *sqlDeletedMessageRepository) CountForAllGuilds(ctx context.Context) (map[string]int64, error) {
+	rows, err := r.store.queries.CountDeletedMessagesForAllGuilds(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]int64, len(rows))
+	for _, row := range rows {
+		out[row.GuildID] = row.Count
+	}
+	return out, nil
 }
 
 func toentitiesDeletedMessages(rows []postgres.DeletedMessage) []deletedmessage.DeletedMessage {
