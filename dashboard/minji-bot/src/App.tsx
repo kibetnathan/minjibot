@@ -4,6 +4,7 @@ import Commands from "./pages/Commands"
 import Login from "./pages/Login"
 import SignUp from "./pages/SignUp"
 import Dashboard from "./pages/Dashboard"
+import GuildLogs from "./pages/GuildLogs"
 
 export function App() {
   return (
@@ -13,6 +14,7 @@ export function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard/guild/:guildId" element={<GuildLogs />} />
     </Routes>
   )
 }
