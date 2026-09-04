@@ -1,3 +1,5 @@
+// Package auditlog defines the domain model for moderation action audit
+// logs, recording who did what to whom in a guild.
 package auditlog
 
 import "time"

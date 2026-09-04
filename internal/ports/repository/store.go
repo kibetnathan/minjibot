@@ -1,3 +1,5 @@
+// Package repository defines repository interfaces for all domain entities
+// and provides SQL implementations backed by sqlc-generated queries.
 package repository
 
 import (

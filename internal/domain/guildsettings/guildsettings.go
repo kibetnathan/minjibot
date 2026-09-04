@@ -1,3 +1,5 @@
+// Package guildsettings defines the domain model for per-guild bot
+// configuration (logging channel, prefix, etc.).
 package guildsettings
 
 import "time"

@@ -1,3 +1,5 @@
+// Dashboard log endpoints: guild picker, deleted messages, and moderation
+// actions. All handlers require a valid session cookie (Discord OAuth).
 package api
 
 import (

@@ -1,3 +1,5 @@
+// Package config parses environment variables into a Config struct using
+// the caarlos0/env library. All configuration comes from .env.
 package config
 
 import (
