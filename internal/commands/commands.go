@@ -77,6 +77,8 @@ func (h *CommandHandler) Handle(ctx context.Context, s *discordgo.Session, m *di
 		return h.test(s, m, args)
 	case "donate":
 		return h.donate(s, m, args)
+	case "setup":
+		return h.setup(s, m, args)
 	case "bug":
 		return h.bug(s, m, args)
 	case "ddg":
@@ -326,6 +328,8 @@ func (h *CommandHandler) HandleSlash(ctx context.Context, s *discordgo.Session, 
 		return h.testSlash(s, i)
 	case "donate":
 		return h.donateSlash(s, i)
+	case "setup":
+		return h.setupSlash(s, i)
 	case "bug":
 		return h.bugSlash(s, i)
 	case "ddg":
@@ -712,6 +716,13 @@ func (h *CommandHandler) bug(s *discordgo.Session, m *discordgo.MessageCreate, a
 }
 func (h *CommandHandler) bugSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return bugSlashCommandHandler(s, i)
+}
+
+func (h *CommandHandler) setup(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
+	return setupMessageCommandHandler(h, s, m, args)
+}
+func (h *CommandHandler) setupSlash(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	return setupSlashCommandHandler(h, s, i)
 }
 
 func (h *CommandHandler) ttys(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {
@@ -1340,6 +1351,16 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "donate",
 		Description: "Buy the developer a coffee to support MinjiBot",
+	},
+	{
+		Name:        "setup",
+		Description: "Set up server logging (owners and admins)",
+		Options: []*discordgo.ApplicationCommandOption{
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "logchannel", Description: "Set the channel where deleted messages and moderation actions are logged", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "The channel to log to", Required: true},
+			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "status", Description: "Show the current logging configuration"},
+		},
 	},
 	{
 		Name:        "ddg",
