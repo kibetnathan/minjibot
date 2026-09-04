@@ -31,6 +31,7 @@ type App struct {
 	BirthdayRepo repository.BirthdayRepository
 	BirthdaySett repository.GuildBirthdaySettingsRepository
 	DiaryRepo    repository.DiaryRepository
+	DeletedMsg   repository.DeletedMessageRepository
 	cmdHandler   *commands.CommandHandler
 }
 
@@ -77,6 +78,7 @@ func NewApp() (*App, error) {
 		BirthdayRepo: repository.NewBirthdayRepository(store),
 		BirthdaySett: repository.NewGuildBirthdaySettingsRepository(store),
 		DiaryRepo:    repository.NewDiaryRepository(store),
+		DeletedMsg:   repository.NewDeletedMessageRepository(store),
 	}
 
 	// Initialize command handler
@@ -128,9 +130,11 @@ func (a *App) RegisterHandlers() {
 
 	// Message delete handler
 	handlers.RegisterMessageDeleteHandler(a.Session, handlers.MessageDeleteHandlerDeps{
-		Logger:    a.Logger,
-		GuildRepo: a.GuildRepo,
-		AuditRepo: a.AuditRepo,
+		Logger:             a.Logger,
+		GuildRepo:          a.GuildRepo,
+		AuditRepo:          a.AuditRepo,
+		SettingsRepo:       a.SettingsRepo,
+		DeletedMessageRepo: a.DeletedMsg,
 	})
 
 	// Interaction handler
