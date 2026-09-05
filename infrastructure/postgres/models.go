@@ -71,6 +71,7 @@ type GuildSetting struct {
 	AutoModerationEnabled bool               `json:"auto_moderation_enabled"`
 	LoggingChannelID      pgtype.Text        `json:"logging_channel_id"`
 	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
+	MessageLoggingEnabled bool               `json:"message_logging_enabled"`
 }
 
 type User struct {

@@ -25,3 +25,8 @@ GROUP BY guild_id;
 
 -- name: DeleteAuditLogsBefore :exec
 DELETE FROM audit_logs WHERE created_at < @cutoff;
+
+-- name: DeleteMessageLogsBefore :exec
+-- Retention prune for message-content logs only (MESSAGE_CREATE etc.); leaves
+-- moderation audit entries untouched.
+DELETE FROM audit_logs WHERE action LIKE 'MESSAGE_%' AND created_at < @cutoff;

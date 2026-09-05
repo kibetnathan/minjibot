@@ -21,7 +21,7 @@ func (q *Queries) DeleteGuildSettings(ctx context.Context, guildID string) error
 }
 
 const getGuildSettings = `-- name: GetGuildSettings :one
-SELECT guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at FROM guild_settings WHERE guild_id = $1
+SELECT guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at, message_logging_enabled FROM guild_settings WHERE guild_id = $1
 `
 
 func (q *Queries) GetGuildSettings(ctx context.Context, guildID string) (GuildSetting, error) {
@@ -34,6 +34,7 @@ func (q *Queries) GetGuildSettings(ctx context.Context, guildID string) (GuildSe
 		&i.AutoModerationEnabled,
 		&i.LoggingChannelID,
 		&i.UpdatedAt,
+		&i.MessageLoggingEnabled,
 	)
 	return i, err
 }
@@ -44,9 +45,10 @@ SET prefix = $1,
     language = $2,
     auto_moderation_enabled = $3,
     logging_channel_id = $4,
+    message_logging_enabled = $5,
     updated_at = NOW()
-WHERE guild_id = $5
-RETURNING guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at
+WHERE guild_id = $6
+RETURNING guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at, message_logging_enabled
 `
 
 type UpdateGuildSettingsParams struct {
@@ -54,6 +56,7 @@ type UpdateGuildSettingsParams struct {
 	Language              string      `json:"language"`
 	AutoModerationEnabled bool        `json:"auto_moderation_enabled"`
 	LoggingChannelID      pgtype.Text `json:"logging_channel_id"`
+	MessageLoggingEnabled bool        `json:"message_logging_enabled"`
 	GuildID               string      `json:"guild_id"`
 }
 
@@ -63,6 +66,7 @@ func (q *Queries) UpdateGuildSettings(ctx context.Context, arg UpdateGuildSettin
 		arg.Language,
 		arg.AutoModerationEnabled,
 		arg.LoggingChannelID,
+		arg.MessageLoggingEnabled,
 		arg.GuildID,
 	)
 	var i GuildSetting
@@ -73,20 +77,22 @@ func (q *Queries) UpdateGuildSettings(ctx context.Context, arg UpdateGuildSettin
 		&i.AutoModerationEnabled,
 		&i.LoggingChannelID,
 		&i.UpdatedAt,
+		&i.MessageLoggingEnabled,
 	)
 	return i, err
 }
 
 const upsertGuildSettings = `-- name: UpsertGuildSettings :one
-INSERT INTO guild_settings (guild_id, prefix, language, auto_moderation_enabled, logging_channel_id)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO guild_settings (guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, message_logging_enabled)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (guild_id) DO UPDATE
 SET prefix = EXCLUDED.prefix,
     language = EXCLUDED.language,
     auto_moderation_enabled = EXCLUDED.auto_moderation_enabled,
     logging_channel_id = EXCLUDED.logging_channel_id,
+    message_logging_enabled = EXCLUDED.message_logging_enabled,
     updated_at = NOW()
-RETURNING guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at
+RETURNING guild_id, prefix, language, auto_moderation_enabled, logging_channel_id, updated_at, message_logging_enabled
 `
 
 type UpsertGuildSettingsParams struct {
@@ -95,6 +101,7 @@ type UpsertGuildSettingsParams struct {
 	Language              string      `json:"language"`
 	AutoModerationEnabled bool        `json:"auto_moderation_enabled"`
 	LoggingChannelID      pgtype.Text `json:"logging_channel_id"`
+	MessageLoggingEnabled bool        `json:"message_logging_enabled"`
 }
 
 func (q *Queries) UpsertGuildSettings(ctx context.Context, arg UpsertGuildSettingsParams) (GuildSetting, error) {
@@ -104,6 +111,7 @@ func (q *Queries) UpsertGuildSettings(ctx context.Context, arg UpsertGuildSettin
 		arg.Language,
 		arg.AutoModerationEnabled,
 		arg.LoggingChannelID,
+		arg.MessageLoggingEnabled,
 	)
 	var i GuildSetting
 	err := row.Scan(
@@ -113,6 +121,7 @@ func (q *Queries) UpsertGuildSettings(ctx context.Context, arg UpsertGuildSettin
 		&i.AutoModerationEnabled,
 		&i.LoggingChannelID,
 		&i.UpdatedAt,
+		&i.MessageLoggingEnabled,
 	)
 	return i, err
 }

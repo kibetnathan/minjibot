@@ -175,6 +175,9 @@ var SlashCommands = []*discordgo.ApplicationCommand{
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "logchannel", Description: "Set the channel where deleted messages and moderation actions are logged", Options: []*discordgo.ApplicationCommandOption{
 				{Type: discordgo.ApplicationCommandOptionChannel, Name: "channel", Description: "The channel to log to", Required: true},
 			}},
+			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "messagelogging", Description: "Turn per-message content logging on or off (off by default)", Options: []*discordgo.ApplicationCommandOption{
+				{Type: discordgo.ApplicationCommandOptionBoolean, Name: "enabled", Description: "Whether to store message content", Required: true},
+			}},
 			{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "status", Description: "Show the current logging configuration"},
 		},
 	},

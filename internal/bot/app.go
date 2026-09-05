@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -150,6 +151,50 @@ func (a *App) RegisterHandlers() {
 		AuditRepo:    a.AuditRepo,
 	}, a.cmdHandler)
 }
+
+const (
+	// messageLogRetention is how long opt-in message-content logs are kept.
+	messageLogRetention = 30 * 24 * time.Hour
+	// messageLogPruneInterval is how often the retention job runs.
+	messageLogPruneInterval = 6 * time.Hour
+)
+
+// startMessageLogPruner runs a background job that periodically deletes
+// message-content logs older than messageLogRetention. It runs once at startup
+// and then on an interval until ctx is cancelled. Moderation audit entries are
+// left untouched.
+func (a *App) startMessageLogPruner(ctx context.Context) {
+	prune := func() {
+		cutoff := time.Now().Add(-messageLogRetention)
+		c, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		if err := a.AuditRepo.DeleteMessageLogsBefore(c, cutoff); err != nil {
+			a.Logger.Error("Failed to prune message logs", "error", err)
+		}
+	}
+
+	go func() {
+		// Guard against a panic taking down the process along with the bot.
+		defer func() {
+			if r := recover(); r != nil {
+				a.Logger.Error("message log pruner panicked", "panic", r)
+			}
+		}()
+
+		prune() // run once at startup
+		ticker := time.NewTicker(messageLogPruneInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				prune()
+			}
+		}
+	}()
+}
+
 func (a *App) Start() error {
 	// Open WebSocket connection to Discord
 	if err := a.Session.Open(); err != nil {
@@ -159,12 +204,17 @@ func (a *App) Start() error {
 
 	a.Logger.Info("Bot is now running. Press CTRL-C to exit.")
 
+	// Start the background retention job that prunes old message-content logs.
+	pruneCtx, cancelPrune := context.WithCancel(context.Background())
+	a.startMessageLogPruner(pruneCtx)
+
 	// Block until SIGINT or SIGTERM is received
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
 	a.Logger.Info("Shutting down bot...")
+	cancelPrune()
 
 	if err := a.Session.Close(); err != nil {
 		a.Logger.Error("Failed to close Discord session", "error", err)

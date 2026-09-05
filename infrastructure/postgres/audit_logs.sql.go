@@ -103,6 +103,17 @@ func (q *Queries) DeleteAuditLogsBefore(ctx context.Context, cutoff pgtype.Times
 	return err
 }
 
+const deleteMessageLogsBefore = `-- name: DeleteMessageLogsBefore :exec
+DELETE FROM audit_logs WHERE action LIKE 'MESSAGE_%' AND created_at < $1
+`
+
+// Retention prune for message-content logs only (MESSAGE_CREATE etc.); leaves
+// moderation audit entries untouched.
+func (q *Queries) DeleteMessageLogsBefore(ctx context.Context, cutoff pgtype.Timestamptz) error {
+	_, err := q.db.Exec(ctx, deleteMessageLogsBefore, cutoff)
+	return err
+}
+
 const listAuditLogsByActor = `-- name: ListAuditLogsByActor :many
 SELECT id, guild_id, action, actor_id, target_id, metadata, created_at, actor_name, target_name FROM audit_logs
 WHERE guild_id = $1 AND actor_id = $2
