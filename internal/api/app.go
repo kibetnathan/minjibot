@@ -44,6 +44,13 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	// Fail fast on missing/weak required configuration rather than starting the
+	// API in a broken or insecure state (e.g. a random per-process session key).
+	if err := cfg.ValidateForAPI(); err != nil {
+		e.Logger.Error("Invalid API configuration", "Error:", err.Error())
+		return nil, err
+	}
+
 	// CORS for cross-origin browser calls to the API (e.g. the dashboard
 	// reading /api/auth/me from a separate frontend origin). Credentials are
 	// allowed so the session cookie is sent, but only for explicit origins —
