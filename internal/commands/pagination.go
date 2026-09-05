@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 const (
@@ -66,6 +67,7 @@ func paginateReactions(s *discordgo.Session, channelID, authorID string, total i
 }
 
 func (p *reactionPaginator) onReaction(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
+	defer safe.Recover(nil, "reactionPaginator.onReaction")
 	if r.UserID == s.State.User.ID {
 		return
 	}
