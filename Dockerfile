@@ -20,7 +20,10 @@ RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /out/minjibot ./cmd/main.go
 ### Runtime stage ###
 FROM golang:1.26-alpine AS runtime
 
-RUN apk add --no-cache ca-certificates tzdata git
+# ffmpeg is required at runtime by the vid2gif / autogif commands, which shell
+# out to the `ffmpeg` binary (see internal/commands/gifconvert.go). Railway
+# deploys from this Dockerfile and ship no ffmpeg by default, so bake it in here.
+RUN apk add --no-cache ca-certificates tzdata git ffmpeg
 
 # Install the goose migration CLI (pinned for a stable CLI syntax).
 RUN go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
