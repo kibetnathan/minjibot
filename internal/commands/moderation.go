@@ -322,3 +322,29 @@ func requireAdmin(m *discordgo.Member) (bool, string) {
 	}
 	return true, ""
 }
+
+// rejectSelfAction blocks a moderator from running a user-targeting moderation
+// action against themselves, sending a friendly error embed for a message
+// command. It is the last guard before an action executes (run after permission
+// and target resolution). Returns (blocked, err); callers should return
+// immediately when blocked is true.
+func rejectSelfAction(s *discordgo.Session, channelID, title, actorID, targetID string) (bool, error) {
+	if actorID == "" || targetID == "" || actorID != targetID {
+		return false, nil
+	}
+	return true, sendModError(s, channelID, title, "You cannot run a moderation action on yourself.")
+}
+
+// rejectSelfActionSlash is the slash-command variant of rejectSelfAction. It
+// replies to the interaction with an error embed when a moderator targets
+// themselves, returning true so the caller aborts the action.
+func rejectSelfActionSlash(s *discordgo.Session, i *discordgo.InteractionCreate, title, actorID, targetID string) bool {
+	if actorID == "" || targetID == "" || actorID != targetID {
+		return false
+	}
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed(title, "You cannot run a moderation action on yourself.")}},
+	})
+	return true
+}

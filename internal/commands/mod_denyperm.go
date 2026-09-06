@@ -20,6 +20,11 @@ func denypermMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *d
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Deny Permission", err.Error())
 	}
+	if targetType == discordgo.PermissionOverwriteTypeMember {
+		if blocked, err := rejectSelfAction(s, m.ChannelID, "Deny Permission", m.Author.ID, targetID); blocked {
+			return err
+		}
+	}
 	perm, ok := parsePermission(args[1])
 	if !ok {
 		return sendModError(s, m.ChannelID, "Deny Permission", "Unknown permission. Try `view`, `send`, `attach`, `embed`, `reaction`, or `voice`.")
@@ -53,6 +58,9 @@ func denypermSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *dis
 	if targetID == "" {
 		targetID = OptString(opts, "role")
 		targetType = discordgo.PermissionOverwriteTypeRole
+	}
+	if targetType == discordgo.PermissionOverwriteTypeMember && rejectSelfActionSlash(s, i, "Deny Permission", i.Member.User.ID, targetID) {
+		return nil
 	}
 	permStr := OptString(opts, "permission")
 	perm, ok := parsePermission(permStr)
@@ -106,6 +114,9 @@ func mediaMute(h *CommandHandler, s *discordgo.Session, guildID, channelID, acto
 	if err != nil {
 		return sendModError(s, channelID, title, fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, channelID, title, actorID, targetID); blocked {
+		return err
+	}
 	perm := discordgo.PermissionAttachFiles
 	if title == "GIF Mute" {
 		perm = discordgo.PermissionEmbedLinks | discordgo.PermissionAttachFiles
@@ -134,6 +145,9 @@ func mediaMuteSlash(h *CommandHandler, s *discordgo.Session, i *discordgo.Intera
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed(title, fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, title, i.Member.User.ID, targetID) {
+		return nil
 	}
 	perm := discordgo.PermissionAttachFiles
 	if title == "GIF Mute" {

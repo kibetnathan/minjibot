@@ -25,6 +25,9 @@ func jailMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Jail", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Jail", m.Author.ID, targetID); blocked {
+		return err
+	}
 	if err := jailUser(h, s, m.GuildID, targetID, m.Author.ID); err != nil {
 		return sendModError(s, m.ChannelID, "Jail", err.Error())
 	}
@@ -48,6 +51,9 @@ func jailSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discord
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Jail", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Jail", i.Member.User.ID, targetID) {
+		return nil
 	}
 	if err := jailUser(h, s, i.GuildID, targetID, i.Member.User.ID); err != nil {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -114,6 +120,9 @@ func unjailMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *dis
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Unjail", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Unjail", m.Author.ID, targetID); blocked {
+		return err
+	}
 	restored, err := unjailUser(h, s, m.GuildID, targetID, m.Author.ID)
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Unjail", err.Error())
@@ -138,6 +147,9 @@ func unjailSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disco
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Unjail", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Unjail", i.Member.User.ID, targetID) {
+		return nil
 	}
 	restored, err := unjailUser(h, s, i.GuildID, targetID, i.Member.User.ID)
 	if err != nil {
@@ -218,6 +230,9 @@ func staffstripMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m 
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Staff Strip", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Staff Strip", m.Author.ID, targetID); blocked {
+		return err
+	}
 	removed, err := stripStaffRoles(s, m.GuildID, targetID)
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Staff Strip", err.Error())
@@ -243,6 +258,9 @@ func staffstripSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *d
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Staff Strip", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Staff Strip", i.Member.User.ID, targetID) {
+		return nil
 	}
 	removed, err := stripStaffRoles(s, i.GuildID, targetID)
 	if err != nil {

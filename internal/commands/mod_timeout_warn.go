@@ -21,6 +21,9 @@ func timeoutMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Timeout", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Timeout", m.Author.ID, targetID); blocked {
+		return err
+	}
 	dur, err := parseDuration(args[1])
 	if err != nil || dur <= 0 {
 		return sendModError(s, m.ChannelID, "Timeout", "Invalid duration. Use e.g. `30m`, `2h`, `1d`.")
@@ -56,6 +59,9 @@ func timeoutSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Timeout", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Timeout", i.Member.User.ID, targetID) {
+		return nil
 	}
 	dur, err := parseDuration(durStr)
 	if err != nil || dur <= 0 {
@@ -97,6 +103,9 @@ func warnMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Warn", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Warn", m.Author.ID, targetID); blocked {
+		return err
+	}
 	reason := strings.Join(args[1:], " ")
 	logModAction(h, s, m.GuildID, "WARN", m.Author.ID, m.Author.Username, targetID, name, map[string]any{"reason": reason})
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, modSuccessEmbed("Warn", fmt.Sprintf("Warned **%s**.", name)))
@@ -120,6 +129,9 @@ func warnSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discord
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Warn", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Warn", i.Member.User.ID, targetID) {
+		return nil
 	}
 	logModAction(h, s, i.GuildID, "WARN", i.Member.User.ID, i.Member.User.Username, targetID, name, map[string]any{"reason": reason})
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
