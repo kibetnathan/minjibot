@@ -5,6 +5,9 @@ import Login from "./pages/Login"
 import SignUp from "./pages/SignUp"
 import Dashboard from "./pages/Dashboard"
 import GuildLogs from "./pages/GuildLogs"
+import GuildSettings from "./pages/GuildSettings"
+import Profile from "./pages/Profile"
+import Diary from "./pages/Diary"
 
 export function App() {
   return (
@@ -15,6 +18,9 @@ export function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/guild/:guildId" element={<GuildLogs />} />
+      <Route path="/dashboard/guild/:guildId/settings" element={<GuildSettings />} />
+      <Route path="/dashboard/profile" element={<Profile />} />
+      <Route path="/dashboard/diary" element={<Diary />} />
     </Routes>
   )
 }

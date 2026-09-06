@@ -24,6 +24,18 @@ export function DashboardHeader() {
           >
             Commands
           </Link>
+          <Link
+            to="/dashboard/diary"
+            className="transition-colors hover:text-foreground"
+          >
+            Diary
+          </Link>
+          <Link
+            to="/dashboard/profile"
+            className="transition-colors hover:text-foreground"
+          >
+            Profile
+          </Link>
           <span className="hidden truncate text-xs text-muted-foreground sm:inline">
             {me.status === "authenticated" ? me.user.email : ""}
           </span>
