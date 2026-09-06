@@ -61,9 +61,10 @@ func NewDiscordOAuth(clientID, clientSecret, appURL string) *DiscordOAuth {
 	}
 }
 
-// AuthURL returns the Discord authorization URL for a fresh login.
-func (d *DiscordOAuth) AuthURL() string {
-	return d.Config.AuthCodeURL("", oauth2.AccessTypeOnline)
+// AuthURL returns the Discord authorization URL for a fresh login, carrying the
+// given anti-CSRF state token (echoed back to the callback by Discord).
+func (d *DiscordOAuth) AuthURL(state string) string {
+	return d.Config.AuthCodeURL(state, oauth2.AccessTypeOnline)
 }
 
 // Exchange trades the authorization code from the callback for an access

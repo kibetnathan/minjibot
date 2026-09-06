@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/kibetnathan/minjibot/internal/ports/dto"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 type MessageDeleteHandlerDeps struct {
@@ -32,6 +33,7 @@ func RegisterMessageDeleteHandler(s *discordgo.Session, deps MessageDeleteHandle
 }
 
 func onMessageDelete(s *discordgo.Session, m *discordgo.MessageDelete, deps MessageDeleteHandlerDeps) {
+	defer safe.Recover(deps.Logger, "onMessageDelete")
 	ctx := context.Background()
 
 	// The cache may hold the deleted message even though Discord only sends
@@ -121,6 +123,7 @@ func onMessageDelete(s *discordgo.Session, m *discordgo.MessageDelete, deps Mess
 }
 
 func onMessageDeleteBulk(s *discordgo.Session, m *discordgo.MessageDeleteBulk, deps MessageDeleteHandlerDeps) {
+	defer safe.Recover(deps.Logger, "onMessageDeleteBulk")
 	ctx := context.Background()
 
 	if err := ensureGuild(ctx, deps, m.GuildID); err != nil {

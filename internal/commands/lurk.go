@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 const lurkAutoExpire = 1 * time.Hour
@@ -58,7 +59,7 @@ func scheduleAutoUnlurk(guildID, userID string) {
 	lurkStateSingleton.timers[key] = func() { close(done) }
 	lurkStateSingleton.mu.Unlock()
 
-	go func() {
+	safe.Go(nil, "lurkAutoExpire", func() {
 		select {
 		case <-time.After(lurkAutoExpire):
 			lurkStateSingleton.mu.Lock()
@@ -69,7 +70,7 @@ func scheduleAutoUnlurk(guildID, userID string) {
 		case <-done:
 			// Timer was cancelled (user manually stopped lurking).
 		}
-	}()
+	})
 }
 
 func lurkMessageCommandHandler(s *discordgo.Session, m *discordgo.MessageCreate, args []string) error {

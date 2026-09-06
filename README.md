@@ -44,6 +44,9 @@ DISCORD_CLIENT_SECRET=
 APP_URL=http://localhost:8080
 FRONTEND_URL=http://localhost:5173
 SESSION_SECRET=<random-secret>
+# Comma-separated Discord user IDs allowed to view dashboard guild data.
+# Empty means no one can view it (endpoints fail closed).
+DASHBOARD_ADMIN_IDS=
 
 # Optional integrations
 GOOGLE_FACTCHECK_API_KEY=
@@ -233,6 +236,7 @@ The bot + API run as a single service on Railway. The dashboard is deployed sepa
 | `APP_URL` | API origin (e.g., `https://minjibot-bot-production.up.railway.app`) |
 | `FRONTEND_URL` | Dashboard origin (e.g., `https://minji-bot.netlify.app`) |
 | `SESSION_SECRET` | Random string for session cookie signing |
+| `DASHBOARD_ADMIN_IDS` | Comma-separated Discord user IDs allowed to view dashboard guild data (deleted messages, mod logs). Empty = no access |
 
 ### Render (alternative)
 

@@ -15,11 +15,15 @@ type Config struct {
 	AppURL              string `env:"APP_URL"`
 	FrontendURL         string `env:"FRONTEND_URL"`
 	SessionSecret       string `env:"SESSION_SECRET"`
-	GoogleFactCheckKey  string `env:"GOOGLE_FACTCHECK_API_KEY"`
-	GeminiAPIKey        string `env:"GEMINI_API_KEY"`
-	GeminiModel         string `env:"GEMINI_MODEL"`
-	RedditClientID      string `env:"REDDIT_CLIENT_ID"`
-	RedditClientSecret  string `env:"REDDIT_CLIENT_SECRET"`
+	// DashboardAdminIDs is the allowlist of Discord user IDs permitted to view
+	// the dashboard's guild data (deleted messages, moderation logs). Empty
+	// means nobody is authorized — the endpoints fail closed.
+	DashboardAdminIDs  []string `env:"DASHBOARD_ADMIN_IDS" envSeparator:","`
+	GoogleFactCheckKey string   `env:"GOOGLE_FACTCHECK_API_KEY"`
+	GeminiAPIKey       string   `env:"GEMINI_API_KEY"`
+	GeminiModel        string   `env:"GEMINI_MODEL"`
+	RedditClientID     string   `env:"REDDIT_CLIENT_ID"`
+	RedditClientSecret string   `env:"REDDIT_CLIENT_SECRET"`
 }
 
 func NewConfig() (*Config, error) {

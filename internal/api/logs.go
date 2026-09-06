@@ -1,5 +1,6 @@
 // Dashboard log endpoints: guild picker, deleted messages, and moderation
-// actions. All handlers require a valid session cookie (Discord OAuth).
+// actions. All handlers require a valid session cookie (Discord OAuth) AND that
+// the session's Discord user is on the dashboard admin allowlist.
 package api
 
 import (
@@ -18,6 +19,7 @@ import (
 // logHandlers bundles the dependencies shared by the dashboard log endpoints.
 type logHandlers struct {
 	sess    *authsvc.SessionManager
+	authz   *authorizer
 	guilds  repository.GuildRepository
 	audits  repository.AuditLogRepository
 	deletes repository.DeletedMessageRepository
@@ -29,12 +31,17 @@ func (a *App) registerLogRoutes(group *echo.Group, h *logHandlers) {
 	group.GET("/logs/actions", h.listModActions)
 }
 
-// requireUser rejects the request with 401 when no valid session is present,
-// returning the session's Discord user ID otherwise.
-func (h *logHandlers) requireUser(c *echo.Context) (string, bool) {
+// requireAdmin gates a dashboard data endpoint: it rejects the request with 401
+// when no valid session is present, and with 403 when the session's Discord user
+// is not on the admin allowlist. It returns the user ID only when authorized.
+func (h *logHandlers) requireAdmin(c *echo.Context) (string, bool) {
 	sess, ok := resolveSession(c, h.sess)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return "", false
+	}
+	if !h.authz.isAdmin(sess.UserID) {
+		c.JSON(http.StatusForbidden, map[string]string{"error": "forbidden"})
 		return "", false
 	}
 	return sess.UserID, true
@@ -51,7 +58,7 @@ type guildSummary struct {
 // listGuilds returns every guild the bot knows about plus per-guild counts of
 // deleted messages and moderation actions, so the dashboard can offer a picker.
 func (h *logHandlers) listGuilds(c *echo.Context) error {
-	if _, ok := h.requireUser(c); !ok {
+	if _, ok := h.requireAdmin(c); !ok {
 		return nil
 	}
 	ctx := c.Request().Context()
@@ -79,7 +86,7 @@ func (h *logHandlers) listGuilds(c *echo.Context) error {
 // listDeletedMessages returns deleted messages for a guild (required query
 // param guild_id), newest first.
 func (h *logHandlers) listDeletedMessages(c *echo.Context) error {
-	if _, ok := h.requireUser(c); !ok {
+	if _, ok := h.requireAdmin(c); !ok {
 		return nil
 	}
 	ctx := c.Request().Context()
@@ -111,7 +118,7 @@ func (h *logHandlers) listDeletedMessages(c *echo.Context) error {
 // listModActions returns moderation actions (audit logs) for a guild (required
 // query param guild_id), newest first, excluding message-created noise.
 func (h *logHandlers) listModActions(c *echo.Context) error {
-	if _, ok := h.requireUser(c); !ok {
+	if _, ok := h.requireAdmin(c); !ok {
 		return nil
 	}
 	ctx := c.Request().Context()

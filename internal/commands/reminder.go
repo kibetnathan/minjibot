@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 var (
@@ -21,7 +22,7 @@ func scheduleReminder(s *discordgo.Session, userID, channelID, text string, dela
 	reminderCount++
 	reminderMu.Unlock()
 
-	go func() {
+	safe.Go(nil, "scheduleReminder", func() {
 		timer := time.NewTimer(delay)
 		defer timer.Stop()
 		<-timer.C
@@ -41,7 +42,7 @@ func scheduleReminder(s *discordgo.Session, userID, channelID, text string, dela
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
 		s.ChannelMessageSendEmbed(dm.ID, embed)
-	}()
+	})
 }
 
 // ParseDuration extracts durations like "30s", "5m", "2h", "1d", or a

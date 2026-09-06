@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -52,7 +53,11 @@ func (sm *SessionManager) Create(userID string) (*http.Cookie, error) {
 		return nil, err
 	}
 
-	value := sm.sign(string(raw))
+	// The JSON payload contains characters ('"', '{', ',', ':') that are not
+	// valid in an HTTP cookie value, so encode it as base64url first. Without
+	// this, net/http strips those bytes from the Set-Cookie header and the
+	// cookie never round-trips — logins silently fail.
+	value := sm.sign(base64.RawURLEncoding.EncodeToString(raw))
 
 	return &http.Cookie{
 		Name:     SessionCookieName,
@@ -78,8 +83,13 @@ func (sm *SessionManager) Verify(cookieValue string) (*Session, error) {
 		return nil, errors.New("invalid session signature")
 	}
 
+	raw, err := base64.RawURLEncoding.DecodeString(payload)
+	if err != nil {
+		return nil, errors.New("invalid session encoding")
+	}
+
 	var s Session
-	if err := json.Unmarshal([]byte(payload), &s); err != nil {
+	if err := json.Unmarshal(raw, &s); err != nil {
 		return nil, errors.New("invalid session payload")
 	}
 	if time.Now().After(s.Expiry) {

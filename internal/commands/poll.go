@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kibetnathan/minjibot/internal/safe"
 )
 
 // Poll option emoji (1-10) used for reaction voting.
@@ -158,6 +159,7 @@ func (pm *pollManager) register(s *discordgo.Session, messageID, channelID strin
 
 // onReactionAdd increments the matching option's vote count.
 func (pm *pollManager) onReactionAdd(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
+	defer safe.Recover(nil, "pollManager.onReactionAdd")
 	if r.UserID == s.State.User.ID {
 		return
 	}
@@ -181,6 +183,7 @@ func (pm *pollManager) onReactionAdd(s *discordgo.Session, r *discordgo.MessageR
 
 // onReactionRemove decrements the matching option's vote count.
 func (pm *pollManager) onReactionRemove(s *discordgo.Session, r *discordgo.MessageReactionRemove) {
+	defer safe.Recover(nil, "pollManager.onReactionRemove")
 	if r.UserID == s.State.User.ID {
 		return
 	}

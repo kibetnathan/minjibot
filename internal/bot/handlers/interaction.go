@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/kibetnathan/minjibot/internal/commands"
 	"github.com/kibetnathan/minjibot/internal/ports/repository"
+	"github.com/kibetnathan/minjibot/internal/safe"
 	"log/slog"
 )
 
@@ -25,6 +26,9 @@ func RegisterInteractionHandler(s *discordgo.Session, deps InteractionHandlerDep
 }
 
 func onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate, deps InteractionHandlerDeps, cmdHandler *commands.CommandHandler) {
+	// A panic in any command handler must not take down the whole bot.
+	defer safe.Recover(deps.Logger, "onInteractionCreate")
+
 	// Component interactions (e.g. help pagination buttons) are routed to the
 	// relevant handler directly.
 	if i.Type == discordgo.InteractionMessageComponent {

@@ -119,12 +119,22 @@ export default function GuildLogs() {
             <ArrowLeft className="mr-1 size-4" />
             Back to guilds
           </Link>
-          <h1 className="mb-1 font-heading text-3xl font-bold tracking-tight text-foreground">
-            Logs
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Deleted messages and moderation actions for <code className="font-mono text-xs">{guildId}</code>.
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="mb-1 font-heading text-3xl font-bold tracking-tight text-foreground">
+                Logs
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Deleted messages and moderation actions for <code className="font-mono text-xs">{guildId}</code>.
+              </p>
+            </div>
+            <Link
+              to={`/dashboard/guild/${guildId}/settings`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Settings
+            </Link>
+          </div>
         </div>
 
         {me.status !== "authenticated" ? (

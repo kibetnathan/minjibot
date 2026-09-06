@@ -19,6 +19,9 @@ func banMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *discor
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Ban", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Ban", m.Author.ID, targetID); blocked {
+		return err
+	}
 	reason := strings.Join(args[1:], " ")
 
 	if err := s.GuildBanCreateWithReason(m.GuildID, targetID, reason, 0); err != nil {
@@ -48,6 +51,9 @@ func banSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discordg
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Ban", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
 	}
+	if rejectSelfActionSlash(s, i, "Ban", i.Member.User.ID, targetID) {
+		return nil
+	}
 	if err := s.GuildBanCreateWithReason(i.GuildID, targetID, reason, 0); err != nil {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -72,6 +78,9 @@ func hardbanMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	targetID, name, err := resolveTargetUser(s, m.GuildID, args[0])
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Hard Ban", fmt.Sprintf("Could not find that user: %s", err))
+	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Hard Ban", m.Author.ID, targetID); blocked {
+		return err
 	}
 	reason := strings.Join(args[1:], " ")
 	if err := s.GuildBanCreateWithReason(m.GuildID, targetID, reason, 7); err != nil {
@@ -100,6 +109,9 @@ func hardbanSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Hard Ban", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
 	}
+	if rejectSelfActionSlash(s, i, "Hard Ban", i.Member.User.ID, targetID) {
+		return nil
+	}
 	if err := s.GuildBanCreateWithReason(i.GuildID, targetID, reason, 7); err != nil {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -124,6 +136,9 @@ func softbanMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *di
 	targetID, name, err := resolveTargetUser(s, m.GuildID, args[0])
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Soft Ban", fmt.Sprintf("Could not find that user: %s", err))
+	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Soft Ban", m.Author.ID, targetID); blocked {
+		return err
 	}
 	reason := strings.Join(args[1:], " ")
 	if err := s.GuildBanCreateWithReason(m.GuildID, targetID, reason, 1); err != nil {
@@ -154,6 +169,9 @@ func softbanSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *disc
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Soft Ban", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Soft Ban", i.Member.User.ID, targetID) {
+		return nil
 	}
 	if err := s.GuildBanCreateWithReason(i.GuildID, targetID, reason, 1); err != nil {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -186,6 +204,9 @@ func kickMessageCommandHandler(h *CommandHandler, s *discordgo.Session, m *disco
 	if err != nil {
 		return sendModError(s, m.ChannelID, "Kick", fmt.Sprintf("Could not find that user: %s", err))
 	}
+	if blocked, err := rejectSelfAction(s, m.ChannelID, "Kick", m.Author.ID, targetID); blocked {
+		return err
+	}
 	reason := strings.Join(args[1:], " ")
 	if err := s.GuildMemberDeleteWithReason(m.GuildID, targetID, reason); err != nil {
 		return sendModError(s, m.ChannelID, "Kick", fmt.Sprintf("Failed to kick %s: %s", name, err))
@@ -212,6 +233,9 @@ func kickSlashCommandHandler(h *CommandHandler, s *discordgo.Session, i *discord
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Embeds: []*discordgo.MessageEmbed{modErrorEmbed("Kick", fmt.Sprintf("Could not find that user: %s", err))}},
 		})
+	}
+	if rejectSelfActionSlash(s, i, "Kick", i.Member.User.ID, targetID) {
+		return nil
 	}
 	if err := s.GuildMemberDeleteWithReason(i.GuildID, targetID, reason); err != nil {
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
