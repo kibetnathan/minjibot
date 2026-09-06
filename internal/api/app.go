@@ -112,6 +112,18 @@ func (a *App) registerRoutes() {
 		deletes: repository.NewDeletedMessageRepository(store),
 	}
 	a.registerLogRoutes(group, logHandlers)
+
+	settingsHandlers := &settingsHandlers{
+		sess:     authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		settings: repository.NewGuildSettingsRepository(store),
+	}
+	a.registerSettingsRoutes(group, settingsHandlers)
+
+	diaryHandlers := &diaryHandlers{
+		sess:  authsvc.NewSessionManager(a.Cfg.SessionSecret),
+		diary: repository.NewDiaryRepository(store),
+	}
+	a.registerDiaryRoutes(group, diaryHandlers)
 }
 
 func (a *App) Start() error {
