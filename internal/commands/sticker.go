@@ -51,9 +51,15 @@ func resolveStickerSource(s *discordgo.Session, raw string) (string, string, err
 		return item.ID, StickerImageURL(item.ID, item.FormatType), nil
 	}
 
-	// Bare sticker ID.
+	// Bare sticker ID. Look the sticker up so we use the right CDN extension for
+	// its format — a GIF sticker lives at a .gif URL, not .png, so assuming PNG
+	// here 404s for animated stickers.
 	if DigitsOnly(raw) {
-		return raw, StickerImageURL(raw, discordgo.StickerFormatTypePNG), nil
+		st, err := fetchSticker(s, raw)
+		if err != nil {
+			return "", "", fmt.Errorf("couldn't look up sticker %s: %w", raw, err)
+		}
+		return raw, StickerImageURL(raw, st.FormatType), nil
 	}
 
 	// Sticker CDN URL.
@@ -93,11 +99,9 @@ func stealStickerToGuild(s *discordgo.Session, guildID, raw string) error {
 		return err
 	}
 
-	sticker, err := guildStickerCreate(s, guildID, label, "Stolen via steal command", label, md.Data)
-	if err != nil {
+	if _, err := guildStickerCreate(s, guildID, label, "Stolen via steal command", label, md); err != nil {
 		return err
 	}
-	_ = sticker
 	return nil
 }
 
@@ -107,8 +111,8 @@ func stickerAddMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []
 		return err
 	}
 	name := strings.TrimSpace(args[0])
-	if name == "" {
-		return fmt.Errorf("invalid sticker name")
+	if err := validateStickerName(name); err != nil {
+		return err
 	}
 
 	url := ""
@@ -120,7 +124,7 @@ func stickerAddMessage(s *discordgo.Session, m *discordgo.MessageCreate, args []
 		return err
 	}
 
-	sticker, err := guildStickerCreate(s, m.GuildID, name, "Added by "+m.Author.Username, name, md.Data)
+	sticker, err := guildStickerCreate(s, m.GuildID, name, "Added by "+m.Author.Username, name, md)
 	if err != nil {
 		return err
 	}
@@ -178,14 +182,14 @@ func stickerSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 	switch sub.Name {
 	case "add":
 		name := strings.TrimSpace(OptString(opts, "name"))
-		if name == "" {
-			return fmt.Errorf("invalid sticker name")
+		if err := validateStickerName(name); err != nil {
+			return err
 		}
 		md, err := fetchURL(OptString(opts, "url"))
 		if err != nil {
 			return err
 		}
-		sticker, err := guildStickerCreate(s, guildID, name, "Added via slash command", name, md.Data)
+		sticker, err := guildStickerCreate(s, guildID, name, "Added via slash command", name, md)
 		if err != nil {
 			return err
 		}
@@ -235,9 +239,62 @@ func stickerSlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCr
 	})
 }
 
+// validateStickerName enforces Discord's sticker name length (2–30 characters)
+// up front so callers get a clear message instead of a raw 400 from the API.
+func validateStickerName(name string) error {
+	n := len([]rune(strings.TrimSpace(name)))
+	if n < 2 || n > 30 {
+		return fmt.Errorf("sticker name must be 2-30 characters (got %d)", n)
+	}
+	return nil
+}
+
+// stickerUploadName returns the multipart filename Discord expects for a
+// sticker of the given image type. Discord infers the sticker's format from the
+// upload's file extension, so a GIF sent as "sticker.png" is rejected — the
+// filename has to match the bytes. Lottie stickers can't be created from a
+// raster/animation upload, so they're refused with a clear message.
+func stickerUploadName(ext string) (string, error) {
+	switch strings.ToLower(ext) {
+	case "png", "apng":
+		return "sticker.png", nil
+	case "gif":
+		return "sticker.gif", nil
+	case "json":
+		return "", fmt.Errorf("Lottie (animated JSON) stickers can't be uploaded — only PNG, APNG, or GIF")
+	default:
+		return "", fmt.Errorf("unsupported sticker image type %q — Discord stickers must be PNG, APNG, or GIF", OrEmpty(ext))
+	}
+}
+
+// fetchSticker looks up a sticker object by ID. discordgo v0.29.0 ships no
+// Session wrapper for this endpoint, so we call it directly and decode the
+// result to learn the sticker's format.
+func fetchSticker(s *discordgo.Session, stickerID string) (*discordgo.Sticker, error) {
+	if !DigitsOnly(stickerID) {
+		return nil, fmt.Errorf("invalid sticker ID: %q", stickerID)
+	}
+	body, err := s.RequestWithBucketID("GET", discordgo.EndpointSticker(stickerID), nil, "stickers")
+	if err != nil {
+		return nil, err
+	}
+	var st discordgo.Sticker
+	if err := json.Unmarshal(body, &st); err != nil {
+		return nil, err
+	}
+	return &st, nil
+}
+
 // guildStickerCreate uploads a sticker via multipart/form-data, since the
-// discordgo version in use lacks a wrapper for the sticker endpoints.
-func guildStickerCreate(s *discordgo.Session, guildID, name, desc, tags string, data []byte) (*discordgo.Sticker, error) {
+// discordgo version in use lacks a wrapper for the sticker endpoints. The
+// upload filename is derived from the media's real type so Discord accepts the
+// format (see stickerUploadName).
+func guildStickerCreate(s *discordgo.Session, guildID, name, desc, tags string, md *MediaData) (*discordgo.Sticker, error) {
+	filename, err := stickerUploadName(md.Ext)
+	if err != nil {
+		return nil, err
+	}
+
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -251,11 +308,11 @@ func guildStickerCreate(s *discordgo.Session, guildID, name, desc, tags string, 
 		}
 	}
 
-	part, err := writer.CreateFormFile("file", "sticker.png")
+	part, err := writer.CreateFormFile("file", filename)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := part.Write(data); err != nil {
+	if _, err := part.Write(md.Data); err != nil {
 		return nil, err
 	}
 	if err := writer.Close(); err != nil {
@@ -287,12 +344,16 @@ func guildStickerDelete(s *discordgo.Session, guildID, stickerID string) error {
 	return err
 }
 
-// StickerImageURL returns the CDN image URL for a sticker. Lottie stickers have
-// no uploadable raster image and are rejected upstream.
+// StickerImageURL returns the CDN image URL for a sticker, matching the
+// extension to the sticker's format. PNG and APNG both serve from .png; GIF
+// from .gif; Lottie from .json (which guildStickerCreate then rejects, rather
+// than silently fetching a .png that doesn't exist for that sticker).
 func StickerImageURL(id string, format discordgo.StickerFormat) string {
 	switch format {
 	case discordgo.StickerFormatTypeGIF:
 		return fmt.Sprintf("https://cdn.discordapp.com/stickers/%s.gif", id)
+	case discordgo.StickerFormatTypeLottie:
+		return fmt.Sprintf("https://cdn.discordapp.com/stickers/%s.json", id)
 	default:
 		return fmt.Sprintf("https://cdn.discordapp.com/stickers/%s.png", id)
 	}
